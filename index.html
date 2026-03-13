@@ -1262,6 +1262,29 @@ footer {
 .db-field-input:not(:disabled) { background:#fff; border-color:rgba(201,166,104,0.5); }
 .db-field-input:not(:disabled):focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,166,104,0.12); }
 textarea.db-field-input { line-height:1.6; }
+/* ── FIELD TOOLTIPS ── */
+.rf-label-wrap { display:flex; align-items:center; gap:6px; }
+.rf-tip {
+  position:relative; display:inline-flex; align-items:center; justify-content:center;
+  width:15px; height:15px; border-radius:50%;
+  background:rgba(201,166,104,0.15); border:1px solid rgba(201,166,104,0.35);
+  font-size:9.5px; font-weight:800; color:rgba(201,166,104,0.75);
+  cursor:default; flex-shrink:0; line-height:1;
+}
+.rf-tip-box {
+  display:none; position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+  background:#0d0d2e; border:1px solid rgba(201,166,104,0.25); border-radius:8px;
+  padding:10px 13px; width:220px; font-size:11.5px; font-weight:400;
+  color:rgba(255,255,255,0.65); line-height:1.55; z-index:500;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4); pointer-events:none;
+  white-space:normal; text-transform:none; letter-spacing:0;
+}
+.rf-tip-box::after {
+  content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+  border:5px solid transparent; border-top-color:#0d0d2e;
+}
+.rf-tip:hover .rf-tip-box { display:block; }
+
 .rf-upload-box {
   border: 1.5px dashed rgba(201,166,104,0.25);
   border-radius: 8px;
@@ -2834,8 +2857,20 @@ textarea.db-field-input { line-height:1.6; }
 
           <div style="padding:32px 36px;display:flex;flex-direction:column;gap:32px;">
 
+          <div style="font-size:11.5px;color:rgba(255,255,255,0.3);padding:0 36px 0;margin-bottom:-18px;">Fields marked <span style="color:var(--gold);font-weight:700;">*</span> are required.</div>
+
+          <!-- Progress indicator + Save Draft -->
+          <div style="display:flex;gap:10px;padding:0 36px;margin-bottom:-10px;align-items:center;">
+            <span style="font-size:11px;color:rgba(255,255,255,0.3);white-space:nowrap;margin-right:2px;">Progress:</span>
+            <div style="flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,0.08);overflow:hidden;">
+              <div id="rn-progress-bar" style="height:100%;width:0%;background:var(--gold);border-radius:4px;transition:width 0.4s ease;"></div>
+            </div>
+            <span id="rn-progress-label" style="font-size:11px;color:rgba(201,166,104,0.6);min-width:32px;text-align:right;font-weight:700;">0%</span>
+            <button onclick="saveDraft('renter')" style="padding:5px 13px;background:transparent;color:rgba(201,166,104,0.75);border:1px solid rgba(201,166,104,0.35);border-radius:5px;font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;margin-left:6px;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(201,166,104,0.35)';this.style.color='rgba(201,166,104,0.75)'">💾 Save Draft</button>
+          </div>
+
             <!-- ══ SECTION 1: PERSONAL DETAILS ══ -->
-            <div>
+            <div id="rn-s1">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
                 <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);flex-shrink:0;">1</div>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--white);letter-spacing:-0.3px;">Personal Details</span>
@@ -2846,6 +2881,18 @@ textarea.db-field-input { line-height:1.6; }
                 <div class="rf-field">
                   <label class="rf-label">Name <span class="rf-req">*</span></label>
                   <input type="text" id="rn-name" placeholder="Full name" class="rf-input">
+                </div>
+
+                <!-- Date of Birth -->
+                <div class="rf-field">
+                  <label class="rf-label">Date of Birth <span class="rf-req">*</span></label>
+                  <input type="date" id="rn-dob" class="rf-input" style="color-scheme:dark;">
+                </div>
+
+                <!-- Father's Name -->
+                <div class="rf-field">
+                  <label class="rf-label">Father's Name <span style="font-size:10.5px;font-weight:400;color:rgba(255,255,255,0.35);margin-left:4px;">(Optional)</span></label>
+                  <input type="text" id="rn-father-name" placeholder="Father's full name" class="rf-input">
                 </div>
 
                 <!-- Married? -->
@@ -2864,9 +2911,6 @@ textarea.db-field-input { line-height:1.6; }
                   </div>
                 </div>
 
-                <!-- placeholder to keep grid balanced when spouse fields hidden -->
-                <div></div>
-
                 <!-- Spouse fields (shown only when Married) -->
                 <div id="rn-spouse-fields" style="display:none;grid-column:1/-1;grid-template-columns:1fr 1fr;gap:14px;">
 
@@ -2878,7 +2922,7 @@ textarea.db-field-input { line-height:1.6; }
 
                   <!-- Spouse Working -->
                   <div class="rf-field">
-                    <label class="rf-label">Spouse Working? <span class="rf-req">*</span></label>
+                    <label class="rf-label-wrap"><span>Spouse Working? <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Indicate whether your spouse is currently employed. Some landlords consider dual income as a positive factor when selecting tenants.</span></span></label>
                     <div style="position:relative;">
                       <select id="rn-spouse-working" class="rf-select" style="padding-right:36px;" onchange="document.getElementById('rn-spouse-occ-wrap').style.display=this.value==='Yes'?'block':'none'">
                         <option value="">-- Select --</option>
@@ -2910,16 +2954,22 @@ textarea.db-field-input { line-height:1.6; }
                   </div>
                 </div>
 
-                <!-- Aadhar No. -->
+                <!-- Aadhaar No. -->
                 <div class="rf-field">
-                  <label class="rf-label">Aadhar No. <span class="rf-req">*</span></label>
-                  <input type="text" id="rn-aadhar" placeholder="12-digit Aadhar number" maxlength="12" inputmode="numeric" pattern="[0-9]{12}" class="rf-input">
+                  <label class="rf-label-wrap"><span>Aadhaar No. <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Enter your 12-digit Aadhaar card number. This is used for identity verification and will not be publicly displayed to landlords.</span></span></label>
+                  <input type="text" id="rn-aadhar" placeholder="12-digit Aadhaar number" maxlength="12" inputmode="numeric" pattern="[0-9]{12}" class="rf-input">
                 </div>
 
                 <!-- Mobile No. -->
                 <div class="rf-field">
-                  <label class="rf-label">Mobile No. (WhatsApp) <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Mobile No. (WhatsApp) <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Enter the mobile number you use on WhatsApp. Landlords will contact you on this number once a match is confirmed and contact details are shared.</span></span></label>
                   <input type="tel" id="rn-mobile" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric" class="rf-input">
+                </div>
+
+                <!-- Alternate Mobile -->
+                <div class="rf-field">
+                  <label class="rf-label">Alternate Mobile <span style="font-size:10.5px;font-weight:400;color:rgba(255,255,255,0.35);margin-left:4px;">(Optional)</span></label>
+                  <input type="tel" id="rn-mobile-alt" placeholder="Backup contact number" maxlength="10" inputmode="numeric" class="rf-input">
                 </div>
 
                 <!-- Email (full width) -->
@@ -2928,44 +2978,36 @@ textarea.db-field-input { line-height:1.6; }
                   <input type="email" id="rn-email" placeholder="your@email.com" class="rf-input">
                 </div>
 
-                <!-- Commercial Property Toggle -->
-                <div class="rf-field" style="grid-column:1/-1">
-                  <div style="display:flex;align-items:center;gap:14px;background:rgba(201,166,104,0.07);border:1.5px solid rgba(201,166,104,0.2);border-radius:8px;padding:14px 18px;cursor:pointer;" onclick="
-                    var isOn = this.classList.toggle('comm-active');
-                    this.style.background = isOn ? 'rgba(201,166,104,0.18)' : 'rgba(201,166,104,0.07)';
-                    this.style.borderColor = isOn ? 'var(--gold)' : 'rgba(201,166,104,0.2)';
-                    document.getElementById('rn-comm-indicator').style.background = isOn ? 'var(--gold)' : 'rgba(255,255,255,0.15)';
-                    document.getElementById('rn-comm-indicator').textContent = isOn ? '✓' : '';
-                    document.getElementById('rn-comm-indicator').style.color = isOn ? 'var(--dark)' : 'transparent';
-                    document.getElementById('rn-family-block').style.display = isOn ? 'none' : 'contents';
-                    document.getElementById('rn-family-size').value = isOn ? 'Commercial Property' : '';
-                  ">
-                    <div id="rn-comm-indicator" style="width:22px;height:22px;border-radius:5px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(201,166,104,0.35);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:transparent;flex-shrink:0;transition:all 0.2s;"></div>
-                    <div>
-                      <div style="font-size:13.5px;font-weight:700;color:var(--white);">Looking for Commercial Property</div>
-                      <div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-top:2px;">Tick this if you need a shop, office, or commercial space</div>
-                    </div>
-                  </div>
-                  <input type="hidden" id="rn-family-size" value="">
+
+
+                <!-- Background sub-group divider -->
+                <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:4px;">
+                  <div style="height:1px;flex:1;background:rgba(201,166,104,0.1);"></div>
+                  <span style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(201,166,104,0.45);">Background</span>
+                  <div style="height:1px;flex:1;background:rgba(201,166,104,0.1);"></div>
                 </div>
 
-                <!-- Family Size (hidden when commercial is ticked) -->
-                <div id="rn-family-block" style="display:contents;">
+                <!-- Native State -->
                 <div class="rf-field">
-                  <label class="rf-label">Family Size <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Native State <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select the state you originally belong to or were born in. This is different from your current address and helps landlords understand your background.</span></span></label>
                   <div style="position:relative;">
-                    <select id="rn-family-size-select" class="rf-select" style="padding-right:36px;" onchange="document.getElementById('rn-family-size').value=this.value">
+                    <select id="rn-native-state" class="rf-select" style="padding-right:36px;" onchange="populateDistrict(this,'renter-native-district')">
                       <option value="">-- Select --</option>
-                      <option>Single Male</option>
-                      <option>Single Female</option>
-                      <option>Family of 2 members</option>
-                      <option>Family of 3 members</option>
-                      <option>Family of 4 members</option>
-                      <option>Family of 5 or more members</option>
+                      <option>Andaman And Nicobar Islands</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chandigarh</option><option>Chhattisgarh</option><option>Delhi</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jammu And Kashmir</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Ladakh</option><option>Lakshadweep</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Puducherry</option><option>Punjab</option><option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option><option>The Dadra And Nagar Haveli And Daman And Diu</option><option>Tripura</option><option>Uttarakhand</option><option>Uttar Pradesh</option><option>West Bengal</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
                 </div>
+
+                <!-- Native District -->
+                <div class="rf-field">
+                  <label class="rf-label">Native District <span class="rf-req">*</span></label>
+                  <div style="position:relative;">
+                    <select id="renter-native-district" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
                 </div>
 
                 <!-- Religion -->
@@ -2978,7 +3020,7 @@ textarea.db-field-input { line-height:1.6; }
                       <option>Muslim</option>
                       <option>Sikh</option>
                       <option>Christian</option>
-                      <option>Buddhism</option>
+                      <option>Buddhist</option>
                       <option>Jain</option>
                       <option>Other</option>
                     </select>
@@ -2986,45 +3028,9 @@ textarea.db-field-input { line-height:1.6; }
                   </div>
                 </div>
 
-                <!-- Parking Needed -->
-                <div class="rf-field">
-                  <label class="rf-label">Parking Requirement <span class="rf-req">*</span></label>
-                  <div style="position:relative;">
-                    <select id="rn-parking" class="rf-select" style="padding-right:36px;">
-                      <option value="">-- Select --</option>
-                      <option>N/A</option>
-                      <option>Car</option>
-                      <option>Bike</option>
-                      <option>Car + Bike</option>
-                    </select>
-                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
-                  </div>
-                </div>
-                <div class="rf-field">
-                  <label class="rf-label">Native State <span class="rf-req">*</span></label>
-                  <div style="position:relative;">
-                    <select id="rn-native-state" class="rf-select" style="padding-right:36px;" onchange="populateDistrict(this,'renter-native-district')">
-                      <option value="">-- Select --</option>
-                      <option>Andaman And Nicobar Islands</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chandigarh</option><option>Chhattisgarh</option><option>Delhi</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jammu And Kashmir</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Ladakh</option><option>Lakshadweep</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Puducherry</option><option>Punjab</option><option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option><option>The Dadra And Nagar Haveli And Daman And Diu</option><option>Tripura</option><option>Uttarakhand</option><option>Uttar Pradesh</option><option>West Bengal</option>
-                    </select>
-                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
-                  </div>
-                </div>
-
-                <!-- Native State -->
-                <div class="rf-field">
-                  <label class="rf-label">Native District <span class="rf-req">*</span></label>
-                  <div style="position:relative;">
-                    <select id="renter-native-district" class="rf-select" style="padding-right:36px;">
-                      <option value="">-- Select --</option>
-                    </select>
-                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
-                  </div>
-                </div>
-
                 <!-- Category -->
                 <div class="rf-field">
-                  <label class="rf-label">Category <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Category <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select your social category as per government classification. This is collected for record-keeping purposes only and is not used for discrimination in tenant matching.</span></span></label>
                   <div style="position:relative;">
                     <select id="rn-category" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
@@ -3039,8 +3045,76 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Caste Name (optional) -->
                 <div class="rf-field">
-                  <label class="rf-label">Caste Name</label>
-                  <input type="text" id="rn-caste" placeholder="Optional" class="rf-input">
+                  <label class="rf-label">Caste Name <span style="font-size:10.5px;font-weight:400;color:rgba(255,255,255,0.35);margin-left:4px;">(Optional)</span></label>
+                  <input type="text" id="rn-caste" placeholder="Leave blank if you prefer not to share" class="rf-input">
+                </div>
+
+                <!-- Parking Requirement -->
+                <div class="rf-field">
+                  <label class="rf-label-wrap"><span>Parking Requirement <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Let landlords know what parking space you need. Select "N/A" if you do not own a vehicle. This helps match you with properties that have the right parking facilities.</span></span></label>
+                  <div style="position:relative;">
+                    <select id="rn-parking" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>N/A</option>
+                      <option>Car</option>
+                      <option>Bike</option>
+                      <option>Car + Bike</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
+
+                <!-- Employment sub-group divider -->
+                <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:4px;">
+                  <div style="height:1px;flex:1;background:rgba(201,166,104,0.1);"></div>
+                  <span style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(201,166,104,0.45);">Employment</span>
+                  <div style="height:1px;flex:1;background:rgba(201,166,104,0.1);"></div>
+                </div>
+
+                <!-- Occupation -->
+                <div class="rf-field">
+                  <label class="rf-label-wrap"><span>Occupation <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select the category that best describes your current profession or employment type. This information helps landlords understand your background and stability.</span></span></label>
+                  <div style="position:relative;">
+                    <select id="rn-occupation" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>Central Government</option>
+                      <option>State Government</option>
+                      <option>Bank</option>
+                      <option>Private Sector (Salaried)</option>
+                      <option>Self-Employed / Business</option>
+                      <option>Doctor / Healthcare</option>
+                      <option>Teacher / Academician</option>
+                      <option>Engineer / IT Professional</option>
+                      <option>Lawyer / Legal Professional</option>
+                      <option>Student</option>
+                      <option>Retired</option>
+                      <option>Others</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
+
+                <!-- Yearly Income -->
+                <div class="rf-field">
+                  <label class="rf-label">Yearly Income <span style="font-size:10.5px;font-weight:400;color:rgba(255,255,255,0.35);margin-left:4px;">(Optional)</span></label>
+                  <div style="position:relative;">
+                    <select id="rn-income" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>Upto 5L</option>
+                      <option>5-10L</option>
+                      <option>10-15L</option>
+                      <option>15L-30L</option>
+                      <option>30L+</option>
+                      <option>N/A</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
+
+                <!-- Office Name & Address (full width, optional) -->
+                <div class="rf-field" style="grid-column:1/-1">
+                  <label class="rf-label-wrap"><span>Office Name &amp; Address <span style="font-size:10.5px;font-weight:400;color:rgba(255,255,255,0.35);margin-left:4px;">(Optional)</span></span><span class="rf-tip">i<span class="rf-tip-box">Optionally enter your current employer's name and office address. This helps landlords assess your employment stability. It will only be visible after a confirmed match.</span></span></label>
+                  <input type="text" id="rn-office" placeholder="Current employer / office address" class="rf-input">
                 </div>
 
                 <!-- Upload Personal Photo (full width) -->
@@ -3061,7 +3135,7 @@ textarea.db-field-input { line-height:1.6; }
             <div style="height:1px;background:rgba(201,166,104,0.12);"></div>
 
             <!-- ══ SECTION 2: PRESENT ADDRESS ══ -->
-            <div>
+            <div id="rn-s2">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
                 <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);flex-shrink:0;">2</div>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--white);letter-spacing:-0.3px;">Present Address</span>
@@ -3097,51 +3171,14 @@ textarea.db-field-input { line-height:1.6; }
                   </div>
                 </div>
 
-                <!-- Office Name & Address (full width, optional) -->
-                <div class="rf-field" style="grid-column:1/-1">
-                  <label class="rf-label">Office Name &amp; Address</label>
-                  <input type="text" id="rn-office" placeholder="Current employer / office address (optional)" class="rf-input">
+                <!-- Present Pincode -->
+                <div class="rf-field">
+                  <label class="rf-label">Pincode <span class="rf-req">*</span></label>
+                  <input type="text" id="rn-pincode" placeholder="6-digit pincode" maxlength="6" inputmode="numeric" class="rf-input">
                 </div>
 
-                <!-- Occupation -->
-                <div class="rf-field">
-                  <label class="rf-label">Occupation <span class="rf-req">*</span></label>
-                  <div style="position:relative;">
-                    <select id="rn-occupation" class="rf-select" style="padding-right:36px;">
-                      <option value="">-- Select --</option>
-                      <option>Central Government</option>
-                      <option>State Government</option>
-                      <option>Bank</option>
-                      <option>Private Sector (Salaried)</option>
-                      <option>Self-Employed / Business</option>
-                      <option>Doctor / Healthcare</option>
-                      <option>Teacher / Academician</option>
-                      <option>Engineer / IT Professional</option>
-                      <option>Lawyer / Legal Professional</option>
-                      <option>Student</option>
-                      <option>Retired</option>
-                      <option>Others</option>
-                    </select>
-                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
-                  </div>
-                </div>
-
-                <!-- Yearly Income -->
-                <div class="rf-field">
-                  <label class="rf-label">Yearly Income</label>
-                  <div style="position:relative;">
-                    <select id="rn-income" class="rf-select" style="padding-right:36px;">
-                      <option value="">-- Select --</option>
-                      <option>Upto 5L</option>
-                      <option>5-10L</option>
-                      <option>10-15L</option>
-                      <option>15L-30L</option>
-                      <option>+30L</option>
-                      <option>N/A</option>
-                    </select>
-                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
-                  </div>
-                </div>
+                <!-- spacer -->
+                <div></div>
 
               </div><!-- /present address grid -->
             </div><!-- /section 2 -->
@@ -3149,12 +3186,52 @@ textarea.db-field-input { line-height:1.6; }
             <div style="height:1px;background:rgba(201,166,104,0.12);"></div>
 
             <!-- ══ SECTION 3: PROPERTY PREFERENCE DETAILS ══ -->
-            <div>
+            <div id="rn-s3">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
                 <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);flex-shrink:0;">3</div>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--white);letter-spacing:-0.3px;">Property Preference Details</span>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+                <!-- Commercial Property Toggle -->
+                <div class="rf-field" style="grid-column:1/-1">
+                  <div style="display:flex;align-items:center;gap:14px;background:rgba(201,166,104,0.07);border:1.5px solid rgba(201,166,104,0.2);border-radius:8px;padding:14px 18px;cursor:pointer;" onclick="
+                    var isOn = this.classList.toggle('comm-active');
+                    this.style.background = isOn ? 'rgba(201,166,104,0.18)' : 'rgba(201,166,104,0.07)';
+                    this.style.borderColor = isOn ? 'var(--gold)' : 'rgba(201,166,104,0.2)';
+                    document.getElementById('rn-comm-indicator').style.background = isOn ? 'var(--gold)' : 'rgba(255,255,255,0.15)';
+                    document.getElementById('rn-comm-indicator').textContent = isOn ? '✓' : '';
+                    document.getElementById('rn-comm-indicator').style.color = isOn ? 'var(--dark)' : 'transparent';
+                    document.getElementById('rn-family-block').style.display = isOn ? 'none' : 'contents';
+                    document.getElementById('rn-family-size').value = isOn ? 'Commercial Property' : '';
+                  ">
+                    <div id="rn-comm-indicator" style="width:22px;height:22px;border-radius:5px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(201,166,104,0.35);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:transparent;flex-shrink:0;transition:all 0.2s;"></div>
+                    <div>
+                      <div style="font-size:13.5px;font-weight:700;color:var(--white);">Looking for Commercial Property</div>
+                      <div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-top:2px;">Tick this if you need a shop, office, or commercial space</div>
+                    </div>
+                  </div>
+                  <input type="hidden" id="rn-family-size" value="">
+                </div>
+
+                <!-- Family Size (hidden when commercial is ticked) -->
+                <div id="rn-family-block" style="display:contents;">
+                <div class="rf-field">
+                  <label class="rf-label-wrap"><span>Family Size <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select the number of people in your household who will be living in the property. This helps landlords match their listing to your family's needs.</span></span></label>
+                  <div style="position:relative;">
+                    <select id="rn-family-size-select" class="rf-select" style="padding-right:36px;" onchange="document.getElementById('rn-family-size').value=this.value">
+                      <option value="">-- Select --</option>
+                      <option>Single Male</option>
+                      <option>Single Female</option>
+                      <option>Family of 2 members</option>
+                      <option>Family of 3 members</option>
+                      <option>Family of 4 members</option>
+                      <option>Family of 5 or more members</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
+                </div>
 
                 <!-- Preferred State -->
                 <div class="rf-field">
@@ -3181,7 +3258,7 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Preferred Sub-District (optional) -->
                 <div class="rf-field">
-                  <label class="rf-label">Preferred Sub-District</label>
+                  <label class="rf-label-wrap"><span>Preferred Sub-District</span><span class="rf-tip">i<span class="rf-tip-box">Sub-district (also called tehsil or taluka) is a smaller administrative unit within a district. Select this to narrow down your preferred area further. Select State and District first to load options.</span></span></label>
                   <div style="position:relative;">
                     <select id="rn-pref-subdistrict" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
@@ -3218,16 +3295,39 @@ textarea.db-field-input { line-height:1.6; }
                   </div>
                 </div>
 
+                <!-- Preferred Property Type -->
+                <div class="rf-field">
+                  <label class="rf-label-wrap"><span>Preferred Property Type <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select the type of property you are looking for. This helps match you with landlords listing the right kind of property.</span></span></label>
+                  <div style="position:relative;">
+                    <select id="rn-prop-type" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>Any</option>
+                      <option>Studio / 1 RK</option>
+                      <option>Flat / Apartment</option>
+                      <option>Builder Floor (Independent)</option>
+                      <option>Independent House / Villa</option>
+                      <option>Duplex / Rowhouse</option>
+                      <option>PG Accommodation</option>
+                      <option>Boys / Girls Hostel</option>
+                      <option>Serviced Apartment</option>
+                      <option>Shop / Showroom</option>
+                      <option>Office Space</option>
+                      <option>Others</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
+
                 <!-- Size -->
                 <div class="rf-field">
-                  <label class="rf-label">Size <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Size <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select the approximate carpet area you are looking for. Carpet area is the usable floor space inside the walls. This helps landlords match you with appropriately sized properties.</span></span></label>
                   <div style="position:relative;">
                     <select id="rn-size" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
-                      <option>Upto 500 Sq. Ft.</option>
-                      <option>500 to 1000 sq feet</option>
-                      <option>1000 to 1500 sq feet</option>
-                      <option>1500 - 2000 sq ft</option>
+                      <option>Up to 500 sq ft</option>
+                      <option>500 – 1000 sq ft</option>
+                      <option>1000 – 1500 sq ft</option>
+                      <option>1500 – 2000 sq ft</option>
                       <option>2000+ sq ft</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
@@ -3236,10 +3336,11 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- BHK -->
                 <div class="rf-field">
-                  <label class="rf-label">BHK <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>BHK <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">BHK stands for Bedroom, Hall, Kitchen. Select the number of bedrooms you need — e.g. "2 BHK" means 2 bedrooms, 1 hall, and 1 kitchen. Select "Commercial" if you are looking for a shop or office space.</span></span></label>
                   <div style="position:relative;">
                     <select id="rn-bhk" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
+                      <option>Studio / 1 RK</option>
                       <option>1 BHK</option>
                       <option>2 BHK</option>
                       <option>3 BHK</option>
@@ -3253,16 +3354,40 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Rent Range (optional) -->
                 <div class="rf-field">
-                  <label class="rf-label">Rent Range</label>
+                  <label class="rf-label-wrap"><span>Rent Range</span><span class="rf-tip">i<span class="rf-tip-box">Select the monthly rent range you can afford. Landlords will use this to assess if your budget matches their asking rent. You can discuss and negotiate the exact amount directly with the landlord.</span></span></label>
                   <div style="position:relative;">
                     <select id="rn-rent-range" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
-                      <option>Upto 10K</option>
-                      <option>10-15K</option>
-                      <option>15-20K</option>
-                      <option>20-25K</option>
-                      <option>25-30K</option>
-                      <option>30K+</option>
+                      <option>Up to ₹10,000</option>
+                      <option>₹10,000 – ₹15,000</option>
+                      <option>₹15,000 – ₹20,000</option>
+                      <option>₹20,000 – ₹25,000</option>
+                      <option>₹25,000 – ₹30,000</option>
+                      <option>₹30,000 – ₹40,000</option>
+                      <option>₹40,000 – ₹60,000</option>
+                      <option>Above ₹60,000</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
+
+                <!-- Move-in Date -->
+                <div class="rf-field">
+                  <label class="rf-label-wrap"><span>Move-in Date <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select the date from which you need the property. This is matched against the landlord's availability date to find suitable listings.</span></span></label>
+                  <input type="date" id="rn-movein-date" class="rf-input" style="color-scheme:dark;">
+                  <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:5px;">When do you need to move in?</div>
+                </div>
+
+                <!-- Duration of Stay -->
+                <div class="rf-field">
+                  <label class="rf-label">Duration of Stay <span class="rf-req">*</span></label>
+                  <div style="position:relative;">
+                    <select id="rn-duration" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>Up to 6 months</option>
+                      <option>6 months – 1 year</option>
+                      <option>1 – 2 years</option>
+                      <option>2+ years / Long-term</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
@@ -3271,7 +3396,8 @@ textarea.db-field-input { line-height:1.6; }
                 <!-- Any Other Details (full width, optional) -->
                 <div class="rf-field" style="grid-column:1/-1">
                   <label class="rf-label">Any Other Details</label>
-                  <textarea id="rn-other-details" rows="3" placeholder="Any special requirements, preferences, or notes for the landlord…" class="rf-input" style="resize:vertical;min-height:80px;"></textarea>
+                  <textarea id="rn-other-details" rows="3" placeholder="Any special requirements, preferences, or notes for the landlord…" class="rf-input" style="resize:vertical;min-height:80px;" maxlength="600" oninput="document.getElementById('rn-other-details-count').textContent=this.value.length+' / 600'"></textarea>
+                  <div style="display:flex;justify-content:flex-end;font-size:10.5px;color:rgba(255,255,255,0.25);margin-top:4px;"><span id="rn-other-details-count">0 / 600</span></div>
                 </div>
 
               </div><!-- /property preference grid -->
@@ -3280,12 +3406,29 @@ textarea.db-field-input { line-height:1.6; }
             <div style="height:1px;background:rgba(201,166,104,0.12);"></div>
 
             <!-- ══ SECTION 4: OFFER CODE, UNDERTAKING & CAPTCHA ══ -->
-            <div>
+            <div id="rn-s4">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
                 <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);flex-shrink:0;">4</div>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--white);letter-spacing:-0.3px;">Offer &amp; Confirmation</span>
               </div>
               <div style="display:flex;flex-direction:column;gap:18px;">
+
+                <!-- How did you hear about us? -->
+                <div class="rf-field">
+                  <label class="rf-label">How did you hear about us? <span style="font-size:10.5px;font-weight:400;color:rgba(255,255,255,0.35);margin-left:4px;">(Optional)</span></label>
+                  <div style="position:relative;">
+                    <select id="rn-referral-source" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>Google / Web Search</option>
+                      <option>Facebook / Instagram</option>
+                      <option>Friend / Family Referral</option>
+                      <option>Pamphlet / Banner</option>
+                      <option>Word of Mouth</option>
+                      <option>Other</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
 
                 <!-- Offer Code -->
                 <div class="rf-field">
@@ -3331,7 +3474,7 @@ textarea.db-field-input { line-height:1.6; }
                   style="width:100%;padding:16px;background:var(--gold);color:var(--dark);border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:0.5px;transition:background 0.2s,transform 0.2s;margin-top:4px;"
                   onmouseover="this.style.background='#dfc08e';this.style.transform='translateY(-2px)'"
                   onmouseout="this.style.background='var(--gold)';this.style.transform='translateY(0)'">
-                  Submit Renter Registration →
+                  Complete Registration →
                 </button>
 
                 <p style="font-size:11.5px;color:rgba(255,255,255,0.22);text-align:center;line-height:1.6;">By submitting you agree to RenterFinder.com's <a onclick="openLegalModal('terms')" style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Terms of Use</a>, <a onclick="openLegalModal('privacy')" style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Privacy Policy</a>, and <a onclick="openLegalModal('disclaimer')" style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Disclaimer</a>. Your information is kept secure and used only for matching purposes.</p>
@@ -3359,8 +3502,20 @@ textarea.db-field-input { line-height:1.6; }
 
           <div style="padding:32px 36px;display:flex;flex-direction:column;gap:32px;">
 
+          <div style="font-size:11.5px;color:rgba(255,255,255,0.3);padding:0 36px 0;margin-bottom:-18px;">Fields marked <span style="color:var(--gold);font-weight:700;">*</span> are required.</div>
+
+          <!-- Progress indicator + Save Draft -->
+          <div style="display:flex;gap:10px;padding:0 36px;margin-bottom:-10px;align-items:center;">
+            <span style="font-size:11px;color:rgba(255,255,255,0.3);white-space:nowrap;margin-right:2px;">Progress:</span>
+            <div style="flex:1;height:4px;border-radius:4px;background:rgba(255,255,255,0.08);overflow:hidden;">
+              <div id="ll-progress-bar" style="height:100%;width:0%;background:var(--gold);border-radius:4px;transition:width 0.4s ease;"></div>
+            </div>
+            <span id="ll-progress-label" style="font-size:11px;color:rgba(201,166,104,0.6);min-width:32px;text-align:right;font-weight:700;">0%</span>
+            <button onclick="saveDraft('landlord')" style="padding:5px 13px;background:transparent;color:rgba(201,166,104,0.75);border:1px solid rgba(201,166,104,0.35);border-radius:5px;font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all 0.2s;margin-left:6px;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(201,166,104,0.35)';this.style.color='rgba(201,166,104,0.75)'">💾 Save Draft</button>
+          </div>
+
             <!-- ══ SECTION 1: LANDLORD DETAILS ══ -->
-            <div>
+            <div id="ll-s1">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
                 <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);flex-shrink:0;">1</div>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--white);letter-spacing:-0.3px;">Landlord Details</span>
@@ -3373,10 +3528,22 @@ textarea.db-field-input { line-height:1.6; }
                   <input type="text" id="ll-name" placeholder="Full name" class="rf-input">
                 </div>
 
-                <!-- Father/Spouse Name -->
+                <!-- Father's Name -->
                 <div class="rf-field">
-                  <label class="rf-label">Father / Spouse Name <span class="rf-req">*</span></label>
-                  <input type="text" id="ll-father-name" placeholder="Father's or spouse's name" class="rf-input">
+                  <label class="rf-label">Father's Name <span style="font-size:10.5px;font-weight:400;color:rgba(255,255,255,0.35);margin-left:4px;">(Optional)</span></label>
+                  <input type="text" id="ll-father-name" placeholder="Father's full name" class="rf-input">
+                </div>
+
+                <!-- Spouse Name -->
+                <div class="rf-field">
+                  <label class="rf-label">Spouse Name <span style="font-size:10.5px;font-weight:400;color:rgba(255,255,255,0.35);margin-left:4px;">(Optional)</span></label>
+                  <input type="text" id="ll-spouse-name" placeholder="Spouse's full name (if married)" class="rf-input">
+                </div>
+
+                <!-- Date of Birth -->
+                <div class="rf-field">
+                  <label class="rf-label">Date of Birth <span class="rf-req">*</span></label>
+                  <input type="date" id="ll-dob" class="rf-input" style="color-scheme:dark;">
                 </div>
 
                 <!-- Gender -->
@@ -3392,32 +3559,21 @@ textarea.db-field-input { line-height:1.6; }
                   </div>
                 </div>
 
-                <!-- Religion -->
                 <div class="rf-field">
-                  <label class="rf-label">Religion <span class="rf-req">*</span></label>
-                  <div style="position:relative;">
-                    <select id="ll-religion" class="rf-select" style="padding-right:36px;">
-                      <option value="">-- Select --</option>
-                      <option>Hindu</option>
-                      <option>Muslim</option>
-                      <option>Sikh</option>
-                      <option>Christian</option>
-                      <option>Buddhism</option>
-                      <option>Jain</option>
-                      <option>Other</option>
-                    </select>
-                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
-                  </div>
-                </div>
-                <div class="rf-field">
-                  <label class="rf-label">Aadhar No. <span class="rf-req">*</span></label>
-                  <input type="text" id="ll-aadhar" placeholder="12-digit Aadhar number" maxlength="12" inputmode="numeric" pattern="[0-9]{12}" class="rf-input">
+                  <label class="rf-label-wrap"><span>Aadhaar No. <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Enter your 12-digit Aadhaar card number. This is used for identity verification and will not be publicly displayed.</span></span></label>
+                  <input type="text" id="ll-aadhar" placeholder="12-digit Aadhaar number" maxlength="12" inputmode="numeric" pattern="[0-9]{12}" class="rf-input">
                 </div>
 
                 <!-- Mobile No. -->
                 <div class="rf-field">
-                  <label class="rf-label">Mobile No. (WhatsApp) <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Mobile No. (WhatsApp) <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Enter the mobile number you actively use on WhatsApp. Prospective renters will contact you on this number after a match is confirmed.</span></span></label>
                   <input type="tel" id="ll-mobile" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric" class="rf-input">
+                </div>
+
+                <!-- Alternate Mobile -->
+                <div class="rf-field">
+                  <label class="rf-label">Alternate Mobile <span style="font-size:10.5px;font-weight:400;color:rgba(255,255,255,0.35);margin-left:4px;">(Optional)</span></label>
+                  <input type="tel" id="ll-mobile-alt" placeholder="Backup contact number" maxlength="10" inputmode="numeric" class="rf-input">
                 </div>
 
                 <!-- Email -->
@@ -3429,8 +3585,17 @@ textarea.db-field-input { line-height:1.6; }
                 <!-- Address (full width) -->
                 <div class="rf-field" style="grid-column:1/-1">
                   <label class="rf-label">Address <span class="rf-req">*</span></label>
-                  <input type="text" id="ll-address" placeholder="Full residential address" class="rf-input">
+                  <input type="text" id="ll-address" placeholder="House no., street, area, city" class="rf-input">
                 </div>
+
+                <!-- Pincode (personal) -->
+                <div class="rf-field">
+                  <label class="rf-label">Pincode <span class="rf-req">*</span></label>
+                  <input type="text" id="ll-pincode" placeholder="6-digit pincode" maxlength="6" inputmode="numeric" class="rf-input">
+                </div>
+
+                <!-- spacer to keep grid balanced -->
+                <div></div>
 
                 <!-- State (personal) -->
                 <div class="rf-field">
@@ -3455,10 +3620,38 @@ textarea.db-field-input { line-height:1.6; }
                   </div>
                 </div>
 
+                <!-- Background sub-group divider -->
+                <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:4px;">
+                  <div style="height:1px;flex:1;background:rgba(201,166,104,0.1);"></div>
+                  <span style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(201,166,104,0.45);">Background</span>
+                  <div style="height:1px;flex:1;background:rgba(201,166,104,0.1);"></div>
+                </div>
+
+                <!-- Religion -->
+                <div class="rf-field">
+                  <label class="rf-label">Religion <span class="rf-req">*</span></label>
+                  <div style="position:relative;">
+                    <select id="ll-religion" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>Hindu</option>
+                      <option>Muslim</option>
+                      <option>Sikh</option>
+                      <option>Christian</option>
+                      <option>Buddhist</option>
+                      <option>Jain</option>
+                      <option>Other</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
+
+                <!-- spacer -->
+                <div></div>
+
                 <!-- Upload Personal Photo (full width) -->
                 <div class="rf-field" style="grid-column:1/-1">
                   <label class="rf-label">Upload Personal Photo</label>
-                  <div style="font-size:11.5px;color:rgba(255,255,255,0.3);margin-bottom:8px;">Optional — passport-size photograph preferred</div>
+                  <div style="font-size:11.5px;color:rgba(255,255,255,0.3);margin-bottom:8px;">Optional — passport-size photograph preferred &middot; Max 1 MB &middot; JPEG or PNG</div>
                   <div class="rf-upload-box" onclick="document.getElementById('ll-photo').click()" style="cursor:pointer;">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(201,166,104,0.6)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     <span style="font-size:12.5px;color:rgba(255,255,255,0.4);margin-top:8px;">Click to upload photo</span>
@@ -3473,7 +3666,7 @@ textarea.db-field-input { line-height:1.6; }
             <div style="height:1px;background:rgba(201,166,104,0.12);"></div>
 
             <!-- ══ SECTION 2: PROPERTY DETAILS ══ -->
-            <div>
+            <div id="ll-s2">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
                 <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);flex-shrink:0;">2</div>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--white);letter-spacing:-0.3px;">Property Details</span>
@@ -3484,7 +3677,7 @@ textarea.db-field-input { line-height:1.6; }
                 <div class="rf-field">
                   <label class="rf-label">State <span class="rf-req">*</span></label>
                   <div style="position:relative;">
-                    <select id="ll-prop-state" class="rf-select" style="padding-right:36px;" onchange="populateDistrict(this,'ll-prop-district');llResetSubDistrict();">
+                    <select id="ll-prop-state" class="rf-select" style="padding-right:36px;" onchange="populateDistrict(this,'ll-prop-district');llResetSubDistrict();document.getElementById('ll-prop-address').placeholder='Locality / Street / Landmark (State & District already selected above)';">
                       <option value="">-- Select --</option>
                       <option>Andaman And Nicobar Islands</option><option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chandigarh</option><option>Chhattisgarh</option><option>Delhi</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jammu And Kashmir</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Ladakh</option><option>Lakshadweep</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Puducherry</option><option>Punjab</option><option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option><option>The Dadra And Nagar Haveli And Daman And Diu</option><option>Tripura</option><option>Uttarakhand</option><option>Uttar Pradesh</option><option>West Bengal</option>
                     </select>
@@ -3517,41 +3710,54 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Property Type -->
                 <div class="rf-field">
-                  <label class="rf-label">Property Type <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Property Type <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select the type of property you are listing. Choose the option that best describes the structure — e.g. "Flat in Apartment" for a multi-storey building, or "Independent House/Villa" for a standalone property.</span></span></label>
                   <div style="position:relative;">
                     <select id="ll-prop-type" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
-                      <option>Independent House/Villa</option>
-                      <option>Independent Builder Floor</option>
-                      <option>Flat in Apartment</option>
-                      <option>Flat in Society</option>
+                      <option>Studio / 1 RK</option>
+                      <option>Builder Floor (Independent)</option>
+                      <option>Flat / Apartment</option>
+                      <option>Duplex / Rowhouse</option>
+                      <option>Independent House / Villa</option>
+                      <option>Penthouse</option>
+                      <option>Farmhouse / Bungalow</option>
+                      <option>PG Accommodation</option>
+                      <option>Boys / Girls Hostel</option>
                       <option>Serviced Apartment</option>
-                      <option>Boys/Girls Hostel</option>
-                      <option>Commercial/Shop/Office</option>
-                      <option>Co-Working Space</option>
-                      <option>Duplex/Rowhouse</option>
+                      <option>Shop / Showroom</option>
+                      <option>Office Space</option>
+                      <option>Warehouse / Godown</option>
                       <option>Others</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
                 </div>
 
-                <!-- Detail Address (full width) -->
+                <!-- Property Address -->
                 <div class="rf-field" style="grid-column:1/-1">
-                  <label class="rf-label">Detail Address <span class="rf-req">*</span></label>
-                  <input type="text" id="ll-prop-address" placeholder="Full property address (building, street, area, landmark)" class="rf-input">
+                  <label class="rf-label-wrap"><span>Property Address <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Enter the street-level address of your property — building name, house/flat number, street, locality, and a nearby landmark. The State and District are already captured above, so no need to repeat them.</span></span></label>
+                  <input type="text" id="ll-prop-address" placeholder="Building / flat no., street, locality, landmark" class="rf-input">
                 </div>
+
+                <!-- Property Pincode -->
+                <div class="rf-field">
+                  <label class="rf-label">Property Pincode <span class="rf-req">*</span></label>
+                  <input type="text" id="ll-prop-pincode" placeholder="6-digit pincode" maxlength="6" inputmode="numeric" class="rf-input">
+                </div>
+
+                <!-- spacer -->
+                <div></div>
 
                 <!-- Available For -->
                 <div class="rf-field">
-                  <label class="rf-label">Available For <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Available For <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Specify who you are comfortable renting to. Select "No Restriction" if you are open to all types of tenants, or choose a specific preference like family size or student to filter your matches.</span></span></label>
                   <div style="position:relative;">
                     <select id="ll-available-for" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
                       <option>No Restriction</option>
                       <option>Single Male/Female</option>
-                      <option>For Any Family</option>
                       <option>Student</option>
+                      <option>For Any Family</option>
                       <option>Family of 2 members</option>
                       <option>Family of 3 members</option>
                       <option>Family of 4 members</option>
@@ -3564,7 +3770,7 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Furnishing -->
                 <div class="rf-field">
-                  <label class="rf-label">Furnishing Details <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Furnishing Details <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">"Fully Furnished" means appliances, furniture, and fittings are included. "Semi Furnished" includes basic fixtures like fans, geysers, and wardrobes. "Without Furnish" means the property is bare and unfurnished.</span></span></label>
                   <div style="position:relative;">
                     <select id="ll-furnishing" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
@@ -3578,31 +3784,80 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Availability -->
                 <div class="rf-field">
-                  <label class="rf-label">Availability <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Availability <span class="rf-req">*</span></span>
+                    <span class="rf-tip">i<span class="rf-tip-box">Select "Immediate" if the property is ready to move in now. Select "Future — Select Date" if it will be available on a future date, then pick that date from the calendar. Only dates within the next 3 months are selectable.</span></span>
+                  </label>
                   <div style="position:relative;">
-                    <select id="ll-availability" class="rf-select" style="padding-right:36px;">
+                    <select id="ll-availability" class="rf-select" style="padding-right:36px;" onchange="
+                      document.getElementById('ll-avail-date-wrap').style.display = this.value==='Future' ? 'block' : 'none';
+                      if(this.value!=='Future') document.getElementById('ll-avail-date').value='';
+                    ">
                       <option value="">-- Select --</option>
                       <option>Immediate</option>
-                      <option>Future</option>
+                      <option value="Future">Future — Select Date</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                  <div id="ll-avail-date-wrap" style="display:none;margin-top:10px;">
+                    <input type="date" id="ll-avail-date" class="rf-input" style="color-scheme:dark;"
+                      oninput="(function(el){
+                        var today=new Date(), max=new Date();
+                        max.setMonth(max.getMonth()+3);
+                        var v=new Date(el.value);
+                        if(v<today){el.value='';return;}
+                        if(v>max){el.value=max.toISOString().split('T')[0];}
+                      })(this)">
+                    <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:5px;">Available dates: today up to 3 months ahead</div>
                   </div>
                 </div>
 
                 <!-- Total Carpet Area -->
                 <div class="rf-field">
-                  <label class="rf-label">Total Carpet Area (sq ft) <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Total Carpet Area (sq ft) <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Carpet area is the actual usable floor area inside the property walls, excluding walls and common areas. Enter the approximate square footage as mentioned in your property documents.</span></span></label>
                   <input type="number" id="ll-carpet-area" placeholder="e.g. 850" min="1" class="rf-input">
+                </div>
+
+                <!-- BHK -->
+                <div class="rf-field">
+                  <label class="rf-label-wrap"><span>BHK <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select the number of bedrooms your property has. BHK = Bedroom, Hall, Kitchen. Select "Studio / 1 RK" for a single-room unit without a separate bedroom.</span></span></label>
+                  <div style="position:relative;">
+                    <select id="ll-bhk" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>Studio / 1 RK</option>
+                      <option>1 BHK</option>
+                      <option>2 BHK</option>
+                      <option>3 BHK</option>
+                      <option>4 BHK</option>
+                      <option>4+ BHK</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
+
+                <!-- Number of Bathrooms -->
+                <div class="rf-field">
+                  <label class="rf-label">No. of Bathrooms <span class="rf-req">*</span></label>
+                  <div style="position:relative;">
+                    <select id="ll-bathrooms" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>1</option>
+                      <option>2</option>
+                      <option>3</option>
+                      <option>4+</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
                 </div>
 
                 <!-- Lift Facility -->
                 <div class="rf-field">
-                  <label class="rf-label">Lift Facility <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Lift Facility <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select "N/A" if your property is a standalone house, on the ground floor, or in a building where a lift is not relevant. Select "Yes" or "No" for apartment buildings.</span></span></label>
                   <div style="position:relative;">
                     <select id="ll-lift" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
                       <option>Yes</option>
                       <option>No</option>
+                      <option>N/A</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
@@ -3610,7 +3865,7 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Rent Ask -->
                 <div class="rf-field">
-                  <label class="rf-label">Rent Ask (₹/month) <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Rent Ask (₹/month) <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Enter the monthly rent you expect. This amount will be visible to prospective renters browsing your listing. You can negotiate the final amount directly with the renter.</span></span></label>
                   <div style="position:relative;">
                     <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:rgba(201,166,104,0.7);font-weight:600;">₹</span>
                     <input type="number" id="ll-rent" placeholder="e.g. 15000" min="0" class="rf-input" style="padding-left:30px;">
@@ -3619,7 +3874,7 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Security Deposit -->
                 <div class="rf-field">
-                  <label class="rf-label">Security Deposit Amount (₹)</label>
+                  <label class="rf-label-wrap"><span>Security Deposit Amount (₹)</span><span class="rf-tip">i<span class="rf-tip-box">Security deposit is an upfront amount held by the landlord as security against damage or unpaid rent. It is refunded when the tenant vacates. Typically 1–3 months' rent. Leave blank if not applicable.</span></span></label>
                   <div style="position:relative;">
                     <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:rgba(201,166,104,0.7);font-weight:600;">₹</span>
                     <input type="number" id="ll-deposit" placeholder="e.g. 30000" min="0" class="rf-input" style="padding-left:30px;">
@@ -3628,7 +3883,7 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Monthly Maintenance -->
                 <div class="rf-field">
-                  <label class="rf-label">Monthly Maintenance Charges (₹)</label>
+                  <label class="rf-label-wrap"><span>Monthly Maintenance Charges (₹)</span><span class="rf-tip">i<span class="rf-tip-box">Enter any monthly maintenance or society charges the renter will be required to pay, separate from rent. Leave blank if maintenance is included in the rent or not applicable.</span></span></label>
                   <div style="position:relative;">
                     <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:rgba(201,166,104,0.7);font-weight:600;">₹</span>
                     <input type="number" id="ll-maintenance" placeholder="e.g. 1500" min="0" class="rf-input" style="padding-left:30px;">
@@ -3637,21 +3892,24 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Floor -->
                 <div class="rf-field">
-                  <label class="rf-label">Floor <span class="rf-req">*</span></label>
-                  <input type="number" id="ll-floor" placeholder="e.g. 0 for Ground, 1, 2…" min="0" class="rf-input">
-                  <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:5px;">Enter 0 for Ground Floor</div>
+                  <label class="rf-label-wrap"><span>Floor <span class="rf-req">*</span></span>
+                    <span class="rf-tip">i<span class="rf-tip-box">Enter the floor number your property is on. Type "G" for Ground Floor, or a number like 1, 2, 3, etc. for upper floors.</span></span>
+                  </label>
+                  <input type="text" id="ll-floor" placeholder="G for Ground, or 1, 2, 3…" class="rf-input"
+                    oninput="this.value=this.value.replace(/[^0-9Gg]/g,'').replace(/^([Gg].*)$/,function(m){return m[0].toUpperCase();})">
+                  <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:5px;">Enter G for Ground Floor, or a floor number</div>
                 </div>
 
                 <!-- Out of Total Floors -->
                 <div class="rf-field">
-                  <label class="rf-label">Out of Total Floors <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Out of Total Floors <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Enter the total number of floors in the building. For example, if your property is on the 3rd floor of a 6-storey building, enter 6 here.</span></span></label>
                   <input type="number" id="ll-total-floors" placeholder="e.g. 5" min="0" class="rf-input">
                   <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:5px;">Total number of floors in the building</div>
                 </div>
 
                 <!-- Parking Availability -->
                 <div class="rf-field">
-                  <label class="rf-label">Parking Availability <span class="rf-req">*</span></label>
+                  <label class="rf-label-wrap"><span>Parking Availability <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Specify what type of parking space, if any, is available with the property. Select "No" if there is no dedicated parking. This helps renters with vehicles find suitable properties.</span></span></label>
                   <div style="position:relative;">
                     <select id="ll-parking" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
@@ -3662,6 +3920,14 @@ textarea.db-field-input { line-height:1.6; }
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
+                </div>
+
+
+                <!-- Additional Notes (full width) -->
+                <div class="rf-field" style="grid-column:1/-1">
+                  <label class="rf-label">Property Description / Additional Notes</label>
+                  <textarea id="ll-description" rows="3" placeholder="Describe your property — any special features, rules, nearby amenities, or anything else a prospective renter should know…" class="rf-input" style="resize:vertical;min-height:90px;"></textarea>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:5px;">Optional — but a good description helps attract the right renter faster.</div>
                 </div>
 
                 <!-- Property Photos (full width) -->
@@ -3693,12 +3959,29 @@ textarea.db-field-input { line-height:1.6; }
             <div style="height:1px;background:rgba(201,166,104,0.12);"></div>
 
             <!-- ══ SECTION 3: OFFER CODE, UNDERTAKING & CAPTCHA ══ -->
-            <div>
+            <div id="ll-s3">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
                 <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);flex-shrink:0;">3</div>
                 <span style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--white);letter-spacing:-0.3px;">Offer &amp; Confirmation</span>
               </div>
               <div style="display:flex;flex-direction:column;gap:18px;">
+
+                <!-- How did you hear about us? -->
+                <div class="rf-field">
+                  <label class="rf-label">How did you hear about us? <span style="font-size:10.5px;font-weight:400;color:rgba(255,255,255,0.35);margin-left:4px;">(Optional)</span></label>
+                  <div style="position:relative;">
+                    <select id="ll-referral-source" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>Google / Web Search</option>
+                      <option>Facebook / Instagram</option>
+                      <option>Friend / Family Referral</option>
+                      <option>Pamphlet / Banner</option>
+                      <option>Word of Mouth</option>
+                      <option>Other</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
 
                 <!-- Offer Code -->
                 <div class="rf-field">
@@ -3746,7 +4029,7 @@ textarea.db-field-input { line-height:1.6; }
                   style="width:100%;padding:16px;background:var(--gold);color:var(--dark);border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:0.5px;transition:background 0.2s,transform 0.2s;margin-top:4px;"
                   onmouseover="this.style.background='#dfc08e';this.style.transform='translateY(-2px)'"
                   onmouseout="this.style.background='var(--gold)';this.style.transform='translateY(0)'">
-                  Submit Landlord Registration →
+                  Complete Registration →
                 </button>
 
                 <p style="font-size:11.5px;color:rgba(255,255,255,0.22);text-align:center;line-height:1.6;">By submitting you agree to RenterFinder.com's <a onclick="openLegalModal('terms')" style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Terms of Use</a>, <a onclick="openLegalModal('privacy')" style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Privacy Policy</a>, and <a onclick="openLegalModal('disclaimer')" style="color:rgba(255,255,255,0.5);text-decoration:underline;cursor:pointer;">Disclaimer</a>. Your information is kept secure and used only for matching purposes.</p>
@@ -4765,7 +5048,7 @@ textarea.db-field-input { line-height:1.6; }
               <div class="db-field-group"><label class="db-field-label">Spouse Working?</label><input class="db-field-input" id="db-rn-spouse" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Mobile (WhatsApp)</label><input class="db-field-input" id="db-rn-mobile" type="tel" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Email</label><input class="db-field-input" id="db-rn-email" type="email" placeholder="—" disabled></div>
-              <div class="db-field-group"><label class="db-field-label">Aadhar No.</label><input class="db-field-input" id="db-rn-aadhar" type="text" placeholder="—" disabled></div>
+              <div class="db-field-group"><label class="db-field-label">Aadhaar No.</label><input class="db-field-input" id="db-rn-aadhar" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Occupation</label><input class="db-field-input" id="db-rn-occupation" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Monthly Income</label><input class="db-field-input" id="db-rn-income" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Family Size</label><input class="db-field-input" id="db-rn-family-size" type="text" placeholder="—" disabled></div>
@@ -4798,7 +5081,7 @@ textarea.db-field-input { line-height:1.6; }
               <div class="db-field-group"><label class="db-field-label">Gender</label><input class="db-field-input" id="db-ll-gender" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Mobile (WhatsApp)</label><input class="db-field-input" id="db-ll-mobile" type="tel" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Email</label><input class="db-field-input" id="db-ll-email" type="email" placeholder="—" disabled></div>
-              <div class="db-field-group"><label class="db-field-label">Aadhar No.</label><input class="db-field-input" id="db-ll-aadhar" type="text" placeholder="—" disabled></div>
+              <div class="db-field-group"><label class="db-field-label">Aadhaar No.</label><input class="db-field-input" id="db-ll-aadhar" type="text" placeholder="—" disabled></div>
               <div class="db-field-group" style="grid-column:1/-1"><label class="db-field-label">Personal Address</label><input class="db-field-input" id="db-ll-address" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Personal State</label><input class="db-field-input" id="db-ll-personal-state" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Personal District</label><input class="db-field-input" id="db-ll-personal-district" type="text" placeholder="—" disabled></div>
@@ -5574,23 +5857,28 @@ function submitLandlordReg() {
   // --- Required field IDs and their display names ---
   const required = [
     { id:'ll-name',           label:'Name' },
-    { id:'ll-father-name',    label:'Father / Spouse Name' },
+    { id:'ll-dob',            label:'Date of Birth' },
     { id:'ll-gender',         label:'Gender' },
-    { id:'ll-aadhar',         label:'Aadhar No.' },
+    { id:'ll-religion',       label:'Religion' },
+    { id:'ll-aadhar',         label:'Aadhaar No.' },
     { id:'ll-mobile',         label:'Mobile No. (WhatsApp)' },
     { id:'ll-email',          label:'Email' },
     { id:'ll-address',        label:'Address' },
+    { id:'ll-pincode',        label:'Pincode (Personal)' },
     { id:'ll-personal-state', label:'State (Personal)' },
     { id:'ll-personal-district', label:'District (Personal)' },
     { id:'ll-prop-state',     label:'State (Property)' },
     { id:'ll-prop-district',  label:'District (Property)' },
     { id:'ll-prop-subdistrict', label:'Sub-District' },
     { id:'ll-prop-type',      label:'Property Type' },
-    { id:'ll-prop-address',   label:'Detail Address' },
+    { id:'ll-prop-address',   label:'Property Address' },
+    { id:'ll-prop-pincode',   label:'Property Pincode' },
     { id:'ll-available-for',  label:'Available For' },
     { id:'ll-furnishing',     label:'Furnishing Details' },
     { id:'ll-availability',   label:'Availability' },
     { id:'ll-carpet-area',    label:'Total Carpet Area' },
+    { id:'ll-bhk',            label:'BHK' },
+    { id:'ll-bathrooms',      label:'No. of Bathrooms' },
     { id:'ll-lift',           label:'Lift Facility' },
     { id:'ll-parking',        label:'Parking Availability' },
     { id:'ll-rent',           label:'Rent Ask' },
@@ -5607,16 +5895,26 @@ function submitLandlordReg() {
     }
   }
 
-  // Aadhar: 12 digits
+  // Aadhaar: 12 digits
   const aadhar = document.getElementById('ll-aadhar').value.trim();
   if (!/^\d{12}$/.test(aadhar)) {
-    alert('Aadhar number must be exactly 12 digits.'); return;
+    alert('Aadhaar number must be exactly 12 digits.'); return;
   }
 
   // Mobile: 10 digits starting with 6–9
   const mobile = document.getElementById('ll-mobile').value.trim();
   if (!/^[6-9]\d{9}$/.test(mobile)) {
     alert('Please enter a valid 10-digit WhatsApp mobile number (starting with 6, 7, 8, or 9).'); return;
+  }
+
+  // Pincode: 6 digits
+  const pincode = document.getElementById('ll-pincode').value.trim();
+  if (!/^\d{6}$/.test(pincode)) {
+    alert('Please enter a valid 6-digit pincode (personal address).'); return;
+  }
+  const propPincode = document.getElementById('ll-prop-pincode').value.trim();
+  if (!/^\d{6}$/.test(propPincode)) {
+    alert('Please enter a valid 6-digit pincode (property address).'); return;
   }
 
   // Email format
@@ -5655,24 +5953,30 @@ function submitRenterReg() {
   // --- Required field IDs and display names ---
   const required = [
     { id:'rn-name',              label:'Name' },
-    { id:'rn-marital-status',    label:'Married?' },
+    { id:'rn-dob',               label:'Date of Birth' },
+    { id:'rn-marital-status',    label:'Marital Status' },
     { id:'rn-gender',            label:'Gender' },
-    { id:'rn-aadhar',            label:'Aadhar No.' },
+    { id:'rn-aadhar',            label:'Aadhaar No.' },
     { id:'rn-mobile',            label:'Mobile No. (WhatsApp)' },
     { id:'rn-email',             label:'Email' },
-    { id:'rn-family-size',       label:'Family Size' },
-    { id:'rn-religion',          label:'Religion' },
+    { id:'rn-occupation',        label:'Occupation' },
     { id:'rn-native-state',      label:'Native State' },
     { id:'renter-native-district', label:'Native District' },
+    { id:'rn-religion',          label:'Religion' },
     { id:'rn-category',          label:'Category' },
+    { id:'rn-parking',           label:'Parking Requirement' },
     { id:'rn-address',           label:'Present Address' },
     { id:'rn-present-state',     label:'Present State' },
     { id:'renter-present-district', label:'Present District' },
-    { id:'rn-occupation',        label:'Occupation' },
+    { id:'rn-pincode',           label:'Pincode (Present Address)' },
+    { id:'rn-family-size',       label:'Family Size' },
     { id:'rn-pref-state',        label:'Preferred State' },
     { id:'renter-pref-district', label:'Preferred District' },
+    { id:'rn-prop-type',         label:'Preferred Property Type' },
     { id:'rn-size',              label:'Size' },
     { id:'rn-bhk',               label:'BHK' },
+    { id:'rn-movein-date',       label:'Move-in Date' },
+    { id:'rn-duration',          label:'Duration of Stay' },
   ];
 
   // Conditionally require spouse fields when married
@@ -5698,16 +6002,22 @@ function submitRenterReg() {
     }
   }
 
-  // Aadhar: exactly 12 digits
+  // Aadhaar: exactly 12 digits
   const aadhar = document.getElementById('rn-aadhar').value.trim();
   if (!/^\d{12}$/.test(aadhar)) {
-    alert('Aadhar number must be exactly 12 digits.'); return;
+    alert('Aadhaar number must be exactly 12 digits.'); return;
   }
 
   // Mobile: 10 digits starting with 6–9
   const mobile = document.getElementById('rn-mobile').value.trim();
   if (!/^[6-9]\d{9}$/.test(mobile)) {
     alert('Please enter a valid 10-digit WhatsApp mobile number (starting with 6, 7, 8, or 9).'); return;
+  }
+
+  // Pincode: 6 digits
+  const pincode = document.getElementById('rn-pincode').value.trim();
+  if (!/^\d{6}$/.test(pincode)) {
+    alert('Please enter a valid 6-digit pincode for your present address.'); return;
   }
 
   // Email format
@@ -5747,6 +6057,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initPromiseCarousel();
   window.addEventListener('resize', initValuesCarousel);
   window.addEventListener('resize', initPromiseCarousel);
+
+  // Set date constraints for availability date picker (today → +3 months)
+  const availDate = document.getElementById('ll-avail-date');
+  if (availDate) {
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    availDate.min = today.toISOString().split('T')[0];
+    availDate.max = maxDate.toISOString().split('T')[0];
+  }
 
   // Feat scroll: start animation only when in viewport
   const featOuter = document.getElementById('feat-scroll-mobile');
@@ -5876,6 +6196,114 @@ function dbSaveProfile() {
   // [BACKEND: show success toast here after API confirms save]
   alert('Profile changes saved! (Backend integration pending)');
 }
+
+// ── FORM PROGRESS (field-completion based) ──
+var _rnProgressFields = [
+  'rn-name','rn-dob','rn-marital-status','rn-gender','rn-aadhar','rn-mobile','rn-email',
+  'rn-occupation','rn-income','rn-native-state','renter-native-district','rn-religion',
+  'rn-category','rn-parking','rn-address','rn-present-state','renter-present-district','rn-pincode',
+  'rn-family-size','rn-pref-state','renter-pref-district','rn-prop-type',
+  'rn-size','rn-bhk','rn-rent-range','rn-movein-date','rn-duration'
+];
+var _llProgressFields = [
+  'll-name','ll-father-name','ll-dob','ll-gender','ll-religion','ll-aadhar','ll-mobile','ll-email',
+  'll-address','ll-pincode','ll-personal-state','ll-personal-district',
+  'll-prop-state','ll-prop-district','ll-prop-subdistrict','ll-prop-type',
+  'll-prop-address','ll-prop-pincode','ll-available-for','ll-furnishing','ll-availability',
+  'll-carpet-area','ll-bhk','ll-bathrooms','ll-lift','ll-parking',
+  'll-rent','ll-floor','ll-total-floors'
+];
+
+function _calcProgress(fields) {
+  var filled = 0;
+  fields.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.value && el.value.trim() !== '') filled++;
+  });
+  return Math.round((filled / fields.length) * 100);
+}
+
+function _updateProgress(formKey) {
+  var fields = formKey === 'renter' ? _rnProgressFields : _llProgressFields;
+  var barId  = formKey === 'renter' ? 'rn-progress-bar' : 'll-progress-bar';
+  var lblId  = formKey === 'renter' ? 'rn-progress-label' : 'll-progress-label';
+  var pct = _calcProgress(fields);
+  var bar = document.getElementById(barId);
+  var lbl = document.getElementById(lblId);
+  if (bar) bar.style.width = pct + '%';
+  if (lbl) lbl.textContent = pct + '%';
+}
+
+function _attachProgressListeners(formKey) {
+  var fields = formKey === 'renter' ? _rnProgressFields : _llProgressFields;
+  fields.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var evt = (el.tagName === 'SELECT' || el.type === 'checkbox' || el.type === 'date') ? 'change' : 'input';
+    el.addEventListener(evt, function() { _updateProgress(formKey); });
+  });
+  // Also update when hidden rn-family-size changes (commercial toggle writes it)
+  if (formKey === 'renter') {
+    var fsHidden = document.getElementById('rn-family-size');
+    if (fsHidden) {
+      var origSet = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+      // Use MutationObserver as a reliable fallback for hidden input value changes
+      var mo = new MutationObserver(function() { _updateProgress('renter'); });
+      mo.observe(fsHidden, { attributes: true, attributeFilter: ['value'] });
+    }
+  }
+}
+
+// ── SAVE DRAFT ──
+function saveDraft(formKey) {
+  var fields = formKey === 'renter' ? _rnProgressFields : _llProgressFields;
+  var extra  = formKey === 'renter'
+    ? ['rn-mobile-alt','rn-caste','rn-office','rn-other-details','rn-pref-locality','rn-pref-subdistrict','rn-referral-source','rn-offer-code','rn-pref-floor']
+    : ['ll-mobile-alt','ll-description','ll-deposit','ll-maintenance','ll-referral-source','ll-offer-code'];
+  var draft = {};
+  fields.concat(extra).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) draft[id] = el.value || '';
+  });
+  try {
+    sessionStorage.setItem('rf_draft_' + formKey, JSON.stringify(draft));
+    var btn = event && event.target;
+    if (btn) {
+      var orig = btn.textContent;
+      btn.textContent = '✓ Saved';
+      btn.style.color = 'var(--gold)';
+      btn.style.borderColor = 'var(--gold)';
+      setTimeout(function() {
+        btn.textContent = orig;
+        btn.style.color = 'rgba(201,166,104,0.75)';
+        btn.style.borderColor = 'rgba(201,166,104,0.35)';
+      }, 1800);
+    }
+  } catch(e) {
+    alert('Could not save draft. Storage may be unavailable in this browser.');
+  }
+}
+
+function _restoreDraft(formKey) {
+  try {
+    var raw = sessionStorage.getItem('rf_draft_' + formKey);
+    if (!raw) return;
+    var draft = JSON.parse(raw);
+    Object.keys(draft).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && draft[id]) { el.value = draft[id]; }
+    });
+    _updateProgress(formKey);
+  } catch(e) {}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  _attachProgressListeners('renter');
+  _attachProgressListeners('landlord');
+  _restoreDraft('renter');
+  _restoreDraft('landlord');
+});
+
 </script>
 <!-- ── LEGAL MODAL (registration form legal links) ── -->
 <div id="legal-modal-overlay">
