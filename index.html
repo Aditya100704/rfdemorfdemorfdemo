@@ -647,10 +647,10 @@ nav.scrolled { box-shadow: 0 4px 24px rgba(4,4,41,0.1); }
 
 /* Home — CTA Banner */
 .home-cta {
-  margin: 0 60px 0;
+  margin: 0 60px 80px;
   background: var(--dark); border-radius: 14px;
-  padding: 64px 72px;
-  display: flex; align-items: center; justify-content: space-between; gap: 40px;
+  padding: 56px 72px 40px;
+  display: flex; flex-direction: column; gap: 0;
   position: relative; overflow: hidden;
   border: 1px solid rgba(201,166,104,0.15);
 }
@@ -659,7 +659,11 @@ nav.scrolled { box-shadow: 0 4px 24px rgba(4,4,41,0.1); }
   width: 320px; height: 320px; border-radius: 50%;
   background: radial-gradient(circle, rgba(201,166,104,0.1) 0%, transparent 70%);
 }
-.home-cta-text { position: relative; z-index: 2; }
+.home-cta-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 40px; position: relative; z-index: 2;
+}
+.home-cta-text { flex: 1; min-width: 0; }
 .home-cta-text h2 {
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(28px, 2.8vw, 42px); font-weight: 700;
@@ -667,7 +671,17 @@ nav.scrolled { box-shadow: 0 4px 24px rgba(4,4,41,0.1); }
 }
 .home-cta-text h2 em { font-style: italic; color: var(--gold); }
 .home-cta-text p { font-size: 14px; color: rgba(255,255,255,0.45); max-width: 380px; line-height: 1.6; }
-.home-cta-btns { display: flex; gap: 12px; flex-shrink: 0; position: relative; z-index: 2; }
+.home-cta-right { display: flex; flex-shrink: 0; }
+.home-cta-btns { display: flex; gap: 12px; }
+.home-cta-art-line {
+  width: 100%;
+  text-align: center;
+  padding-top: 32px;
+  margin-top: 32px;
+  border-top: 1px solid rgba(201,166,104,0.12);
+  opacity: 0.75;
+  position: relative; z-index: 2;
+}
 
 /* ══════════════════════════════════════════
    PAGE 2 — ABOUT US
@@ -1186,7 +1200,7 @@ footer {
    REGISTRATION FORM COMPONENTS
 ══════════════════════════════════════════ */
 .rf-field { display:flex; flex-direction:column; gap:6px; }
-.rf-label { font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:rgba(255,255,255,0.5); }
+.rf-label { font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:rgba(255,255,255,0.82); }
 .rf-req { color:var(--gold); }
 .rf-input, .rf-select {
   background: rgba(255,255,255,0.05);
@@ -1493,11 +1507,10 @@ textarea.db-field-input { line-height:1.6; }
   .value-card { flex: 0 0 78vw; max-width: 300px; scroll-snap-align: start; }
 
   .renters-section { padding:64px 24px; }
-  .home-cta { margin:0 20px 64px; padding:40px 24px; flex-direction:column; align-items:center; text-align:center; }
+  .home-cta { margin:0 20px 64px; padding:32px 24px 28px; }
+  .home-cta-row { flex-direction:column; align-items:center; text-align:center; gap:20px; }
   .home-cta-btns { flex-direction:column; width:100%; }
   .home-cta-btns button,.home-cta-btns .btn-gold,.home-cta-btns .btn-outline-light { width:100%; text-align:center; }
-  .home-cta-art-line { display:block !important; }
-  .home-standalone-art-line { display:none !important; }
   .hero-btns { flex-direction:column; margin-top:24px; gap:16px; width:100%; }
   .hero-btns button { width:100%; text-align:center; padding:16px 24px; font-size:14px; }
   .hero-tagline { margin-bottom:28px; }
@@ -1587,6 +1600,218 @@ textarea.db-field-input { line-height:1.6; }
   .wn-qs-num { font-size:22px; }
 }
 /* ══ HOME PROPERTY LISTINGS SECTION ══ */
+/* ── TESTIMONIALS ── */
+.testi-section {
+  padding: 56px 60px 56px;
+  background: var(--dark);
+  margin-bottom: 72px;
+}
+.testi-inner { max-width: 1280px; margin: 0 auto; }
+.testi-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+/* Override section-title colour inside navy section */
+.testi-section .section-title { color: var(--white); }
+.testi-section .section-title em { color: var(--gold); }
+.testi-section p { color: rgba(255,255,255,0.55) !important; }
+.testi-nav-btns {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  padding-bottom: 4px;
+}
+.testi-nav-btn {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201,166,104,0.4);
+  background: transparent;
+  color: var(--gold);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  line-height: 1;
+}
+.testi-nav-btn:hover {
+  background: var(--gold);
+  color: var(--dark);
+  border-color: var(--gold);
+  transform: scale(1.08);
+}
+.testi-track-wrap {
+  overflow: hidden;
+  position: relative;
+}
+.testi-side-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(201,166,104,0.45);
+  background: rgba(4,4,41,0.72);
+  backdrop-filter: blur(8px);
+  color: var(--gold);
+  font-size: 17px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s, opacity 0.2s;
+  line-height: 1;
+  opacity: 0.7;
+}
+.testi-side-btn:hover {
+  background: var(--gold);
+  color: var(--dark);
+  border-color: var(--gold);
+  opacity: 1;
+  transform: translateY(-50%) scale(1.1);
+}
+.testi-side-prev { left: 10px; }
+.testi-side-next { right: 10px; }
+.testi-track {
+  display: flex;
+  gap: 24px;
+  transition: transform 0.48s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+.testi-card {
+  flex: 0 0 calc(25% - 18px);
+  min-width: 0;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(201,166,104,0.2);
+  border-radius: 14px;
+  padding: 24px 22px 20px;
+  position: relative;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.25);
+  transition: box-shadow 0.25s, transform 0.25s, background 0.25s;
+  cursor: default;
+}
+.testi-card:hover {
+  background: rgba(255,255,255,0.08);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.35);
+  transform: translateY(-3px);
+}
+.testi-quote-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 56px;
+  line-height: 0.6;
+  color: var(--gold);
+  opacity: 0.35;
+  margin-bottom: 12px;
+  font-weight: 700;
+  user-select: none;
+}
+.testi-text {
+  font-size: 13.5px;
+  line-height: 1.68;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 14px;
+  min-height: 72px;
+}
+.testi-stars {
+  color: var(--gold);
+  font-size: 13px;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+.testi-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(201,166,104,0.18);
+}
+.testi-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  font-family: 'Cormorant Garamond', serif;
+  letter-spacing: 0;
+}
+.testi-meta {
+  flex: 1;
+  min-width: 0;
+}
+.testi-meta strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.testi-meta span {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+.testi-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+.testi-badge-landlord {
+  background: rgba(201,166,104,0.15);
+  color: var(--gold-lt);
+  border: 1px solid rgba(201,166,104,0.35);
+}
+.testi-badge-renter {
+  background: rgba(80,180,130,0.12);
+  color: #6ed4a8;
+  border: 1px solid rgba(80,180,130,0.25);
+}
+.testi-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 28px;
+}
+.testi-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(201,166,104,0.25);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  padding: 0;
+}
+.testi-dot.active {
+  background: var(--gold);
+  transform: scale(1.3);
+}
+
+/* Testimonials — responsive */
+@media (max-width: 1439px) and (min-width: 999px) {
+  .testi-card { flex: 0 0 calc(33.333% - 16px); }
+}
+@media (max-width: 998px) and (min-width: 601px) {
+  .testi-card { flex: 0 0 calc(50% - 12px); }
+}
+@media (max-width: 700px) {
+  .testi-section { padding: 40px 0 40px; margin-bottom: 48px; }
+  .testi-inner { padding: 0 24px; }
+  .testi-track-wrap { margin: 0 -24px; padding: 0 24px; overflow-x: visible; }
+  .testi-card { flex: 0 0 calc(100vw - 64px); }
+  .testi-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .testi-nav-btns { align-self: flex-end; }
+}
+
 .home-props-section { padding: 0 60px 100px; background: var(--offwhite); }
 .home-props-inner { max-width: 1200px; margin: 0 auto; }
 .home-props-header {
@@ -2166,22 +2391,142 @@ textarea.db-field-input { line-height:1.6; }
     </div>
   </section>
 
+  <!-- ══ TESTIMONIALS ══ -->
+  <section class="testi-section">
+    <div class="testi-inner">
+      <div class="testi-header reveal">
+        <div>
+          <span class="section-label">What People Say</span>
+          <h2 class="section-title" style="margin-bottom:10px;">Real Stories from <em>Real People</em></h2>
+          <p style="font-size:15px;color:var(--mid);line-height:1.65;max-width:480px;">Landlords and renters across India found their perfect match — here's what they had to say.</p>
+        </div>
+        <div class="testi-nav-btns">
+          <button class="testi-nav-btn" id="testi-prev" aria-label="Previous testimonials" onclick="testiScroll(-1)">&#8592;</button>
+          <button class="testi-nav-btn" id="testi-next" aria-label="Next testimonials" onclick="testiScroll(1)">&#8594;</button>
+        </div>
+      </div>
+
+      <div class="testi-track-wrap">
+        <button class="testi-side-btn testi-side-prev" aria-label="Previous" onclick="testiScroll(-1)">&#8592;</button>
+        <button class="testi-side-btn testi-side-next" aria-label="Next" onclick="testiScroll(1)">&#8594;</button>
+        <div class="testi-track" id="testi-track">
+
+          <!-- Card 1 -->
+          <div class="testi-card reveal">
+            <div class="testi-quote-mark">"</div>
+            <p class="testi-text">Found a perfect 2BHK tenant within 10 days of listing. The renter profiles are detailed and verified — no time-wasters, just genuine families.</p>
+            <div class="testi-stars">★★★★★</div>
+            <div class="testi-person">
+              <div class="testi-avatar" style="background:linear-gradient(135deg,#c9a668,#8c6830);">R</div>
+              <div class="testi-meta">
+                <strong>Rajesh Khanna</strong>
+                <span>Landlord · South Delhi</span>
+              </div>
+              <div class="testi-badge testi-badge-landlord">Landlord</div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="testi-card reveal">
+            <div class="testi-quote-mark">"</div>
+            <p class="testi-text">As a renter, I uploaded my profile and got three calls from landlords in the first week. No broker fees, no middle-man — direct contact only.</p>
+            <div class="testi-stars">★★★★★</div>
+            <div class="testi-person">
+              <div class="testi-avatar" style="background:linear-gradient(135deg,#7ab8a0,#3a7055);">P</div>
+              <div class="testi-meta">
+                <strong>Priya Nair</strong>
+                <span>Renter · Koramangala, Bangalore</span>
+              </div>
+              <div class="testi-badge testi-badge-renter">Renter</div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="testi-card reveal">
+            <div class="testi-quote-mark">"</div>
+            <p class="testi-text">I was sceptical at first, but the platform is genuinely India-focused. Found a reliable working professional for my flat in Powai within 2 weeks.</p>
+            <div class="testi-stars">★★★★★</div>
+            <div class="testi-person">
+              <div class="testi-avatar" style="background:linear-gradient(135deg,#a898d8,#6040a0);">A</div>
+              <div class="testi-meta">
+                <strong>Anjali Desai</strong>
+                <span>Landlord · Powai, Mumbai</span>
+              </div>
+              <div class="testi-badge testi-badge-landlord">Landlord</div>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="testi-card reveal">
+            <div class="testi-quote-mark">"</div>
+            <p class="testi-text">The platform matched me with a landlord who accepted my pet — something impossible on other sites. Moved into my dream apartment in Banjara Hills!</p>
+            <div class="testi-stars">★★★★★</div>
+            <div class="testi-person">
+              <div class="testi-avatar" style="background:linear-gradient(135deg,#f0b87a,#c07020);">S</div>
+              <div class="testi-meta">
+                <strong>Suresh Menon</strong>
+                <span>Renter · Banjara Hills, Hyderabad</span>
+              </div>
+              <div class="testi-badge testi-badge-renter">Renter</div>
+            </div>
+          </div>
+
+          <!-- Card 5 -->
+          <div class="testi-card reveal">
+            <div class="testi-quote-mark">"</div>
+            <p class="testi-text">Excellent experience. Hinjewadi has many options but finding a trust-worthy family tenant was always hard. RenterFinder solved that in days.</p>
+            <div class="testi-stars">★★★★★</div>
+            <div class="testi-person">
+              <div class="testi-avatar" style="background:linear-gradient(135deg,#88c0a8,#306048);">M</div>
+              <div class="testi-meta">
+                <strong>Meera Joshi</strong>
+                <span>Landlord · Hinjewadi, Pune</span>
+              </div>
+              <div class="testi-badge testi-badge-landlord">Landlord</div>
+            </div>
+          </div>
+
+          <!-- Card 6 -->
+          <div class="testi-card reveal">
+            <div class="testi-quote-mark">"</div>
+            <p class="testi-text">Shifted cities for work and needed a place fast. Posted my renter profile Monday, signed a lease by Friday. The landlord called me directly — zero hassle.</p>
+            <div class="testi-stars">★★★★★</div>
+            <div class="testi-person">
+              <div class="testi-avatar" style="background:linear-gradient(135deg,#d08888,#a03030);">V</div>
+              <div class="testi-meta">
+                <strong>Vikram Rao</strong>
+                <span>Renter · Whitefield, Bangalore</span>
+              </div>
+              <div class="testi-badge testi-badge-renter">Renter</div>
+            </div>
+          </div>
+
+        </div><!-- /testi-track -->
+      </div><!-- /testi-track-wrap -->
+
+      <!-- Dot indicators -->
+      <div class="testi-dots" id="testi-dots"></div>
+
+    </div>
+  </section>
+
   <!-- CTA -->
   <div class="home-cta reveal">
-    <div class="home-cta-text">
-      <h2>Ready to find your<br><em>perfect match?</em></h2>
-      <p>Join thousands of renters and landlords who found their ideal match through RenterFinder.com — India's only property rental-exclusive platform.</p>
+    <div class="home-cta-row">
+      <div class="home-cta-text">
+        <h2>Ready to find your<br><em>perfect match?</em></h2>
+        <p>Join thousands of renters and landlords who found their ideal match through RenterFinder.com — India's only property rental-exclusive platform.</p>
+      </div>
+      <div class="home-cta-right">
+        <div class="home-cta-btns">
+          <button class="btn-gold" style="min-width:160px;text-align:center;" onclick="navigate('login')">Get Started</button>
+          <button class="btn-outline-light" style="min-width:160px;text-align:center;" onclick="navigate('services')">Learn More</button>
+        </div>
+      </div>
     </div>
-    <div class="home-cta-btns">
-      <button class="btn-gold" style="min-width:160px;text-align:center;" onclick="navigate('login')">Get Started</button>
-      <button class="btn-outline-light" style="min-width:160px;text-align:center;" onclick="navigate('services')">Learn More</button>
-    </div>
-    <div class="home-cta-art-line" style="display:none;width:100%;text-align:center;padding-top:8px;">
+    <div class="home-cta-art-line">
       <em style="font-family:'Pinyon Script',cursive;font-size:22px;font-weight:700;color:var(--gold);letter-spacing:0.5px;">Finding a good renter is an art...</em>
     </div>
-  </div>
-  <div class="home-standalone-art-line" style="text-align:center;padding:50px 0;">
-    <em style="font-family:'Pinyon Script',cursive;font-size:24px;font-weight:700;color:var(--gold);letter-spacing:0.5px;">Finding a good renter is an art...</em>
   </div>
 
   <div id="home-footer"></div>
@@ -2987,6 +3332,9 @@ textarea.db-field-input { line-height:1.6; }
                   <div style="height:1px;flex:1;background:rgba(201,166,104,0.1);"></div>
                 </div>
 
+                <!-- spacer after divider -->
+                <div style="grid-column:1/-1;height:8px;"></div>
+
                 <!-- Native State -->
                 <div class="rf-field">
                   <label class="rf-label-wrap"><span>Native State <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select the state you originally belong to or were born in. This is different from your current address and helps landlords understand your background.</span></span></label>
@@ -3030,7 +3378,7 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Category -->
                 <div class="rf-field">
-                  <label class="rf-label-wrap"><span>Category <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select your social category as per government classification. This is collected for record-keeping purposes only and is not used for discrimination in tenant matching.</span></span></label>
+                  <label class="rf-label-wrap"><span>Category <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select your social category as per government classification. This is collected for statistical and record-keeping purposes only.</span></span></label>
                   <div style="position:relative;">
                     <select id="rn-category" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
@@ -3080,12 +3428,14 @@ textarea.db-field-input { line-height:1.6; }
                       <option>Central Government</option>
                       <option>State Government</option>
                       <option>Bank</option>
+                      <option>Defence / Armed Forces</option>
+                      <option>PSU / Public Sector Undertaking</option>
                       <option>Private Sector (Salaried)</option>
-                      <option>Self-Employed / Business</option>
-                      <option>Doctor / Healthcare</option>
+                      <option>IT / Software Professional</option>
+                      <option>Doctor / Healthcare Professional</option>
                       <option>Teacher / Academician</option>
-                      <option>Engineer / IT Professional</option>
                       <option>Lawyer / Legal Professional</option>
+                      <option>Self-Employed / Business Owner</option>
                       <option>Student</option>
                       <option>Retired</option>
                       <option>Others</option>
@@ -3120,7 +3470,8 @@ textarea.db-field-input { line-height:1.6; }
                 <!-- Upload Personal Photo (full width) -->
                 <div class="rf-field" style="grid-column:1/-1">
                   <label class="rf-label">Upload Personal Photo</label>
-                  <div style="font-size:11.5px;color:rgba(255,255,255,0.3);margin-bottom:8px;">Optional — passport-size photograph preferred</div>
+                  <div style="font-size:11.5px;color:rgba(255,255,255,0.3);margin-bottom:2px;">Optional — passport-size photograph preferred (selfies are also accepted)</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.22);margin-bottom:8px;">Max 1 MB &middot; JPG / JPEG only</div>
                   <div class="rf-upload-box" onclick="document.getElementById('renter-photo').click()" style="cursor:pointer;">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(201,166,104,0.6)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     <span style="font-size:12.5px;color:rgba(255,255,255,0.4);margin-top:8px;">Click to upload photo</span>
@@ -3195,16 +3546,7 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Commercial Property Toggle -->
                 <div class="rf-field" style="grid-column:1/-1">
-                  <div style="display:flex;align-items:center;gap:14px;background:rgba(201,166,104,0.07);border:1.5px solid rgba(201,166,104,0.2);border-radius:8px;padding:14px 18px;cursor:pointer;" onclick="
-                    var isOn = this.classList.toggle('comm-active');
-                    this.style.background = isOn ? 'rgba(201,166,104,0.18)' : 'rgba(201,166,104,0.07)';
-                    this.style.borderColor = isOn ? 'var(--gold)' : 'rgba(201,166,104,0.2)';
-                    document.getElementById('rn-comm-indicator').style.background = isOn ? 'var(--gold)' : 'rgba(255,255,255,0.15)';
-                    document.getElementById('rn-comm-indicator').textContent = isOn ? '✓' : '';
-                    document.getElementById('rn-comm-indicator').style.color = isOn ? 'var(--dark)' : 'transparent';
-                    document.getElementById('rn-family-block').style.display = isOn ? 'none' : 'contents';
-                    document.getElementById('rn-family-size').value = isOn ? 'Commercial Property' : '';
-                  ">
+                  <div style="display:flex;align-items:center;gap:14px;background:rgba(201,166,104,0.07);border:1.5px solid rgba(201,166,104,0.2);border-radius:8px;padding:14px 18px;cursor:pointer;" onclick="toggleCommercial(this)">
                     <div id="rn-comm-indicator" style="width:22px;height:22px;border-radius:5px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(201,166,104,0.35);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:transparent;flex-shrink:0;transition:all 0.2s;"></div>
                     <div>
                       <div style="font-size:13.5px;font-weight:700;color:var(--white);">Looking for Commercial Property</div>
@@ -3310,8 +3652,6 @@ textarea.db-field-input { line-height:1.6; }
                       <option>PG Accommodation</option>
                       <option>Boys / Girls Hostel</option>
                       <option>Serviced Apartment</option>
-                      <option>Shop / Showroom</option>
-                      <option>Office Space</option>
                       <option>Others</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
@@ -3374,7 +3714,7 @@ textarea.db-field-input { line-height:1.6; }
                 <!-- Move-in Date -->
                 <div class="rf-field">
                   <label class="rf-label-wrap"><span>Move-in Date <span class="rf-req">*</span></span><span class="rf-tip">i<span class="rf-tip-box">Select the date from which you need the property. This is matched against the landlord's availability date to find suitable listings.</span></span></label>
-                  <input type="date" id="rn-movein-date" class="rf-input" style="color-scheme:dark;">
+                  <input type="date" id="rn-movein-date" class="rf-input" style="color-scheme:dark;" oninput="">
                   <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:5px;">When do you need to move in?</div>
                 </div>
 
@@ -3384,10 +3724,9 @@ textarea.db-field-input { line-height:1.6; }
                   <div style="position:relative;">
                     <select id="rn-duration" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
-                      <option>Up to 6 months</option>
-                      <option>6 months – 1 year</option>
-                      <option>1 – 2 years</option>
-                      <option>2+ years / Long-term</option>
+                      <option>Upto 11 months</option>
+                      <option>12 – 36 months</option>
+                      <option>3yr+ (Long-term stay)</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
@@ -3651,7 +3990,8 @@ textarea.db-field-input { line-height:1.6; }
                 <!-- Upload Personal Photo (full width) -->
                 <div class="rf-field" style="grid-column:1/-1">
                   <label class="rf-label">Upload Personal Photo</label>
-                  <div style="font-size:11.5px;color:rgba(255,255,255,0.3);margin-bottom:8px;">Optional — passport-size photograph preferred &middot; Max 1 MB &middot; JPEG or PNG</div>
+                  <div style="font-size:11.5px;color:rgba(255,255,255,0.3);margin-bottom:2px;">Optional — passport-size photograph preferred (selfies are also accepted)</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.22);margin-bottom:8px;">Max 1 MB &middot; JPG / JPEG only</div>
                   <div class="rf-upload-box" onclick="document.getElementById('ll-photo').click()" style="cursor:pointer;">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(201,166,104,0.6)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     <span style="font-size:12.5px;color:rgba(255,255,255,0.4);margin-top:8px;">Click to upload photo</span>
@@ -5364,6 +5704,93 @@ window.addEventListener('scroll', () => {
 });
 
 // ── HAMBURGER ──
+// ── TESTIMONIALS CAROUSEL ──
+(function(){
+  var track, cards, dotsWrap, current = 0, total, perPage, autoTimer;
+
+  function getPerPage() {
+    var w = window.innerWidth;
+    if (w <= 700)  return 1;
+    if (w <= 998)  return 2;
+    if (w <= 1439) return 3;
+    return 4;
+  }
+
+  function initTesti() {
+    track    = document.getElementById('testi-track');
+    dotsWrap = document.getElementById('testi-dots');
+    if (!track) return;
+    cards    = track.querySelectorAll('.testi-card');
+    total    = cards.length;
+    perPage  = getPerPage();
+    var pages = Math.ceil(total / perPage);
+    // Build dots
+    dotsWrap.innerHTML = '';
+    for (var i = 0; i < pages; i++) {
+      var d = document.createElement('button');
+      d.className = 'testi-dot' + (i === 0 ? ' active' : '');
+      d.setAttribute('aria-label', 'Page ' + (i+1));
+      d.dataset.idx = i;
+      d.onclick = function(){ goTo(parseInt(this.dataset.idx)); };
+      dotsWrap.appendChild(d);
+    }
+    goTo(0);
+    startAuto();
+  }
+
+  function goTo(idx) {
+    perPage = getPerPage();
+    var pages = Math.ceil(total / perPage);
+    current = Math.max(0, Math.min(idx, pages - 1));
+    var cardW = cards[0].offsetWidth + 24; // card width + gap
+    track.style.transform = 'translateX(-' + (current * perPage * cardW) + 'px)';
+    // Dots
+    var dots = dotsWrap.querySelectorAll('.testi-dot');
+    dots.forEach(function(d, i){ d.classList.toggle('active', i === current); });
+  }
+
+  window.testiScroll = function(dir) {
+    perPage = getPerPage();
+    var pages = Math.ceil(total / perPage);
+    goTo((current + dir + pages) % pages);
+    resetAuto();
+  };
+
+  function startAuto() {
+    clearInterval(autoTimer);
+    autoTimer = setInterval(function(){ window.testiScroll(1); }, 5000);
+  }
+  function resetAuto() {
+    clearInterval(autoTimer);
+    startAuto();
+  }
+
+  // Re-init on resize
+  var resizeTimer;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(initTesti, 120);
+  });
+
+  // Init after page loads
+  document.addEventListener('DOMContentLoaded', initTesti);
+  // Also re-init when navigating to home
+  var _origNavigate = window.navigate;
+  // Hook into navigate to reset carousel when home shown
+  var _testiNavHook = setInterval(function(){
+    if (window.navigate && window.navigate !== _testiNavHook) {
+      clearInterval(_testiNavHook);
+      var orig = window.navigate;
+      window.navigate = function(key) {
+        orig(key);
+        if (key === 'home') { setTimeout(initTesti, 80); }
+      };
+    }
+  }, 100);
+  // Fallback: init on load
+  window.addEventListener('load', function(){ setTimeout(initTesti, 100); });
+})();
+
 function toggleMenu() {
   const nav = document.getElementById('nav-links');
   const ham = document.getElementById('hamburger');
@@ -6303,6 +6730,80 @@ document.addEventListener('DOMContentLoaded', function() {
   _restoreDraft('renter');
   _restoreDraft('landlord');
 });
+
+// ── COMMERCIAL PROPERTY TOGGLE ──
+function toggleCommercial(el) {
+  var isOn = el.classList.toggle('comm-active');
+  el.style.background    = isOn ? 'rgba(201,166,104,0.18)' : 'rgba(201,166,104,0.07)';
+  el.style.borderColor   = isOn ? 'var(--gold)'            : 'rgba(201,166,104,0.2)';
+
+  var ind = document.getElementById('rn-comm-indicator');
+  ind.style.background   = isOn ? 'var(--gold)'            : 'rgba(255,255,255,0.15)';
+  ind.textContent        = isOn ? '✓' : '';
+  ind.style.color        = isOn ? 'var(--dark)'            : 'transparent';
+
+  document.getElementById('rn-family-block').style.display = isOn ? 'none' : 'contents';
+  document.getElementById('rn-family-size').value          = isOn ? 'Commercial Property' : '';
+
+  var pt = document.getElementById('rn-prop-type');
+  if (isOn) {
+    pt.innerHTML = [
+      '<option value="">-- Select --</option>',
+      '<option>Shop / Showroom</option>',
+      '<option>Office Space</option>',
+      '<option>Warehouse / Godown</option>',
+      '<option>Commercial Complex Unit</option>',
+      '<option>Retail Space</option>',
+      '<option>Co-working Space</option>',
+      '<option>Restaurant / Food Outlet Space</option>',
+      '<option>Clinic / Consultation Room</option>',
+      '<option>Studio / Workshop Space</option>',
+      '<option>Others</option>'
+    ].join('');
+  } else {
+    pt.innerHTML = [
+      '<option value="">-- Select --</option>',
+      '<option>Any</option>',
+      '<option>Studio / 1 RK</option>',
+      '<option>Flat / Apartment</option>',
+      '<option>Builder Floor (Independent)</option>',
+      '<option>Independent House / Villa</option>',
+      '<option>Duplex / Rowhouse</option>',
+      '<option>PG Accommodation</option>',
+      '<option>Boys / Girls Hostel</option>',
+      '<option>Serviced Apartment</option>',
+      '<option>Others</option>'
+    ].join('');
+  }
+}
+
+// ── MOVE-IN DATE CONSTRAINTS ──
+(function(){
+  function setMoveinConstraints(){
+    var el = document.getElementById('rn-movein-date');
+    if(!el) return;
+    var today = new Date();
+    var maxDate = new Date(today);
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    var fmt = function(d){ return d.toISOString().split('T')[0]; };
+    el.min = fmt(today);
+    el.max = fmt(maxDate);
+  }
+  document.addEventListener('DOMContentLoaded', setMoveinConstraints);
+  window.addEventListener('load', setMoveinConstraints);
+  // Also re-apply when navigating to the registration page
+  var _origNav = window.navigate;
+  var _hookInterval = setInterval(function(){
+    if(window.navigate && window.navigate !== _hookInterval){
+      clearInterval(_hookInterval);
+      var _orig = window.navigate;
+      window.navigate = function(key){
+        _orig(key);
+        if(key === 'login') setTimeout(setMoveinConstraints, 120);
+      };
+    }
+  }, 100);
+})();
 
 </script>
 <!-- ── LEGAL MODAL (registration form legal links) ── -->
