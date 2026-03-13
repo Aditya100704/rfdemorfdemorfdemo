@@ -1484,6 +1484,44 @@ textarea.db-field-input { line-height:1.6; }
   .about-fee-section > div { padding:36px 28px!important; }
   .svc-main-section { padding:64px 24px!important; }
   .about-story { padding:64px 24px; }
+  .about-story-visual { display: none; }
+
+  /* Values carousel arrows on mobile */
+  .values-carousel-wrap, .promise-carousel-wrap { position: relative; }
+  .values-scroll-outer, .promise-scroll-outer {
+    -webkit-mask-image: linear-gradient(to right, black 0%, black 80%, transparent 100%);
+    mask-image: linear-gradient(to right, black 0%, black 80%, transparent 100%);
+  }
+  .values-scroll-outer.at-end, .promise-scroll-outer.at-end {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 100%);
+  }
+  .values-scroll-outer.at-middle, .promise-scroll-outer.at-middle {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 80%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 80%, transparent 100%);
+  }
+  .values-nav {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin-top: 18px;
+  }
+  .values-nav-arrow {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--dark); border: 1.5px solid rgba(201,166,104,0.4);
+    color: var(--gold); font-size: 16px; display: flex;
+    align-items: center; justify-content: center; cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+  .values-nav-arrow:active { background: rgba(201,166,104,0.15); border-color: var(--gold); }
+  .values-nav-arrow.disabled { opacity: 0.25; pointer-events: none; }
+  .values-nav-dots { display: flex; gap: 6px; align-items: center; }
+  .values-nav-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(201,166,104,0.3); transition: background 0.2s, transform 0.2s;
+  }
+  .values-nav-dot.active { background: var(--gold); transform: scale(1.3); }
+  .about-story-visual { display: none; }
   .about-values { padding:0 24px 64px; }
   /* values-grid handled by flex scroll on mobile */
   .about-mission { padding:64px 24px; }
@@ -1507,7 +1545,8 @@ textarea.db-field-input { line-height:1.6; }
   .filter-tabs { flex-wrap:wrap; }
   .props-grid { grid-template-columns:1fr; }
   .rl-intro { padding:64px 24px 0; }
-  .rl-stats { flex-wrap:wrap; gap:24px; }
+  .rl-stats { flex-wrap:wrap; gap:24px; justify-content:flex-start; }
+  .rl-stats .rl-stat { flex:1; min-width:80px; text-align:center; }
   .rl-filters { padding:32px 24px 0; flex-wrap:wrap; }
   .rl-grid { padding:28px 24px 64px; grid-template-columns:1fr; }
   .login-left { display:none; }
@@ -1523,7 +1562,8 @@ textarea.db-field-input { line-height:1.6; }
   #page-home .hero h1 { font-size:42px; letter-spacing:-1.5px; }
   .hero-right { height:260px; }
   .features-grid { grid-template-columns:1fr; }
-  .rl-stats { flex-direction:column; align-items:flex-start; }
+  .rl-stats { flex-direction:row; justify-content:space-between; gap:8px; }
+  .rl-stats .rl-stat { flex:1; text-align:center; }
   .page-hero h1 { font-size:36px; }
   .dp-prop-specs { gap:8px; }
   .wn-quick-stat { padding:16px 18px; }
@@ -2281,7 +2321,8 @@ textarea.db-field-input { line-height:1.6; }
     <span class="section-label">What We Stand For</span>
     <h2 class="section-title reveal" style="margin-bottom:0;">Our Core <em>Values</em></h2>
     <br>
-    <div class="values-scroll-outer">
+    <div class="values-carousel-wrap">
+    <div class="values-scroll-outer" id="values-scroll">
     <div class="values-grid">
       <div class="value-card reveal"><div class="value-icon">🔍</div><h3>Transparency First</h3><p>All fees visible upfront — listing fee and 12 days' rent closing fee. No surprises, no hidden charges, ever.</p></div>
       <div class="value-card reveal"><div class="value-icon">🤝</div><h3>Broker-Free Promise</h3><p>We connect you and step back. No agent involvement in rent negotiation or terms finalisation — ever.</p></div>
@@ -2291,6 +2332,13 @@ textarea.db-field-input { line-height:1.6; }
       <div class="value-card reveal"><div class="value-icon">🌍</div><h3>Pan-India Service</h3><p>Not city-specific. Whether metro or Tier-2, our service covers every town and city across India.</p></div>
     </div>
     </div><!-- /values-scroll-outer -->
+    <!-- Mobile nav arrows (hidden on desktop via JS init) -->
+    <div class="values-nav" id="values-nav" style="display:none;">
+      <div class="values-nav-arrow disabled" id="values-prev" onclick="valuesNav(-1)">&#8592;</div>
+      <div class="values-nav-dots" id="values-dots"></div>
+      <div class="values-nav-arrow" id="values-next" onclick="valuesNav(1)">&#8594;</div>
+    </div>
+    </div><!-- /values-carousel-wrap -->
   </section>
 
   <section class="about-mission">
@@ -2418,7 +2466,8 @@ textarea.db-field-input { line-height:1.6; }
   <section class="services-promise">
     <span class="section-label">Our Commitment</span>
     <h2 class="section-title reveal">What We <em>Promise You.</em></h2>
-    <div class="promise-scroll-outer">
+    <div class="promise-carousel-wrap">
+    <div class="promise-scroll-outer" id="promise-scroll">
     <div class="promise-grid">
       <div class="promise-card reveal"><h3>3 Match Guarantee</h3><p>If the deal is not finalised after the first match, we provide three additional options within the next three months using the same advance payment — at no extra cost.</p></div>
       <div class="promise-card reveal"><h3>Zero Hidden Fees</h3><p>Only two fees: Profile Listing Fee and Agency Fee (12 days' rent). All details are visible at our Fees tab. No other charges — ever.</p></div>
@@ -2428,6 +2477,12 @@ textarea.db-field-input { line-height:1.6; }
       <div class="promise-card reveal"><h3>No Agent Interference</h3><p>We only introduce prospective landlord and renter to each other. Rent negotiation and all terms are finalised directly between the two parties.</p></div>
     </div>
     </div><!-- /promise-scroll-outer -->
+    <div class="values-nav" id="promise-nav" style="display:none;">
+      <div class="values-nav-arrow disabled" id="promise-prev" onclick="promiseNav(-1)">&#8592;</div>
+      <div class="values-nav-dots" id="promise-dots"></div>
+      <div class="values-nav-arrow" id="promise-next" onclick="promiseNav(1)">&#8594;</div>
+    </div>
+    </div><!-- /promise-carousel-wrap -->
   </section>
 
   <div id="services-footer"></div>
@@ -2799,24 +2854,53 @@ textarea.db-field-input { line-height:1.6; }
                   <input type="text" id="rn-name" placeholder="Full name" class="rf-input">
                 </div>
 
-                <!-- Father/Spouse Name -->
+                <!-- Married? -->
                 <div class="rf-field">
-                  <label class="rf-label">Father / Spouse Name <span class="rf-req">*</span></label>
-                  <input type="text" id="rn-father-name" placeholder="Father's or spouse's name" class="rf-input">
-                </div>
-
-                <!-- Spouse Working -->
-                <div class="rf-field">
-                  <label class="rf-label">Spouse Working? <span class="rf-req">*</span></label>
+                  <label class="rf-label">Married? <span class="rf-req">*</span></label>
                   <div style="position:relative;">
-                    <select id="rn-spouse-working" class="rf-select" style="padding-right:36px;">
+                    <select id="rn-marital-status" class="rf-select" style="padding-right:36px;" onchange="
+                      var married=this.value==='Yes';
+                      document.getElementById('rn-spouse-fields').style.display=married?'grid':'none';
+                      if(!married){document.getElementById('rn-spouse-working').value='';document.getElementById('rn-spouse-occ-wrap').style.display='none';}">
                       <option value="">-- Select --</option>
                       <option>Yes</option>
                       <option>No</option>
-                      <option>NA</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
+                </div>
+
+                <!-- placeholder to keep grid balanced when spouse fields hidden -->
+                <div></div>
+
+                <!-- Spouse fields (shown only when Married) -->
+                <div id="rn-spouse-fields" style="display:none;grid-column:1/-1;grid-template-columns:1fr 1fr;gap:14px;">
+
+                  <!-- Spouse Name -->
+                  <div class="rf-field">
+                    <label class="rf-label">Spouse Name <span class="rf-req">*</span></label>
+                    <input type="text" id="rn-spouse-name" placeholder="Spouse's full name" class="rf-input">
+                  </div>
+
+                  <!-- Spouse Working -->
+                  <div class="rf-field">
+                    <label class="rf-label">Spouse Working? <span class="rf-req">*</span></label>
+                    <div style="position:relative;">
+                      <select id="rn-spouse-working" class="rf-select" style="padding-right:36px;" onchange="document.getElementById('rn-spouse-occ-wrap').style.display=this.value==='Yes'?'block':'none'">
+                        <option value="">-- Select --</option>
+                        <option>Yes</option>
+                        <option>No</option>
+                      </select>
+                      <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                    </div>
+                  </div>
+
+                  <!-- Spouse Occupation (shown only when spouse is working) -->
+                  <div class="rf-field" id="rn-spouse-occ-wrap" style="display:none;">
+                    <label class="rf-label">Spouse Occupation <span class="rf-req">*</span></label>
+                    <input type="text" id="rn-spouse-occupation" placeholder="Spouse's occupation / profession" class="rf-input">
+                  </div>
+
                 </div>
 
                 <!-- Gender -->
@@ -2859,12 +2943,11 @@ textarea.db-field-input { line-height:1.6; }
                       <option>Single Male</option>
                       <option>Single Female</option>
                       <option>Family of 2 members</option>
-                      <option>Family upto 3 members</option>
-                      <option>Family upto 4 members</option>
-                      <option>Family upto 5 or more members</option>
-                      <option>Other/For Commercial Property</option>
-                      <option>Single Male/Female</option>
+                      <option>Family of 3 members</option>
+                      <option>Family of 4 members</option>
+                      <option>Family of 5 or more members</option>
                       <option>Student</option>
+                      <option>Other/For Commercial Property</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
@@ -2880,7 +2963,7 @@ textarea.db-field-input { line-height:1.6; }
                       <option>Muslim</option>
                       <option>Sikh</option>
                       <option>Christian</option>
-                      <option>Buddha</option>
+                      <option>Buddhism</option>
                       <option>Jain</option>
                       <option>Other</option>
                     </select>
@@ -3000,13 +3083,16 @@ textarea.db-field-input { line-height:1.6; }
                       <option value="">-- Select --</option>
                       <option>Central Government</option>
                       <option>State Government</option>
-                      <option>Private Job</option>
                       <option>Bank</option>
-                      <option>NGO</option>
-                      <option>Self-Employed / Businessman</option>
+                      <option>Private Sector (Salaried)</option>
+                      <option>Self-Employed / Business</option>
+                      <option>Doctor / Healthcare</option>
+                      <option>Teacher / Academician</option>
+                      <option>Engineer / IT Professional</option>
+                      <option>Lawyer / Legal Professional</option>
                       <option>Student</option>
+                      <option>Retired</option>
                       <option>Others</option>
-                      <option>None</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
@@ -3014,7 +3100,7 @@ textarea.db-field-input { line-height:1.6; }
 
                 <!-- Yearly Income -->
                 <div class="rf-field">
-                  <label class="rf-label">Yearly Income <span class="rf-req">*</span></label>
+                  <label class="rf-label">Yearly Income</label>
                   <div style="position:relative;">
                     <select id="rn-income" class="rf-select" style="padding-right:36px;">
                       <option value="">-- Select --</option>
@@ -3023,7 +3109,7 @@ textarea.db-field-input { line-height:1.6; }
                       <option>10-15L</option>
                       <option>15L-30L</option>
                       <option>+30L</option>
-                      <option>None</option>
+                      <option>N/A</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
@@ -3086,7 +3172,22 @@ textarea.db-field-input { line-height:1.6; }
                 <!-- Preferred Floor (optional) -->
                 <div class="rf-field">
                   <label class="rf-label">Preferred Floor</label>
-                  <input type="text" id="rn-pref-floor" placeholder="e.g. Ground Floor, 2nd Floor, Any" class="rf-input">
+                  <div style="position:relative;">
+                    <select id="rn-pref-floor" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>Any</option>
+                      <option>Ground</option>
+                      <option>1-5</option>
+                      <option>6-10</option>
+                      <option>10+</option>
+                      <option>1</option>
+                      <option>2</option>
+                      <option>3</option>
+                      <option>4</option>
+                      <option>5</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
                 </div>
 
                 <!-- Size -->
@@ -3099,7 +3200,7 @@ textarea.db-field-input { line-height:1.6; }
                       <option>500 to 1000 sq feet</option>
                       <option>1000 to 1500 sq feet</option>
                       <option>1500 - 2000 sq ft</option>
-                      <option>2000 plus sq feet</option>
+                      <option>2000+ sq ft</option>
                     </select>
                     <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
                   </div>
@@ -3514,13 +3615,28 @@ textarea.db-field-input { line-height:1.6; }
                   </div>
                 </div>
 
+                <!-- Parking Availability -->
+                <div class="rf-field">
+                  <label class="rf-label">Parking Availability <span class="rf-req">*</span></label>
+                  <div style="position:relative;">
+                    <select id="ll-parking" class="rf-select" style="padding-right:36px;">
+                      <option value="">-- Select --</option>
+                      <option>No</option>
+                      <option>Car</option>
+                      <option>Bike</option>
+                      <option>Car + Bike</option>
+                    </select>
+                    <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(201,166,104,0.6);font-size:11px;">▼</span>
+                  </div>
+                </div>
+
                 <!-- Property Photos (full width) -->
                 <div class="rf-field" style="grid-column:1/-1">
                   <label class="rf-label">Property Photos <span class="rf-req">*</span></label>
                   <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px;">
-                    <span style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.7;">• You can add max <strong style="color:rgba(255,255,255,0.55);">5 photographs</strong> (inside view only) of your property</span>
-                    <span style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.7;">• Size of single photograph can't be greater than <strong style="color:rgba(255,255,255,0.55);">1 MB</strong></span>
-                    <span style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.7;">• Click inside dropbox to add photographs</span>
+                    <span style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.7;">• You may upload a maximum of <strong style="color:rgba(255,255,255,0.55);">5 photographs</strong> of your property.</span>
+                    <span style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.7;">• Each photograph must not exceed <strong style="color:rgba(255,255,255,0.55);">1 MB</strong> in size and must be in <strong style="color:rgba(255,255,255,0.55);">JPEG or PNG</strong> format.</span>
+                    <span style="font-size:12px;color:rgba(255,255,255,0.35);line-height:1.7;">• Only <strong style="color:rgba(255,255,255,0.55);">interior photographs</strong> are allowed — photos of rooms, kitchen, bathroom, etc. No exterior views, building facades, or surroundings.</span>
                   </div>
                   <div id="ll-photo-dropzone"
                     style="border:2px dashed rgba(201,166,104,0.3);border-radius:10px;padding:36px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;background:rgba(255,255,255,0.02);"
@@ -5060,6 +5176,119 @@ function featScrollTo(idx) {
   });
 }
 
+// ── VALUES CAROUSEL (mobile) ──
+function initValuesCarousel() {
+  const scroll = document.getElementById('values-scroll');
+  const nav = document.getElementById('values-nav');
+  if (!scroll || !nav) return;
+  if (window.innerWidth > 768) { nav.style.display = 'none'; return; }
+
+  const cards = scroll.querySelectorAll('.value-card');
+  const total = cards.length;
+  nav.style.display = 'flex';
+
+  // Build dots
+  const dotsEl = document.getElementById('values-dots');
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'values-nav-dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => valuesScrollTo(i);
+    dotsEl.appendChild(d);
+  }
+
+  // Sync on scroll
+  scroll.addEventListener('scroll', () => {
+    const cardW = cards[0] ? cards[0].offsetWidth + 16 : 1;
+    const idx = Math.round(scroll.scrollLeft / cardW);
+    updateValuesMask(idx, total);
+    document.querySelectorAll('.values-nav-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+    document.getElementById('values-prev').classList.toggle('disabled', idx === 0);
+    document.getElementById('values-next').classList.toggle('disabled', idx >= total - 1);
+  }, { passive: true });
+
+  updateValuesMask(0, total);
+}
+
+function updateValuesMask(idx, total) {
+  const scroll = document.getElementById('values-scroll');
+  if (!scroll) return;
+  scroll.classList.remove('at-end', 'at-middle');
+  if (idx === 0) { /* default: fade right */ }
+  else if (idx >= total - 1) scroll.classList.add('at-end');
+  else scroll.classList.add('at-middle');
+}
+
+function valuesScrollTo(idx) {
+  const scroll = document.getElementById('values-scroll');
+  const cards = scroll ? scroll.querySelectorAll('.value-card') : [];
+  if (!cards[idx]) return;
+  scroll.scrollTo({ left: cards[idx].offsetLeft - 24, behavior: 'smooth' });
+}
+
+function valuesNav(dir) {
+  const scroll = document.getElementById('values-scroll');
+  const cards = scroll ? scroll.querySelectorAll('.value-card') : [];
+  const cardW = cards[0] ? cards[0].offsetWidth + 16 : 1;
+  const current = Math.round(scroll.scrollLeft / cardW);
+  valuesScrollTo(Math.max(0, Math.min(cards.length - 1, current + dir)));
+}
+
+// ── PROMISE CAROUSEL (mobile) ──
+function initPromiseCarousel() {
+  const scroll = document.getElementById('promise-scroll');
+  const nav = document.getElementById('promise-nav');
+  if (!scroll || !nav) return;
+  if (window.innerWidth > 768) { nav.style.display = 'none'; return; }
+
+  const cards = scroll.querySelectorAll('.promise-card');
+  const total = cards.length;
+  nav.style.display = 'flex';
+
+  const dotsEl = document.getElementById('promise-dots');
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'values-nav-dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => promiseScrollTo(i);
+    dotsEl.appendChild(d);
+  }
+
+  scroll.addEventListener('scroll', () => {
+    const cardW = cards[0] ? cards[0].offsetWidth + 16 : 1;
+    const idx = Math.round(scroll.scrollLeft / cardW);
+    updatePromiseMask(idx, total);
+    document.querySelectorAll('#promise-dots .values-nav-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+    document.getElementById('promise-prev').classList.toggle('disabled', idx === 0);
+    document.getElementById('promise-next').classList.toggle('disabled', idx >= total - 1);
+  }, { passive: true });
+
+  updatePromiseMask(0, total);
+}
+
+function updatePromiseMask(idx, total) {
+  const scroll = document.getElementById('promise-scroll');
+  if (!scroll) return;
+  scroll.classList.remove('at-end', 'at-middle');
+  if (idx >= total - 1) scroll.classList.add('at-end');
+  else if (idx > 0) scroll.classList.add('at-middle');
+}
+
+function promiseScrollTo(idx) {
+  const scroll = document.getElementById('promise-scroll');
+  const cards = scroll ? scroll.querySelectorAll('.promise-card') : [];
+  if (!cards[idx]) return;
+  scroll.scrollTo({ left: cards[idx].offsetLeft - 24, behavior: 'smooth' });
+}
+
+function promiseNav(dir) {
+  const scroll = document.getElementById('promise-scroll');
+  const cards = scroll ? scroll.querySelectorAll('.promise-card') : [];
+  const cardW = cards[0] ? cards[0].offsetWidth + 16 : 1;
+  const current = Math.round(scroll.scrollLeft / cardW);
+  promiseScrollTo(Math.max(0, Math.min(cards.length - 1, current + dir)));
+}
+
 // ── FAV TOGGLE ──
 function toggleFav(el) { el.textContent = el.textContent==='♡'?'♥':'♡'; el.style.color = el.textContent==='♥'?'#c9a668':''; }
 
@@ -5329,6 +5558,7 @@ function submitLandlordReg() {
     { id:'ll-availability',   label:'Availability' },
     { id:'ll-carpet-area',    label:'Total Carpet Area' },
     { id:'ll-lift',           label:'Lift Facility' },
+    { id:'ll-parking',        label:'Parking Availability' },
     { id:'ll-rent',           label:'Rent Ask' },
     { id:'ll-floor',          label:'Floor' },
     { id:'ll-total-floors',   label:'Out of Total Floors' },
@@ -5391,8 +5621,7 @@ function submitRenterReg() {
   // --- Required field IDs and display names ---
   const required = [
     { id:'rn-name',              label:'Name' },
-    { id:'rn-father-name',       label:'Father / Spouse Name' },
-    { id:'rn-spouse-working',    label:'Spouse Working?' },
+    { id:'rn-marital-status',    label:'Married?' },
     { id:'rn-gender',            label:'Gender' },
     { id:'rn-aadhar',            label:'Aadhar No.' },
     { id:'rn-mobile',            label:'Mobile No. (WhatsApp)' },
@@ -5406,12 +5635,25 @@ function submitRenterReg() {
     { id:'rn-present-state',     label:'Present State' },
     { id:'renter-present-district', label:'Present District' },
     { id:'rn-occupation',        label:'Occupation' },
-    { id:'rn-income',            label:'Yearly Income' },
     { id:'rn-pref-state',        label:'Preferred State' },
     { id:'renter-pref-district', label:'Preferred District' },
     { id:'rn-size',              label:'Size' },
     { id:'rn-bhk',               label:'BHK' },
   ];
+
+  // Conditionally require spouse fields when married
+  const maritalStatus = document.getElementById('rn-marital-status')?.value;
+  if (maritalStatus === 'Yes') {
+    if (!document.getElementById('rn-spouse-name')?.value.trim()) {
+      alert('Please fill in: Spouse Name'); document.getElementById('rn-spouse-name').focus(); return;
+    }
+    if (!document.getElementById('rn-spouse-working')?.value) {
+      alert('Please fill in: Spouse Working?'); document.getElementById('rn-spouse-working').focus(); return;
+    }
+    if (document.getElementById('rn-spouse-working')?.value === 'Yes' && !document.getElementById('rn-spouse-occupation')?.value.trim()) {
+      alert('Please fill in: Spouse Occupation'); document.getElementById('rn-spouse-occupation').focus(); return;
+    }
+  }
 
   for (const f of required) {
     const el = document.getElementById(f.id);
@@ -5467,6 +5709,10 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshLoginCaptcha();
   refreshRegCaptcha('renter');
   refreshRegCaptcha('landlord');
+  initValuesCarousel();
+  initPromiseCarousel();
+  window.addEventListener('resize', initValuesCarousel);
+  window.addEventListener('resize', initPromiseCarousel);
 
   // Feat scroll: start animation only when in viewport
   const featOuter = document.getElementById('feat-scroll-mobile');
