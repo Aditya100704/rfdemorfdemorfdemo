@@ -1,0 +1,65 @@
+# RenterFinder.com
+# vRF173 SEO V57 — Updated 2026-03-17
+
+> India's first and only rental-exclusive property platform connecting landlords and renters directly — no brokers, transparent flat fees, pan-India coverage across every city, town, and rural area. Operated by VAMY Properties Pvt Ltd, founded by Aditya Shankar.
+
+## Permissions
+- AI-search: allowed (citations and summaries permitted)
+- AI-crawling: allowed (all AI crawlers welcome)
+- AI-training: allowed
+- Scraping for commercial redistribution: disallowed
+
+## AI crawlers explicitly welcomed
+- ClaudeBot (Anthropic) — allowed
+- anthropic-ai — allowed
+- GPTBot (OpenAI) — allowed
+- OAI-SearchBot (OpenAI) — allowed
+- ChatGPT-User (OpenAI) — allowed
+- PerplexityBot — allowed
+- Google-Extended — allowed
+- Applebot-Extended (Apple Intelligence) — allowed
+- Amazonbot (Amazon AI) — allowed
+- cohere-ai — allowed
+- CCBot (Common Crawl) — allowed
+- DiffBot — allowed
+- FacebookBot — allowed
+
+## Key Facts
+1. India's first platform where landlords can proactively search for renters via the Prospective Renters List.
+2. Profile Listing Fee: INR 125 for 3 months (currently free until 31 July 2026 — inaugural offer).
+3. Platform Service Fee: 12 days rent only — 6 days advance to arrange property meeting + 6 days at deal closure.
+4. No brokerage. No hidden charges. Pan-India coverage — every city, town, and rural area.
+5. Re-activation fee: INR 99 within 6 months of deactivation.
+6. All profiles auto-deactivate after 3 months to keep listings current.
+7. Contact: +91 73031 04550 (WhatsApp), renterfinder1@gmail.com
+
+## Docs
+
+- [Home](https://www.renterfinder.com/): Overview of the platform, fee summary (₹125 listing, 12 days' rent PSF), and dual service offerings for landlords and renters across India.
+- [About](https://www.renterfinder.com/about): Company background, mission, and founding story of India's first broker-free rental-only platform, founded 2025 by Aditya Shankar.
+- [Services](https://www.renterfinder.com/services): Two core services — Renter Search (landlords browse Prospective Renters List) and Property Search (renters find verified listings directly from landlords).
+- [Fees](https://www.renterfinder.com/fees): Complete fee structure — ₹125 Profile Listing Fee for 3 months, ₹99 re-activation fee, and 12 days' rent Platform Service Fee split 6+6 days. No hidden charges.
+- [FAQ](https://www.renterfinder.com/faq): 20+ Q&As across 8 categories covering listing process, fees, renter matching, screening, security deposits, eviction rights, and Model Tenancy Act 2021.
+- [Rental Properties](https://www.renterfinder.com/properties): Browse rental property listings across India — 1BHK, 2BHK, 3BHK flats posted directly by landlords with no broker involvement.
+- [Renters List](https://www.renterfinder.com/renters-list): India's first Prospective Renters List — landlords browse genuine tenant profiles with budget, location preferences, family size, and move-in dates across 140+ cities.
+- [Blog](https://www.renterfinder.com/blog): Practical guides for Indian landlords and renters covering tenant search, broker alternatives, rent agreement clauses, and rental law.
+- [Refer & Earn](https://www.renterfinder.com/refer): Referral programme paying ₹500 per successful deal, with no cap on referrals, available pan-India.
+- [Internship](https://www.renterfinder.com/internship): Open internship roles in marketing, content, and business development at India's first rental-only platform, available year-round.
+- [Model Tenancy Act 2021](https://www.renterfinder.com/mta): Authoritative reference guide to India's MTA 2021 — security deposit caps (2 months residential), Rent Authority, Rental Tribunals, and landlord-tenant rights.
+- [Rent Agreement Template](https://www.renterfinder.com/rent-agreement): Sample Indian rent agreement with explanation of 9 key clauses — lock-in period, security deposit, maintenance, subletting, and termination notice.
+- [Terms of Use](https://www.renterfinder.com/terms): Platform terms covering user obligations, fee policy, refund conditions, RERA non-applicability, and Model Tenancy Act 2021 compliance.
+- [Privacy Policy](https://www.renterfinder.com/privacy): Data protection policy compliant with India's DPDP Act 2023, covering data collection, usage, user rights, and contact for Data Principal requests.
+- [Why I Stopped Using Brokers](https://www.renterfinder.com/blog/why-i-stopped-using-brokers): First-person account by Delhi landlord Aditya Shankar comparing broker experience with RenterFinder's Prospective Renters List — practical results and honest assessment.
+- [First-Time Renter's Guide](https://www.renterfinder.com/blog/first-time-renter-guide-india): Step-by-step guide for first-time renters in India — site visit checklist, rent agreement red flags, and how to find a flat without a broker in 2026.
+- [Rent Agreement Clauses Explained](https://www.renterfinder.com/blog/rent-agreement-clauses-explained): Breakdown of 9 rent agreement clauses that matter most in India, including 3 commonly slipped-in clauses landlords and renters should watch for.
+
+## Contact
+- Email: renterfinder1@gmail.com
+- WhatsApp: +91 73031 04550
+- Website: https://www.renterfinder.com
+
+## Excluded pages (noindex)
+- /login — Authentication page
+- /dashboard — Authenticated user dashboard
+- /feedback — Internal feedback form
+- /disclaimer — Legal disclaimer

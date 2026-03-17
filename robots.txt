@@ -1,0 +1,61 @@
+# RenterFinder.com robots.txt — vRF173 SEO V57
+
+User-agent: *
+Disallow: /dashboard
+Disallow: /login
+Disallow: /feedback
+Disallow: /disclaimer
+
+# AI crawlers — all allowed (search + training)
+User-agent: GPTBot
+Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /feedback
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /dashboard
+Disallow: /login
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# Fixed: was GoogleExtendedBot (incorrect) — correct user-agent is Google-Extended
+User-agent: Google-Extended
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: DiffBot
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# Added V57: Apple Intelligence crawler
+User-agent: Applebot-Extended
+Allow: /
+
+# Added V57: Amazon Alexa AI crawler
+User-agent: Amazonbot
+Allow: /
+
+# Added V57: Block ByteDance aggressive scraper
+User-agent: Bytespider
+Disallow: /
+
+Sitemap: https://www.renterfinder.com/sitemap.xml

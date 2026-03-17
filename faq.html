@@ -1,0 +1,1025 @@
+<!--
+╔══════════════════════════════════════════════════════════════════════╗
+║       RENTERFINDER.COM — SINGLE FILE SOURCE  vRF173 SEO V27         ║
+║                                                                      ║
+║  HOW TO NAVIGATE THIS FILE (use Ctrl+F / Cmd+F to jump):            ║
+║                                                                      ║
+║  ── GLOBAL STYLES & SHARED COMPONENTS ──────────────── [SECTION:CSS]║
+║  ── MAIN NAVIGATION ───────────────────────────── [SECTION:nav]     ║
+║  ── PAGE 1  · Home (SEO-OPTIMIZED) ────────────── [PAGE:home]      ║
+║  ── PAGE 2  · About Us (SEO-OPTIMIZED) ───────── [PAGE:about]      ║
+║  ── PAGE 3  · Services (SEO-OPTIMIZED) ───────── [PAGE:services]   ║
+║  ── PAGE 4  · Fees (SEO-OPTIMIZED) ────────────── [PAGE:fees]      ║
+║  ── PAGE 5  · Rental Properties (SEO-OPTIMIZED) ── [PAGE:properties]║
+║  ── PAGE 6  · Renter's List (SEO-OPTIMIZED) ──── [PAGE:renters-list]║
+║  ── PAGE 7  · Login / Sign Up (SEO-OPTIMIZED) ──── [PAGE:login]     ║
+║  ── PAGE 8  · FAQ (SEO-OPTIMIZED) ─────────────── [PAGE:faq]       ║
+║  ── PAGE 9  · Terms & Conditions (SEO-OPTIMIZED) ── [PAGE:terms]   ║
+║  ── PAGE 10 · Disclaimer (SEO-OPTIMIZED) ──────── [PAGE:disclaimer]║
+║  ── PAGE 11 · Privacy Policy (SEO-OPTIMIZED) ──── [PAGE:privacy]   ║
+║  ── PAGE 12 · Match Terms Agreement (SEO-OPT) ──── [PAGE:mta]      ║
+║  ── PAGE 13 · Refer & Earn (SEO-OPTIMIZED) ─────── [PAGE:refer]     ║
+║  ── PAGE 14 · Internship (SEO-OPTIMIZED) ──────── [PAGE:internship]║
+║  ── PAGE 15 · Rent Agreement Helper (SEO-OPT) ──── [PAGE:rent-agreement]║
+║  ── PAGE 16 · Feedback (SEO-OPTIMIZED) ─────────── [PAGE:feedback]  ║
+║  ── PAGE 17 · User Dashboard (SEO-OPT) ─────────── [PAGE:dashboard] ║
+║  ── PAGE 18 · Blog & Articles (SEO-OPTIMIZED) ───── [PAGE:blog]     ║
+║  ── SHARED FOOTER ──────────────────────────────── [SECTION:footer] ║
+║  ── JAVASCRIPT ─────────────────────────────────── [SECTION:js]     ║
+║                                                                      ║
+║  ── FILE SPLIT INSTRUCTIONS (for when breaking into individual pages)║
+║  When splitting this SPA into individual HTML files, PAGE 18        ║
+║  (Blog & Articles, id="page-blog") must be extracted as its own     ║
+║  standalone file: blog.html (or /blog/index.html).                  ║
+║  It contains: blog listing index, full Article (id="blog-post-1"),  ║
+║  Article JSON-LD schema, BreadcrumbList schema, and SEO aside.      ║
+║  Each subsequent blog post should also be its own file:             ║
+║  /blog/post-slug.html — never merged back into the SPA shell.       ║
+║                                                                      ║
+║  SEO CHANGES (vRF173 SEO V2):                                        ║
+║  • Meta description, keywords, robots, theme-color added             ║
+║  • Open Graph + Twitter Card meta tags                               ║
+║  • JSON-LD: Organization, WebSite, RealEstateAgent, FAQ, Breadcrumb ║
+║  • Canonical URL                                                     ║
+║  • Semantic HTML: <main>, <header>, <section>, <aside>, <footer>    ║
+║  • ARIA roles/labels on nav, sections, buttons                       ║
+║  • H1 kept original ("Let's Find a Good Renter for Your Home")      ║
+║  • H2s enriched with geo + service keywords                          ║
+║  • Hidden semantic content block for crawlers                        ║
+║  • Preconnect + dns-prefetch for Google Fonts                        ║
+║  • <noscript> fallback                                               ║
+║  • geo.region and content-language meta tags                         ║
+║  • "Verified" removed from all user-facing text (kept in meta only) ║
+║                                                                      ║
+║  SEO CHANGES (vRF173 SEO V3):                                        ║
+║  • font-display: swap added to Google Fonts for performance          ║
+║  • ABOUT PAGE: + aria-label on page wrapper              ║
+║  • ABOUT PAGE: All sections enriched with keyword aria-labels        ║
+║  • ABOUT PAGE: H2s enriched with geo/service keywords                ║
+║  • ABOUT PAGE: Hidden semantic <aside> for crawlers                  ║
+║  • ABOUT PAGE: CTA buttons keyword-optimized                        ║
+║  • ABOUT PAGE: Hero subtitle expanded with city names                ║
+║  • SERVICES PAGE: + aria-label on page wrapper           ║
+║  • SERVICES PAGE: All sections enriched with keyword aria-labels     ║
+║  • SERVICES PAGE: H2s enriched with rental/India keywords            ║
+║  • SERVICES PAGE: Hidden semantic <aside> for crawlers               ║
+║  • SERVICES PAGE: CTA buttons keyword-optimized                     ║
+║  • SERVICES PAGE: Hero subtitle expanded with city names             ║
+║  • JSON-LD: Two new Service schemas (Renter Search + Property Search)║
+║  • FEES PAGE: + aria-label on page wrapper              ║
+║  • FEES PAGE: Hero subtitle expanded with city names                ║
+║  • FEES PAGE: Intro H2 enriched with transparency keywords          ║
+║  • FEES PAGE: Sections enriched with keyword aria-labels            ║
+║  • FEES PAGE: CTA buttons keyword-optimized                        ║
+║  • FEES PAGE: Hidden semantic <aside> for crawlers                  ║
+║  • FAQ PAGE: + aria-label on page wrapper               ║
+║  • FAQ PAGE: Hero subtitle expanded with rental topics + India      ║
+║  • FAQ PAGE: Section enriched with keyword aria-label               ║
+║  • FAQ PAGE: Hidden semantic <aside> for crawlers                   ║
+║  • FAQ PAGE: JSON-LD FAQPage expanded from 4 to 10 questions        ║
+║  • PROPERTIES PAGE: + keyword aria-label on wrapper     ║
+║  • PROPERTIES PAGE: Hero subtitle added with property types + cities║
+║  • PROPERTIES PAGE: Search bar aria-labels on all form elements     ║
+║  • PROPERTIES PAGE: Search button keyword-optimized                 ║
+║  • PROPERTIES PAGE: Hidden semantic <aside> for crawlers            ║
+║  • RENTERS LIST PAGE: + keyword aria-label on wrapper   ║
+║  • RENTERS LIST PAGE: Hero subtitle — "find a renter first time"   ║
+║  • RENTERS LIST PAGE: Intro H2 + body enriched with USP keywords   ║
+║  • RENTERS LIST PAGE: CTA buttons keyword-optimized                 ║
+║  • RENTERS LIST PAGE: Filters + grid aria-labels added              ║
+║  • RENTERS LIST PAGE: Hidden semantic <aside> for crawlers          ║
+║  • USP KEYWORDS added across ALL pages: "find a renter (first time  ║
+║    ever)" + "transparent fees / no hidden charges"                   ║
+║  • Meta description + OG + Twitter updated with USP keywords        ║
+║  • Meta keywords expanded with USP-specific terms                   ║
+║  • All 7 hidden <aside> blocks enriched with USP keyword phrases    ║
+║                                                                      ║
+║  BUG FIXES (vRF173 SEO V5):                                         ║
+║  • Home CTA "Ready to find your perfect rental match?" now           ║
+║    responsive: CSS Grid 1fr 1fr (50-50) on desktop, single-column   ║
+║    stack on mobile (≤768px)                                          ║
+║                                                                      ║
+║  SEO + UI CHANGES (vRF173 SEO V6):                                   ║
+║  • HOME: Meta description rewritten to user's exact copy             ║
+║  • HOME: twitter:site + twitter:creator @RenterFinderIn added        ║
+║  • HOME: Reviews expanded from 6 → 15 genuine human-sounding cards  ║
+║  • HOME: Mix of 5★ and 4★ ratings for authenticity                  ║
+║  • HOME: JSON-LD AggregateRating updated (15 reviews, 4.8 rating)   ║
+║  • HOME: All 15 reviews matched in JSON-LD structured data          ║
+║  • ABOUT: aria-label + role="img" on animated India arc canvas      ║
+║  • ABOUT: AboutPage JSON-LD schema added (foundingDate, sameAs)     ║
+║  • ABOUT: Organization sameAs populated (LI, IG, FB, X, YouTube)    ║
+║  • ABOUT: Visible breadcrumb navigation added (Home › About Us)     ║
+║  • ABOUT: Breadcrumb CSS component added (.page-breadcrumb)         ║
+║                                                                      ║
+║  SEO CHANGES (vRF173 SEO V7):                                        ║
+║  • TERMS: + keyword aria-label on page wrapper           ║
+║  • TERMS: Visible breadcrumb added (Home › Terms of Use)            ║
+║  • TERMS: aria-label on legal-body content section                   ║
+║  • TERMS: Hidden semantic <aside> for crawlers                      ║
+║  • TERMS: SEO-OPTIMIZED comment block added                         ║
+║  • DISCLAIMER: + keyword aria-label on page wrapper     ║
+║  • DISCLAIMER: Visible breadcrumb added (Home › Disclaimer)         ║
+║  • DISCLAIMER: aria-label on legal-body content section              ║
+║  • DISCLAIMER: Hidden semantic <aside> for crawlers                 ║
+║  • DISCLAIMER: SEO-OPTIMIZED comment block added                    ║
+║  • PRIVACY: + keyword aria-label on page wrapper        ║
+║  • PRIVACY: Visible breadcrumb added (Home › Privacy Policy)        ║
+║  • PRIVACY: aria-label on legal-body content section                 ║
+║  • PRIVACY: Hidden semantic <aside> for crawlers                    ║
+║  • PRIVACY: SEO-OPTIMIZED comment block added                       ║
+║  • All 3 legal pages: zero changes to legal content text            ║
+║                                                                      ║
+║  SEO CHANGES (vRF173 SEO V8):                                        ║
+║  • LOGIN: + keyword aria-label on page wrapper           ║
+║  • LOGIN: Hidden semantic <aside> for crawlers                      ║
+║  • LOGIN: SEO-OPTIMIZED comment block added                         ║
+║  • REFER: + keyword aria-label on page wrapper          ║
+║  • REFER: Visible breadcrumb added (Home › Refer & Earn)            ║
+║  • REFER: Hero subtitle expanded with earnings details              ║
+║  • REFER: aria-label on refer-section                                ║
+║  • REFER: Hidden semantic <aside> for crawlers                      ║
+║  • INTERNSHIP: + keyword aria-label on page wrapper     ║
+║  • INTERNSHIP: Visible breadcrumb added (Home › Internship)         ║
+║  • INTERNSHIP: Hero subtitle expanded with online/offline + India   ║
+║  • INTERNSHIP: aria-label on internship-section                      ║
+║  • INTERNSHIP: Hidden semantic <aside> for crawlers                 ║
+║  • FEEDBACK: + keyword aria-label on page wrapper       ║
+║  • FEEDBACK: Visible breadcrumb added (Home › Feedback)             ║
+║  • FEEDBACK: Hero subtitle expanded with service context            ║
+║  • FEEDBACK: aria-label on form section                              ║
+║  • FEEDBACK: Hidden semantic <aside> for crawlers                   ║
+║                                                                      ║
+║  SEO CHANGES (vRF173 SEO V9) — FINAL 3 PAGES:                       ║
+║  • MTA: + keyword aria-label on page wrapper            ║
+║  • MTA: Visible breadcrumb (Home › Model Tenancy Act, 2021)        ║
+║  • MTA: Hero subtitle expanded with chapter topics                  ║
+║  • MTA: aria-label on legal-body section                            ║
+║  • MTA: Hidden semantic <aside> for crawlers                        ║
+║  • RENT AGREEMENT: + keyword aria-label on wrapper      ║
+║  • RENT AGREEMENT: Visible breadcrumb (Home › Rent Agreement)       ║
+║  • RENT AGREEMENT: Hero subtitle expanded with context              ║
+║  • RENT AGREEMENT: Hidden semantic <aside> for crawlers             ║
+║  • DASHBOARD: + keyword aria-label on wrapper           ║
+║  • DASHBOARD: Hidden semantic <aside> for crawlers                  ║
+║  ═══ ALL 17 PAGES NOW SEO-OPTIMIZED ═══                             ║
+║                                                                      ║
+║  CRITICAL FIXES (vRF173 SEO V14):                                    ║
+║  • DUPLICATE SCRIPT: Removed second Cloudflare email-decode.min.js  ║
+║  • CSS PARSE ERROR: Orphaned margin-top/max-width/line-height props  ║
+║    merged into .page-hero p; stray closing brace removed             ║
+║  • FOUNDING DATE: Normalised to "2025" across all schemas            ║
+║    (head Organization, head AboutPage, JS-injected About schema)     ║
+║  • SAMEAS CONSISTENCY: JS-injected About schema now includes full    ║
+║    social sameAs array (was only ["https://www.renterfinder.com"])   ║
+║  • TWITTER/X URL: Normalised twitter.com → x.com/RenterFinderIn     ║
+║    in all sameAs arrays and footer social link                       ║
+║  • SEARCHACTION REMOVED: WebSite schema potentialAction removed      ║
+║    (target /search?q= URL does not exist in this SPA)               ║
+║                                                                      ║
+║  SEO CHANGES (vRF173 SEO V10):                                       ║
+║  • SERVICES: Visible breadcrumb added (Home › Services)             ║
+║  • SERVICES: Service JSON-LD schemas moved from global <head> to    ║
+║    page-specific JS injection (only active on Services page)         ║
+║  • SERVICES: Enriched schemas with serviceOutput + full provider    ║
+║  • FEES: Page-specific FAQPage schema injected via JS (4 fee Q&As)  ║
+║  • FEES: PriceSpecification schema injected via JS on Fees page     ║
+║  • FEES: Free offer expiry date now checked programmatically (JS)   ║
+║  • FEES: data-offer-text attributes added for dynamic text swap     ║
+║  • FAQ: First 3 FAQ answers auto-open on page load                  ║
+║  • FAQ: Category titles changed from <h3> to <h2> (semantic SEO)   ║
+║  • FAQ: Client-side search/filter added (filterFaqItems function)   ║
+║  • FAQ: Search input with "No results" feedback added to FAQ page   ║
+║  SEO CHANGES (vRF173 SEO V13) — ALL AUDIT PRIORITY FIXES:            ║
+║  • ALL PAGES: document.title updated dynamically in showPage()       ║
+║  • ALL PAGES: <link rel="canonical" href="https://www.renterfinder.com/faq">
+<link rel="alternate" hreflang="en-in" href="https://www.renterfinder.com/faq">
+<link rel="alternate" hreflang="en" href="https://www.renterfinder.com/faq">
+<link rel="alternate" hreflang="x-default" href="https://www.renterfinder.com/faq">
+
+
+ updated dynamically             ║
+║  • ALL PAGES: og:title, og:description, og:url updated on nav        ║
+║  • FEES: Visible breadcrumb added (Home › Fees)                     ║
+║  • FEES: 2nd section aria-label added to fees-breakdown section     ║
+║  • PROPERTIES: Visible breadcrumb added (Home › Rental Properties)  ║
+║  • PROPERTIES: 2nd H2 added — "Search by City, BHK Type & Budget"  ║
+║  • PROPERTIES: properties-body section gets aria-label on wrapper   ║
+║  • PROPERTIES: ItemList JSON-LD schema injected via JS              ║
+║  • RENTERS-LIST: Visible breadcrumb added (Home › Prospective       ║
+║    Renters' List)                                                    ║
+║  • RENTERS-LIST: rl-filters gets explicit section aria-label        ║
+║  • RENTERS-LIST: Service JSON-LD schema injected via JS             ║
+║  • FAQ: Visible breadcrumb added (Home › FAQ)                       ║
+║  • FAQ: faq-search area gets explicit section aria-label            ║
+║                                                                      ║
+║  SEO + SECURITY CHANGES (vRF173 SEO V12):                             ║
+║  • DASHBOARD: noindex,nofollow confirmed via _noindexPages array     ║
+║  • DASHBOARD: Session-based auth guard added to navigate()           ║
+║    — navigating to #dashboard without rf_auth_token redirects to    ║
+║    login. getActiveSession() checks sessionStorage for rf_auth_token ║
+║  • DASHBOARD: robots.txt + sitemap notes added (see comments)        ║
+║  • _noindexPages expanded: login, register-renter, register-landlord,║
+║    feedback, disclaimer, dashboard all confirmed noindex             ║
+║                                                                      ║
+║  SEO CHANGES (vRF173 SEO V11):                                       ║
+║  • LOGIN: Dynamic noindex/nofollow robots meta added via            ║
+║    updateRobotsMeta() — active for login, register-renter,          ║
+║    register-landlord, feedback, disclaimer, dashboard               ║
+║  • LOGIN: H1 added to login panel (visually hidden, semantic)       ║
+║  • LOGIN: Breadcrumb nav added (Home › Login / Sign Up)             ║
+║  • RENTER FORM: autocomplete attributes added to all 16 inputs      ║
+║  • LANDLORD FORM: autocomplete attributes added to all 16 inputs    ║
+║  SEO CHANGES (vRF173 SEO V18) — CRITICAL SCHEMA, LEGAL & GEO FIXES:  ║
+║  SCHEMA FIXES:                                                        ║
+║  • Global <head> FAQPage removed — was firing on ALL 17 pages         ║
+║    simultaneously (incl. noindex). Now injected per-page only:        ║
+║    injectHomeFaqSchema() on Home, injectFaqPageSchema() on FAQ.       ║
+║  • Global <head> BreadcrumbList (wrong type) replaced with            ║
+║    ItemList of SiteNavigationElement.                                 ║
+║  • HowTo schema on Services removed (deprecated Sept 2023).           ║
+║    Replaced with Article schema.                                      ║
+║  • Internship JobPosting: added jobLocationType:TELECOMMUTE,          ║
+║    applicantLocationRequirements, datePosted, validThrough.           ║
+║    Now eligible for Google Jobs rich results.                         ║
+║  LEGAL FIXES:                                                         ║
+║  • Privacy Policy: DPDP Act 2023 named as primary legislation.        ║
+║    RenterFinder.com = Data Fiduciary. Users = Data Principals.        ║
+║    Updated in intro, Section 6.1, aside, JS schema, _pageMeta.       ║
+║  • Both registration forms: visible DPDP Act 2023 consent notice.    ║
+║  GEO / TECHNICAL FIXES:                                               ║
+║  • llms.txt created — RSL 1.0, AI search allowed, AI training         ║
+║    disallowed, 7 citation-optimised facts, all 13 indexable pages,    ║
+║    excluded pages flagged.                                            ║
+║  • robots.txt created — GPTBot/ClaudeBot/PerplexityBot/               ║
+║    OAI-SearchBot allowed. CCBot/anthropic-ai/cohere-ai blocked.       ║
+║    Private pages disallowed. Sitemap referenced.                      ║
+║  • sitemap.xml created — 13 indexable pages, no priority/             ║
+║    changefreq, only loc + lastmod. Noindex pages excluded.            ║
+║  • <link rel="sitemap"> + <meta name="llms-txt"> added to head.       ║
+║  • IndexNow deployment instructions added as HTML comment.            ║
+║  • Deployment checklist comment added (logo.svg, og-image.jpg,        ║
+║    robots.txt, sitemap.xml, llms.txt paths noted).                    ║
+║                                                                      ║
+║  • _pageMeta TITLES enriched for 5 weak pages:                       ║
+║    - login: "Login or Register Free — ... | Landlord & Renter        ║
+║       Sign Up India"                                                  ║
+║    - terms: "Terms of Use — ... | Landlord & Renter Legal            ║
+║       Agreement India"                                                ║
+║    - disclaimer: "Disclaimer — ... | Liability, RERA &               ║
+║       Platform Limitations India"                                     ║
+║    - privacy: "Privacy Policy — ... | How We Protect Your            ║
+║       Data in India"                                                  ║
+║    - feedback: "Contact Us & Feedback — ... | Suggestions,           ║
+║       Complaints & Support India"                                     ║
+║  • _pageMeta DESCRIPTIONS enriched for same 5 pages                  ║
+║  • TERMS H1: "Terms of Use — RenterFinder.com" (branded)             ║
+║  • TERMS eyebrow: "Legal" → "Legal Agreement"                        ║
+║  • TERMS hero subtitle: now includes platform context                 ║
+║  • TERMS H2: enriched with "Rental Platform Rules"                   ║
+║  • DISCLAIMER H1: "Platform Disclaimer — RenterFinder.com"           ║
+║  • DISCLAIMER eyebrow: "Legal" → "Legal Notice"                      ║
+║  • DISCLAIMER hero subtitle: now includes RERA + liability context   ║
+║  • DISCLAIMER H2: enriched with "RERA Exclusion"                     ║
+║  • PRIVACY H1: "Privacy Policy — RenterFinder.com"                   ║
+║  • PRIVACY eyebrow: "Legal" → "Legal & Data Protection"              ║
+║  • PRIVACY hero subtitle: now includes data types context             ║
+║  • PRIVACY H2: enriched with "Store" and "in India"                  ║
+║  • FEEDBACK H1: "Share Your Feedback — We're Listening"              ║
+║  • FEEDBACK eyebrow: "We're Listening" → "Contact Us"                ║
+║  • FEEDBACK hero subtitle: enriched with contact context             ║
+║  • FEEDBACK body: H2 added "How Can We Help You?"                    ║
+║  • FEEDBACK body: intro paragraph added (keyword-enriched)           ║
+║  • FEEDBACK left column: aria-label added                            ║
+║  • FEEDBACK form: <h3> → <h2> (proper heading hierarchy)            ║
+║  • FEEDBACK form: <section> wrapper with aria-label added            ║
+║  • FEEDBACK form: for/name/autocomplete attrs on all inputs          ║
+║  • FEEDBACK hidden aside: significantly enriched with keywords,      ║
+║    contact info, and pan-India city coverage                          ║
+║  • FEEDBACK schema: ContactPage + Organization contactPoint          ║
+║    schema injected via JS on feedback page nav                        ║
+║  • FEEDBACK schema: BreadcrumbList schema injected via JS            ║
+║  • LEGAL PAGES schema: WebPage + BreadcrumbList schemas injected     ║
+║    via JS for terms, disclaimer, privacy, mta, rent-agreement        ║
+║  • JS IIFE: injectFeedbackSchema() and injectLegalPageSchema()       ║
+║    functions added; showPage hook updated for all new pages           ║
+║                                                                      ║
+║  FAQ EXPANSION (vRF173 SEO V20):                                     ║
+║  • FAQ page: 3 new categories added:                                 ║
+║    - "Tenant Screening & Verification" (4 new Q&As)                  ║
+║    - "Eviction & Tenancy Disputes" (5 new Q&As)                      ║
+║    - "Model Tenancy Act, 2021 — Key Points" (4 new Q&As)            ║
+║  • FAQ page: "Renting & Negotiation" expanded from 2 to 4 Q&As      ║
+║  • Internal links added throughout FAQ to /renters-list,             ║
+║    /rent-agreement, /properties, /mta pages                          ║
+║  • FAQ hero subtitle updated; aria-labels updated across page         ║
+║  • Hidden <aside> SEO block expanded with all new topics             ║
+║  • FAQPage JSON-LD schema expanded from 10 to 20 questions           ║
+║  • FAQ page now targets ~1500 words across 8 categories              ║
+║                                                                      ║
+║  INTERNAL LINKING AUDIT (vRF173 SEO V21):                            ║
+║  • All 17 pages audited and upgraded with keyword-rich interlinks    ║
+║  • HOME: added /rent-agreement and /faq links in CTA section         ║
+║    Anchor text: "Rent Agreement reference", "FAQ for landlords"      ║
+║  • ABOUT: added /properties, /renters-list, /faq, /rent-agreement   ║
+║    links in mission section                                          ║
+║  • SERVICES: added /fees, /faq, /rent-agreement links after         ║
+║    content block                                                     ║
+║  • FEES: added /properties, /renters-list, /faq links at end        ║
+║    of content section                                                ║
+║  • PROPERTIES: new related-pages paragraph injected with            ║
+║    /fees, /renters-list, /faq, /rent-agreement links                ║
+║  • RENTERS-LIST: added /home, /fees, /faq, /properties links        ║
+║    below existing why-use-us callout                                 ║
+║  • TERMS: new related-resources paragraph with /faq,                ║
+║    /rent-agreement, /fees links before footer                        ║
+║  • DISCLAIMER: new related paragraph with /faq, /fees               ║
+║  • PRIVACY: new related paragraph with /faq, /fees                  ║
+║  • MTA: new related paragraph with /rent-agreement, /faq,           ║
+║    /renters-list after Important Note callout                        ║
+║  • REFER: added /home, /fees links in CTA dark block                ║
+║  • INTERNSHIP: added /about, /feedback links after content block    ║
+║  • RENT-AGREEMENT: added /faq, /properties, /renters-list links     ║
+║    after content section                                             ║
+║  • LOGIN: unchanged — login/register pages intentionally            ║
+║    noindex; nav-level links sufficient                               ║
+║  • DASHBOARD: unchanged — post-auth UI, full sidebar links          ║
+║    already present                                                   ║
+║  • FEEDBACK: existing /dashboard link retained; /faq and /about     ║
+║    already linked via page nav; no content block available           ║
+║  Link pattern: every indexable page now links to at least 3         ║
+║  related pages using keyword-rich anchor text per exec summary       ║
+║                                                                      ║
+║  FEE TERMINOLOGY & CONTENT UPDATE (vRF173 SEO V22):                  ║
+║  • "Agency Fee" renamed to "Platform Service Fee" — 110 replacements║
+║    across all 17 pages, meta tags, JSON-LD schemas, FAQ answers,     ║
+║    registration form consent text, and SEO aside blocks              ║
+║  • "Listing Fee" → "Profile Listing Fee" wherever "Profile" missing  ║
+║    — 23 visible-text instances corrected                             ║
+║  • ₹125 → "₹125 (discounted from ₹499 — 75% off)" in all           ║
+║    visible content blocks outside scripts and JSON-LD                ║
+║  • 6-DAYS SPLIT: language updated from "6 days advance + 6 days on  ║
+║    deal finalisation" to "6 days to arrange property meeting + 6     ║
+║    days at deal closure (when agreement is signed)" across:          ║
+║    – Home page fee breakdown card                                    ║
+║    – Home page 3-match guarantee callout                             ║
+║    – Services page fee hero section                                  ║
+║    – Services page fee card subtitle                                 ║
+║    – Fees page fee card (full rewrite)                               ║
+║    – Fees page breakdown table row labels                            ║
+║    – Fees page content block paragraphs (full rewrite)               ║
+║    – Renters List content paragraph and why-use-us callout           ║
+║    – FAQ: "What are the fees?" answer rewritten                      ║
+║    – FAQ: "Why is 6 days charged?" question renamed + answer rewrite ║
+║    – FAQ: "Can I pay 100% at closure?" question renamed + rewrite    ║
+║    – FAQ: "Hidden charges?" answer updated to list 3 fees            ║
+║    – Registration form consent text (landlord + renter forms)        ║
+║    – JSON-LD schemas (fees FAQ, offer description, home FAQ schema)  ║
+║  • ₹99 RE-ACTIVATION: new dedicated section on Fees page added      ║
+║    explaining re-activation at ₹99 (within 6 months of deactivation)║
+║    "What RenterFinder Does Not Charge" section updated to reflect    ║
+║    the 3-fee structure (₹125, ₹99 re-activation, 12-day PSF)        ║
+║    Fees page hidden aside SEO block updated                          ║
+║    Services page aside updated                                       ║
+╚══════════════════════════════════════════════════════════════════════╝
+-->
+<!DOCTYPE html>
+<html lang="en-in" prefix="og: https://ogp.me/ns#">
+<head>
+<meta charset="UTF-8">
+<meta name="indexnow-key" content="007e684f54ca459a8bcfbb619be68281">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- vRF173 SEO V19 -->
+
+<!-- ═══ DEPLOYMENT FILES (serve these at root alongside this HTML) ═══ -->
+<!-- robots.txt  → https://www.renterfinder.com/robots.txt  (see robots.txt in repo) -->
+<!-- sitemap.xml → https://www.renterfinder.com/sitemap.xml (see sitemap.xml in repo) -->
+<!-- llms.txt    → https://www.renterfinder.com/llms.txt    (see llms.txt in repo)   -->
+<!-- logo.svg    → https://www.renterfinder.com/logo.svg    (serve the brand SVG)    -->
+<!-- og-image.jpg→ https://www.renterfinder.com/og-image.jpg(1200×630 OG image)      -->
+
+<!-- ═══ SITEMAP DISCOVERY ═══ -->
+<link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+
+<!-- ═══ PRIMARY SEO META TAGS ═══ -->
+<title>FAQ — Rental Fees, Listings & Matching | RenterFinder</title>
+<meta name="description" content="FAQ for RenterFinder.com — rental fees, profile listing, how matching works, rent agreements, Model Tenancy Act, and rental laws across India. All answers here.">
+<meta name="keywords" content="rental FAQ India, how RenterFinder works, tenant search questions, rental platform help, landlord FAQ, renter FAQ, property listing questions India">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="author" content="RenterFinder.com">
+<meta name="theme-color" content="#040429">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RenterFinder">
+<meta name="application-name" content="RenterFinder.com">
+<meta name="format-detection" content="telephone=no">
+<link rel="canonical" href="https://www.renterfinder.com/faq">
+
+<!-- ═══ GEO / AI DISCOVERY ═══ -->
+<!-- llms.txt: AI search crawlers can find content permissions at /llms.txt -->
+<meta name="llms-txt" content="/llms.txt">
+
+<!-- ═══ INDEXNOW (per seo-technical: Bing, Yandex, Naver instant indexing) ═══ -->
+<!-- IndexNow key file: deploy /[key].txt at root when submitting URL changes -->
+<!-- Submit via: https://www.bing.com/indexnow?url=https://www.renterfinder.com/&key=[key] -->
+
+<!-- ═══ OPEN GRAPH (Facebook, LinkedIn, WhatsApp) ═══ -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RenterFinder.com">
+<meta property="og:title" content="FAQ — Rental Fees, Listings & Matching | RenterFinder">
+<meta property="og:description" content="FAQ for RenterFinder.com — rental fees, profile listing, how matching works, rent agreements, Model Tenancy Act, and rental laws across India. All answers here.">
+<meta property="og:url" content="https://www.renterfinder.com/faq">
+<meta property="og:image" content="https://www.renterfinder.com/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RenterFinder.com — India's rental-only property matching platform for landlords and tenants">
+<meta property="og:locale" content="en_IN">
+
+<!-- ═══ TWITTER CARD ═══ -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@RenterFinderIn">
+<meta name="twitter:creator" content="@RenterFinderIn">
+<meta name="twitter:title" content="FAQ — Rental Fees, Listings & Matching | RenterFinder">
+<meta name="twitter:description" content="FAQ for RenterFinder.com — rental fees, profile listing, how matching works, rent agreements, Model Tenancy Act, and rental laws across India. All answers here.">
+<meta name="twitter:image" content="https://www.renterfinder.com/og-image.jpg">
+<meta name="twitter:image:alt" content="RenterFinder.com — India's rental-only property matching platform">
+
+<!-- ═══ GEO & LANGUAGE TARGETING ═══ -->
+<meta name="geo.region" content="IN">
+<meta name="geo.placename" content="India">
+<meta name="language" content="English">
+<meta http-equiv="content-language" content="en-in">
+
+<!-- ═══ STRUCTURED DATA — Organization ═══ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "RenterFinder.com",
+  "alternateName": "RenterFinder",
+  "url": "https://www.renterfinder.com",
+  "logo": "https://www.renterfinder.com/logo.svg",
+  "description": "India's first and only rental-exclusive property platform that connects landlords with genuine prospective renters across all Indian cities and towns.",
+  "foundingDate": "2025",
+  "areaServed": {
+    "@type": "Country",
+    "name": "India"
+  },
+  "serviceType": [
+    "Property Rental Matching",
+    "Tenant Finding Service",
+    "Rental Listing Platform"
+  ],
+  "sameAs": [
+    "https://www.linkedin.com/company/renterfinder",
+    "https://www.instagram.com/renterfinder.in",
+    "https://www.facebook.com/renterfinder",
+    "https://x.com/RenterFinderIn",
+    "https://www.youtube.com/@RenterFinder",
+    "https://www.crunchbase.com/organization/renterfinder"
+  ],
+  "founder": {
+    "@type": "Person",
+    "name": "Aditya Shankar",
+    "email": "renterfinder1@gmail.com",
+    "jobTitle": "Founder"
+  }
+}
+</script>
+
+<!-- ═══ STRUCTURED DATA — AboutPage (Google Knowledge Graph) ═══ -->
+
+
+<!-- ═══ STRUCTURED DATA — WebSite (enables Google sitelinks search) ═══ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "RenterFinder.com",
+  "url": "https://www.renterfinder.com",
+  "description": "India's only rental-exclusive property platform — no buying, no selling, only renting.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://www.renterfinder.com/properties?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<!-- ═══ STRUCTURED DATA — RealEstateAgent service ═══ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "RenterFinder.com",
+  "url": "https://www.renterfinder.com",
+  "description": "India's first rental-only property matching service. We connect landlords with genuine prospective renters — pan-India, all cities and towns. Platform service fee: only 12 days' rent.",
+  "areaServed": {
+    "@type": "Country",
+    "name": "India"
+  },
+  "priceRange": "₹125 profile listing fee, 12 days' rent platform service fee",
+  "serviceType": "Online Rental Property Matching",
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Rental Services",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "name": "Profile Listing Fee",
+        "description": "List your renter or landlord profile on RenterFinder.com for 3 months",
+        "price": "125",
+        "priceCurrency": "INR",
+        "availability": "https://schema.org/InStock"
+      },
+      {
+        "@type": "Offer",
+        "name": "Platform Service Fee",
+        "description": "12 days' rent — 6 days' rent advance to arrange the property meeting (non-refundable) and 6 days' rent at deal closure when the rental agreement is signed",
+        "priceCurrency": "INR"
+      }
+    ]
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "RenterFinder.com",
+    "url": "https://www.renterfinder.com"
+  }
+}
+</script>
+
+<!-- ═══ STRUCTURED DATA — FAQ (injected per-page via JS — see injectHomeFaqSchema() in [SECTION:js]) ═══ -->
+<!-- NOTE vRF173 SEO V18: FAQPage removed from global <head> — it was firing on ALL 17 pages
+     simultaneously (including noindex pages like dashboard/login/feedback), causing
+     conflicting schema signals. FAQPage is now injected only on Home via
+     injectHomeFaqSchema() and on the FAQ page via injectFaqPageSchema(), both called
+     from the showPage() hook. -->
+
+<!-- ═══ STRUCTURED DATA — SiteNavigationElement (global nav links) ═══ -->
+<!-- NOTE vRF173 SEO V18: The previous global BreadcrumbList was incorrect — a BreadcrumbList
+     represents a single page's trail (e.g. Home › Services), not the full site nav.
+     Replaced with ItemList of SiteNavigationElement to correctly describe global navigation. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "RenterFinder.com Main Navigation",
+  "itemListElement": [
+    { "@type": "SiteNavigationElement", "position": 1, "name": "Home", "url": "https://www.renterfinder.com/" },
+    { "@type": "SiteNavigationElement", "position": 2, "name": "About Us", "url": "https://www.renterfinder.com/about" },
+    { "@type": "SiteNavigationElement", "position": 3, "name": "Services", "url": "https://www.renterfinder.com/services" },
+    { "@type": "SiteNavigationElement", "position": 4, "name": "Fees", "url": "https://www.renterfinder.com/fees" },
+    { "@type": "SiteNavigationElement", "position": 5, "name": "Rental Properties", "url": "https://www.renterfinder.com/properties" },
+    { "@type": "SiteNavigationElement", "position": 6, "name": "Renters List", "url": "https://www.renterfinder.com/renters-list" },
+    { "@type": "SiteNavigationElement", "position": 7, "name": "FAQ", "url": "https://www.renterfinder.com/faq" }
+  ]
+}
+</script>
+
+<!-- ═══ STRUCTURED DATA — AggregateRating (for star ratings in SERPs) ═══ -->
+
+
+<!-- Service schemas moved to page-specific JS injection (see showPage function) -->
+
+<!-- ═══ PERFORMANCE: Preconnect to external origins ═══ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<link rel="dns-prefetch" href="https://fonts.gstatic.com">
+
+<!-- ═══ FAVICON ═══ -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiAxMDQiIHdpZHRoPSI5NiIgaGVpZ2h0PSIxMDQiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iUmVudGVyRmluZGVyIGxvZ28iPgogIDwhLS0gSG91c2Ugc2hhcGUgZmlsbGVkIHdpdGggYnJhbmQgbmF2eSwgZ29sZCBib3JkZXIsIHRyYW5zcGFyZW50IG91dHNpZGUgLS0+CiAgPHBhdGggZD0iTTQ4IDQgTDkyIDM2IEw5MiAxMDAgTDQgMTAwIEw0IDM2IFoiIGZpbGw9IiMwNDA0MjkiIHN0cm9rZT0iI2M5YTY2YiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPHRleHQgeD0iNDgiIHk9Ijg0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iR2VvcmdpYSwgc2VyaWYiIGZvbnQtc2l6ZT0iNDYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNjOWE2NmIiIGxldHRlci1zcGFjaW5nPSItMiI+UkY8L3RleHQ+Cjwvc3ZnPgo=">
+
+<!-- ═══ GOOGLE FONTS ═══ -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet">
+<link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="styles.css"></noscript></noscript>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is new at RenterFinder.com?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Renters can also upload their profile (with requirement) at this portal. Landlords can search a suitable renter from the available Renter's List. No buying, no selling — ONLY RENTING. We have a single focus on property renting service only. Since all listings are posted for 3 months only, the portal is clutter-free. Since RenterFinder.com is a paid portal (no free services), profile"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why are profile listings valid for 3 months only?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "3 months is enough time to find a property (for renters) or a renter (for landlords). After 3 months, accounts auto-deactivate to keep the portal uncluttered with only active seekers. Users can re-activate their profile after 3 months if genuinely required."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do you have property management service?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "At present, we are an online pan-India service that only introduces prospective renters and landlords to each other. We do not offer property management services. Listing & Profile"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How can I list my property / renter's profile?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "First, register through your mobile number. Fill a short form and list your profile easily. Alternatively, you can post your profile through our help — just say \"Hi\" on our WhatsApp number +91 7303004550 . Our expert team will call you and help with profile listing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I edit my profile after posting it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. You can send an email maximum 3 times in 3 months to us at [email protected] for profile editing. We will edit your profile within 48 hours."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How can I increase the visibility of my profile?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "There is no 'premium service' for more visibility. RenterFinder.com gives equal chance to all clients and generally displays registered profiles on a latest listings first basis. However, RenterFinder.com has reserved the right to list profiles and offer services in other ways too."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What should I take care of while posting my profile?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Landlord: Click pictures of your property from the inside only. All photos must be within 1 MB in size and only in JPEG or PNG format. Renter: All details regarding family size, rent range, etc. must be filled genuinely."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I provide feedback, suggestions, or complaints?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, we have a dedicated Feedback page where you can share suggestions, bug reports, compliments, or complaints. We read every message."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How soon will my listing go live on RenterFinder.com?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Your listing is usually published within 24 hours after we complete screening and review."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How soon will I find a renter through RenterFinder.com?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "There is no fixed time limit. It depends on the number of available renters in your area, as well as each renter's personal preferences and decisions after reviewing the location, property condition, rent amount, and other criteria. Your listing will remain visible on RenterFinder.com for 3 months unless you delete it earlier (e.g., after finding a renter or for any other reason). <"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What should I do with my listing after finding a renter?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You can delete your listing at any time, or you can report to RenterFinder.com and we will deactivate it for you. Listings are automatically deactivated after 3 months. Once deactivated, you can easily reactivate your listing within the next 6 months by paying a small reactivation fee. Fees & Payments <div class="
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the Profile Listing Fee and Platform Service Fee?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "All details regarding fees are visible at our Fees tab . In summary: Profile Listing Fee: ₹125 (discounted from ₹499 — 75% off) for 3 months — paid separately by both landlord and renter. Platform Service Fee: 12 days' rent — also paid separately by both landlord and renter, split as 6 days to arrange"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are there any hidden charges?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. We charge only: the Profile Listing Fee (₹125, discounted from ₹499), the Profile Re-activation Fee (₹99 within 6 months), and the Platform Service Fee (12 days' rent — 6 days at meeting, 6 days at deal closure), all inclusive of taxes. There are no other charges at all."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why is 6 days' rent charged to arrange the meeting? What if the deal does not close?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The 6 days' rent meeting charge is a sign of commitment from both parties — confirming they are serious about proceeding to a property visit. This payment is made only after chatting and clearing all doubts. We value and respect everyone's time. If the deal does not close for any reason and it is reported (with the reason) to us by both parties within 7 days of the meeting, we provide 3 more match"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will Platform Service Fee be calculated on 'Rent Asked on Portal' or 'Final Negotiated Rent'?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Platform Service Fee will be calculated and charged on 'Rent Asked on Portal' only , irrespective of the final rent agreed upon after negotiation."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I pay the full Platform Service Fee only at deal closure?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. As per our terms & conditions, the Platform Service Fee is paid in two stages: 6 days' rent is charged to arrange the property meeting (non-refundable), and the remaining 6 days' rent is charged at deal closure when the rental agreement is signed. The meeting charge must be paid before the property visit takes place — it cannot be deferred to closure. <div class=\"faq-q\" oncl"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is your refund policy?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "All payments made at RenterFinder.com are non-refundable."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I make payment on RenterFinder.com?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "To avoid financial fraud, please pay only through the link given on our portal . Do not respond to any request or call mentioning our name that asks for payment through cash, phone transfer, bank transfer, OTP verification, or any other means. It may be a scammer's call. Renting & Negotiation <div"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will you help me negotiate the rent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RenterFinder.com only introduces prospective landlords and renters to each other for further negotiations at a mutually convenient date and time. It is always better to negotiate between two parties directly, without involving a third party or agent. Generally, rents are fixed by the landlord based on the property's location, age, and condition. Renters have full right to negotiate rent and securi"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a Security Deposit?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A security deposit is a refundable sum of money paid by the renter to the landlord before moving in, as a financial guarantee to cover repairs, cleaning, or unpaid rent during vacation of the property. If there is no damage or unpaid rent after vacation, the landlord returns the full security deposit on the day of vacation. As per the Model Tenancy Act, 2021: maximum 2 months' rent for residential"
+      }
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://www.renterfinder.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "FAQ",
+      "item": "https://www.renterfinder.com/faq"
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<!-- ═══ NOSCRIPT FALLBACK ═══ -->
+<!-- noscript body removed V57: page content renders via CSS without JS; misleading JS-required message deleted -->
+
+<!-- ═══════════════════ NAV ═══════════════════ -->
+<!-- [SECTION:nav] — MAIN NAVIGATION -->
+<header>
+<nav id="main-nav" role="navigation" aria-label="Main navigation">
+  <a href="./index.html" class="logo" onclick="navigate('home')" aria-label="RenterFinder.com — Go to homepage" role="link" tabindex="0">
+    <svg class="logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 82" role="img" aria-label="RenterFinder.com logo — India's rental-only property platform">
+      <rect x="3" y="3" width="354" height="76" fill="none" stroke="#c9a66b" stroke-width="3.5"/>
+      <text y="55" text-anchor="middle" x="180" font-family="Georgia, serif">
+        <tspan font-size="40" font-weight="700" fill="#c9a66b" letter-spacing="-0.5">Renter</tspan><tspan font-size="40" font-weight="700" fill="#040429" letter-spacing="-0.5">Finder</tspan><tspan font-size="22" font-weight="400" fill="#040429">.com</tspan>
+      </text>
+    </svg>
+  </a>
+  <ul class="nav-links" id="nav-links" role="menubar">
+    <li role="none"><a href="./index.html" onclick="navigate('home')" data-page="home" role="menuitem" tabindex="0">Home</a></li>
+    <li role="none"><a href="./about.html" onclick="navigate('about')" data-page="about" role="menuitem" tabindex="0">About Us</a></li>
+    <li role="none"><a href="./services.html" onclick="navigate('services')" data-page="services" role="menuitem" tabindex="0">Services</a></li>
+    <li role="none"><a href="./fees.html" onclick="navigate('fees')" data-page="fees" role="menuitem" tabindex="0">Fees</a></li>
+    <li role="none"><a href="./faq.html" onclick="navigate('faq')" data-page="faq" class="active" role="menuitem" tabindex="0">FAQ</a></li>
+    <li role="none"><a href="./properties.html" onclick="navigate('properties')" data-page="properties" role="menuitem" tabindex="0">Rental Properties</a></li>
+    <li role="none"><a href="./renters-list.html" onclick="navigate('renters-list')" data-page="renters-list" role="menuitem" tabindex="0">Renter's List</a></li>
+    <li role="none"><a href="./login.html" onclick="navigate('login')" data-page="login" class="nav-login" role="menuitem" tabindex="0">Login / Sign Up</a></li>
+  </ul>
+  <div class="nav-hamburger" id="hamburger" onclick="toggleMenu()" role="button" aria-label="Toggle mobile menu" aria-expanded="false" tabindex="0">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+</header>
+<div class="page active" id="page-faq" aria-label="Frequently asked questions about RenterFinder.com — rental fees, profile listing, tenant screening, eviction basics, Model Tenancy Act 2021, rent agreements, and tenant-landlord matching across India">
+  <div class="page-hero">
+    <div class="page-hero-pattern"></div>
+    <div class="page-hero-inner">
+      <nav class="page-breadcrumb" aria-label="Breadcrumb">
+        <a href="./index.html" onclick="navigate('home')">Home</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">FAQ</span>
+      </nav>
+      <div class="page-hero-eyebrow">Help Centre</div>
+      <h1>Frequently Asked <em>Questions</em></h1>
+      <p>Everything you need to know about RenterFinder.com — from listing your profile and finding tenants, to tenant screening, eviction rights, Model Tenancy Act essentials, and rent agreement rules across India.</p>
+    </div>
+  </div>
+  <!-- FAQ categories: About RenterFinder.com, Listing & Profile, Fees & Payments, Renting & Negotiation, Rent Agreements & Legal -->
+  <section style="padding:80px 60px;" class="faq-section" aria-label="FAQ categories — about RenterFinder.com, profile listing, rental fees, renting and negotiation, tenant screening and verification, eviction and tenancy disputes, Model Tenancy Act 2021, rent agreements and Indian rental laws">
+    <div style="max-width:800px;margin:0 auto;">
+      <!-- FAQ Search / Filter -->
+      <div style="margin-bottom:32px;" aria-label="Search frequently asked questions by keyword">
+        <input type="text" id="faq-search-input" placeholder="Search FAQs — type a keyword..." oninput="filterFaqItems(this.value)" style="width:100%;box-sizing:border-box;padding:14px 20px;font-size:14px;font-family:'Outfit',sans-serif;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--dark);outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'" aria-label="Search frequently asked questions">
+        <p id="faq-no-results" style="display:none;text-align:center;color:var(--mid);font-size:14px;margin-top:16px;">No matching questions found. Try a different keyword.</p>
+      </div>
+      <div class="faq-category reveal">
+        <h2 class="faq-cat-title">About RenterFinder.com</h2>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is new at RenterFinder.com?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><ol><li>Renters can also upload their profile (with requirement) at this portal. Landlords can search a suitable renter from the available Renter's List.</li><li>No buying, no selling — <strong>ONLY RENTING.</strong> We have a single focus on property renting service only.</li><li>Since all listings are posted for 3 months only, the portal is clutter-free.</li><li>Since RenterFinder.com is a paid portal (no free services), profile listings are limited, genuine, and mostly listed by landlords or renters themselves. Due to the limited number of profiles, visibility and search is easy and comfortable for all users.</li><li>All details regarding fees are visible at our "Fees" tab. No hidden charges at all.</li><li>We have pan-India service — not city or town specific.</li><li>We have no premium service and we treat all our clients equally.</li><li>No third-party (agent) involvement in rent negotiation and terms &amp; conditions finalisation.</li></ol></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Why are profile listings valid for 3 months only?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>3 months is enough time to find a property (for renters) or a renter (for landlords). After 3 months, accounts auto-deactivate to keep the portal uncluttered with only active seekers. Users can re-activate their profile after 3 months if genuinely required.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Do you have property management service?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>At present, we are an online pan-India service that only introduces prospective renters and landlords to each other. We do not offer property management services.</p></div></div>
+      </div>
+
+      <div class="faq-category reveal">
+        <h2 class="faq-cat-title">Listing & Profile</h2>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">How can I list my property / renter's profile?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>First, register through your mobile number. Fill a short form and list your profile easily. Alternatively, you can post your profile through our help — just say "Hi" on our WhatsApp number <strong>+91 7303004550</strong>. Our expert team will call you and help with profile listing.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Can I edit my profile after posting it?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Yes. You can send an email <strong>maximum 3 times</strong> in 3 months to us at <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="94e6f1fae0f1e6f2fdfaf0f1e6a5d4f3f9f5fdf8baf7fbf9">[email&#160;protected]</a></strong> for profile editing. We will edit your profile within 48 hours.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">How can I increase the visibility of my profile?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>There is no 'premium service' for more visibility. RenterFinder.com gives equal chance to all clients and generally displays registered profiles on a latest listings first basis. However, RenterFinder.com has reserved the right to list profiles and offer services in other ways too.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What should I take care of while posting my profile?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p><strong>Landlord:</strong> Click pictures of your property from the inside only. All photos must be within 1 MB in size and only in JPEG or PNG format.<br><strong>Renter:</strong> All details regarding family size, rent range, etc. must be filled genuinely.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Can I provide feedback, suggestions, or complaints?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Yes, we have a dedicated <a href="./feedback.html" onclick="navigate('feedback')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Feedback page</a> where you can share suggestions, bug reports, compliments, or complaints. We read every message.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">How soon will my listing go live on RenterFinder.com?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Your listing is usually published within 24 hours after we complete screening and review.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">How soon will I find a renter through RenterFinder.com?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>There is no fixed time limit. It depends on the number of available renters in your area, as well as each renter's personal preferences and decisions after reviewing the location, property condition, rent amount, and other criteria. Your listing will remain visible on RenterFinder.com for 3 months unless you delete it earlier (e.g., after finding a renter or for any other reason).</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What should I do with my listing after finding a renter?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>You can delete your listing at any time, or you can report to RenterFinder.com and we will deactivate it for you. Listings are automatically deactivated after 3 months. Once deactivated, you can easily reactivate your listing within the next 6 months by paying a small reactivation fee.</p></div></div>
+      </div>
+
+      <div class="faq-category reveal">
+        <h2 class="faq-cat-title">Fees & Payments</h2>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What are the Profile Listing Fee and Platform Service Fee?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>All details regarding fees are visible at our <a href="./fees.html" onclick="navigate('fees')" style="color:var(--gold-dk);cursor:pointer;font-weight:600;">Fees tab</a>. In summary: <strong>Profile Listing Fee: ₹125 (discounted from ₹499 — 75% off) for 3 months</strong> — paid separately by both landlord and renter. <strong>Platform Service Fee: 12 days' rent</strong> — also paid separately by both landlord and renter, split as 6 days to arrange the property meeting and 6 days at deal closure when the agreement is signed. Profile re-activation (within 6 months of deactivation): ₹99.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Are there any hidden charges?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>No. We charge only: the Profile Listing Fee (₹125, discounted from ₹499), the Profile Re-activation Fee (₹99 within 6 months), and the Platform Service Fee (12 days' rent — 6 days at meeting, 6 days at deal closure), all inclusive of taxes. There are no other charges at all.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Why is 6 days' rent charged to arrange the meeting? What if the deal does not close?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>The 6 days' rent meeting charge is a sign of commitment from both parties — confirming they are serious about proceeding to a property visit. This payment is made only after chatting and clearing all doubts. We value and respect everyone's time.<br><br>If the deal does not close for any reason and it is reported (with the reason) to us by both parties within 7 days of the meeting, we provide <strong>3 more match options</strong> within the next 3 months using the same meeting charge. If no new match closes within 3 months, the account will be deactivated and the meeting charge will not be refunded.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Will Platform Service Fee be calculated on 'Rent Asked on Portal' or 'Final Negotiated Rent'?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Platform Service Fee will be calculated and charged on <strong>'Rent Asked on Portal' only</strong>, irrespective of the final rent agreed upon after negotiation.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Can I pay the full Platform Service Fee only at deal closure?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>No. As per our terms &amp; conditions, the Platform Service Fee is paid in two stages: 6 days' rent is charged to arrange the property meeting (non-refundable), and the remaining 6 days' rent is charged at deal closure when the rental agreement is signed. The meeting charge must be paid before the property visit takes place — it cannot be deferred to closure.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is your refund policy?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p><strong>All payments made at RenterFinder.com are non-refundable.</strong></p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">How do I make payment on RenterFinder.com?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>To avoid financial fraud, please pay <strong>only through the link given on our portal</strong>. Do not respond to any request or call mentioning our name that asks for payment through cash, phone transfer, bank transfer, OTP verification, or any other means. It may be a scammer's call.</p></div></div>
+      </div>
+
+      <div class="faq-category reveal">
+        <h2 class="faq-cat-title">Renting & Negotiation</h2>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Will you help me negotiate the rent?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>RenterFinder.com only introduces prospective landlords and renters to each other for further negotiations at a mutually convenient date and time. It is always better to negotiate between two parties directly, without involving a third party or agent. Generally, rents are fixed by the landlord based on the property's location, age, and condition. Renters have full right to negotiate rent and security deposit amounts as per their budget.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is a Security Deposit?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>A security deposit is a refundable sum of money paid by the renter to the landlord before moving in, as a financial guarantee to cover repairs, cleaning, or unpaid rent during vacation of the property. If there is no damage or unpaid rent after vacation, the landlord returns the full security deposit on the day of vacation.<br><br>As per the Model Tenancy Act, 2021: maximum 2 months' rent for residential properties and 6 months' rent for commercial properties. See our <a href="./mta.html" onclick="navigate('mta')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Model Tenancy Act guide →</a> for full details.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">How do I find a good tenant quickly?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Finding a good tenant quickly comes down to three things: visibility, screening, and speed of response. On RenterFinder.com, landlords get two powerful tools: first, post your property on our <a href="./properties.html" onclick="navigate('properties')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Rental Properties listing</a> so active renters can find you; second, browse our <a href="./renters-list.html" onclick="navigate('renters-list')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Prospective Renters' List</a> — India's only database where you can proactively search for tenants by city, budget, and family size, without waiting for them to approach you. Respond to enquiries within 24 hours and keep your property photos clear and accurate for the fastest results.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What should a landlord check before renting out a property?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Before handing over the keys, a landlord should: <strong>(1)</strong> verify the tenant's identity (Aadhaar, PAN, or passport); <strong>(2)</strong> check employment or income proof to confirm rent affordability; <strong>(3)</strong> collect references from a previous landlord if possible; <strong>(4)</strong> take clear photos of the property's condition before move-in and add an inventory list to the rent agreement; <strong>(5)</strong> collect the security deposit before handing over keys; and <strong>(6)</strong> execute a proper <a href="./rent-agreement.html" onclick="navigate('rent-agreement')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">rent agreement</a> with clear terms on maintenance, utilities, and notice period. RenterFinder's <a href="./renters-list.html" onclick="navigate('renters-list')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Prospective Renters' List</a> shows tenant profiles upfront, making this initial assessment easier.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">How will the renter and landlord contact each other to finalize the deal?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>If either party shortlists a profile by clicking the "Show Interest" button, we share the interested party's full contact details with the other side for quick review. Once the second party approves, we schedule a chat session at a mutually convenient date and time to clear up doubts and discuss rental terms in more detail.</p><p style="margin-top:10px;">If both parties agree to meet after the chat, each must pay a Platform Service Fee equal to 6 days' rent (non-refundable) in advance. We then arrange an in-person meeting at a mutually convenient date and time for a site visit and further discussions or negotiations.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Whom should I contact for any problems after moving in?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>RenterFinder.com is only responsible for facilitating the initial meeting between prospective landlords and renters without a broker in between. For any issues that arise during the stay, you should contact the house owner/landlord directly.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Whom should I pay rent to?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Rent should be paid directly to the house owner/landlord using the agreed payment method.</p></div></div>
+      </div>
+
+      <!-- ─── TENANT SCREENING ─── -->
+      <div class="faq-category reveal">
+        <h2 class="faq-cat-title">Tenant Screening &amp; Verification</h2>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is tenant screening and why is it important?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Tenant screening is the process a landlord follows to evaluate a prospective renter before offering them a property. It typically involves verifying identity documents, checking income or employment, and assessing the tenant's rental history. Proper screening significantly reduces the risk of rent defaults, property damage, and legal disputes. In India, the Model Tenancy Act, 2021 also requires tenant information to be submitted to the local Rent Authority — making formal verification a legal best practice, not just a precaution.</p><p style="margin-top:10px;">On RenterFinder.com, landlords can browse our <a href="./renters-list.html" onclick="navigate('renters-list')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Prospective Renters' List</a> — where tenant profiles are pre-published with requirements, budget, preferred areas, and family size — giving landlords a head start on screening before any direct contact.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What documents should I ask a tenant to provide?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>As a landlord, you are entitled to request the following documents for verification before finalising a tenancy:</p><ul style="margin:8px 0 0 18px;line-height:1.9;"><li><strong>Identity proof:</strong> Aadhaar card, PAN card, passport, or voter ID</li><li><strong>Address proof:</strong> Current utility bill, bank statement, or Aadhaar</li><li><strong>Income/employment proof:</strong> Salary slips (last 3 months), employment letter, or ITR for self-employed renters</li><li><strong>Photograph:</strong> Passport-size photo of the primary tenant</li><li><strong>Reference (optional but recommended):</strong> Contact details of a previous landlord or employer</li></ul><p style="margin-top:10px;">Under the Model Tenancy Act, 2021, a copy of the tenant's identity and address proof must be submitted to the local Rent Authority along with the tenancy agreement. See our <a href="./rent-agreement.html" onclick="navigate('rent-agreement')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Rent Agreement reference →</a></p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">How do I verify a tenant's police record or background in India?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>In many states, landlords are legally required to submit a copy of the tenant's ID to the local police station (tenant verification form) within 24 hours of the tenant moving in. This is mandatory in states like Delhi, Maharashtra, Uttar Pradesh, and Karnataka, among others. The process involves filling a prescribed form and submitting it along with the tenant's ID proof to the nearest police station or online through the state police portal. For example, Delhi landlords can use the <a href="https://www.delhipolice.gov.in" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dk);font-weight:600;">Delhi Police online portal ↗</a>. Failure to complete police verification can expose landlords to legal liability. Always confirm your state's specific rules, as the process varies.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is the Prospective Renters' List on RenterFinder.com?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>The <a href="./renters-list.html" onclick="navigate('renters-list')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Prospective Renters' List</a> is RenterFinder.com's most unique feature — and the first of its kind in India. Instead of waiting for tenants to find you, landlords can proactively browse a database of registered renters who have published their own profiles, including their budget, preferred city and locality, family size, occupation type, and move-in timeline. This reverses the traditional rental search dynamic and gives landlords the power to shortlist tenants on their own terms — without broker involvement.</p></div></div>
+      </div>
+
+      <!-- ─── EVICTION BASICS ─── -->
+      <div class="faq-category reveal">
+        <h2 class="faq-cat-title">Eviction &amp; Tenancy Disputes</h2>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">On what grounds can a landlord legally evict a tenant in India?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Under both state Rent Control Acts and the Model Tenancy Act, 2021, a landlord can seek eviction of a tenant on the following grounds:</p><ul style="margin:8px 0 0 18px;line-height:1.9;"><li><strong>Non-payment of rent</strong> — tenant has defaulted on rent for two or more consecutive months</li><li><strong>Misuse of property</strong> — using the premises for a purpose other than what was agreed (e.g. running a business from a residential unit without permission)</li><li><strong>Subletting without consent</strong> — tenant has sublet the property to a third party without the landlord's written approval</li><li><strong>Structural damage</strong> — tenant has caused significant damage to the property beyond normal wear and tear</li><li><strong>Landlord's personal use</strong> — landlord requires the premises for their own or an immediate family member's use</li><li><strong>Expiry of tenancy term</strong> — tenant refuses to vacate after the agreed tenancy period ends and a proper notice has been served</li></ul><p style="margin-top:10px;">Eviction cannot be carried out forcibly — it must follow due legal process through the Rent Authority or court.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is the correct notice period before asking a tenant to vacate?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Under the Model Tenancy Act, 2021, the minimum notice period before a tenant must vacate is as follows:</p><ul style="margin:8px 0 0 18px;line-height:1.9;"><li><strong>Monthly tenancy:</strong> 1 month's advance notice by either party</li><li><strong>Annual or fixed-term tenancy:</strong> 3 months' advance notice by the landlord; 1 month by the tenant</li></ul><p style="margin-top:10px;">Notice must be in writing. If the landlord needs the property for personal use, they must provide evidence of genuine need. Always include a notice period clause clearly in your <a href="./rent-agreement.html" onclick="navigate('rent-agreement')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">rent agreement</a> to avoid disputes.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Can a landlord lock out or cut off utilities to force a tenant to leave?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>No. A landlord <strong>cannot</strong> forcibly evict a tenant by changing locks, cutting off electricity or water supply, or removing their belongings — even if the tenant is in default of rent. Such actions constitute illegal eviction under Indian law and can result in legal action against the landlord. The correct process is to file an application before the Rent Authority (under the Model Tenancy Act) or file a civil suit through the courts. Engaging in self-help eviction tactics exposes landlords to criminal and civil liability.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What happens if a tenant refuses to vacate after the agreement expires?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>If a tenant holds over (continues to occupy the property after the tenancy period ends without a renewal) and refuses to vacate despite a written notice, the landlord can:</p><ol style="margin:8px 0 0 18px;line-height:1.9;"><li>File an eviction application with the local Rent Authority under the Model Tenancy Act, 2021</li><li>Alternatively, file a civil suit for eviction and recovery of rent/damages in the appropriate civil court</li></ol><p style="margin-top:10px;">Under the Model Tenancy Act, the Rent Authority must decide eviction applications within 60 days of filing. Documenting all communication with the tenant in writing is critical for a smooth legal process. See our <a href="./mta.html" onclick="navigate('mta')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Model Tenancy Act guide →</a> for details on the Rent Authority process.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is Resident Welfare Association (RWA)?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>RWA is a body/NGO elected by the residents of a society to safeguard and work towards their interest and welfare. It is registered under the Societies Registration Act, 1860. Office bearers are elected through an annual general body meeting. Key responsibilities include maintenance of financial records, implementing society rules, repair and maintenance through AMC or other arrangements, and keeping common premises clean. Landlords renting out flats within an RWA-governed society must ensure their tenants comply with RWA rules, and tenants should be made aware of society by-laws at the time of move-in — ideally documented in the <a href="./rent-agreement.html" onclick="navigate('rent-agreement')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">rent agreement</a>.</p></div></div>
+      </div>
+
+      <!-- ─── MODEL TENANCY ACT ─── -->
+      <div class="faq-category reveal">
+        <h2 class="faq-cat-title">Model Tenancy Act, 2021 — Key Points</h2>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is the Model Tenancy Act, 2021?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>The Model Tenancy Act, 2021 (MTA) is a landmark central legislation introduced by the Government of India to modernise and regulate the rental housing market. It was approved by the Union Cabinet in June 2021 and was made available to states and union territories for adoption. Its primary goals are to protect the rights of both landlords and tenants, reduce rental disputes, unlock vacant housing stock, and promote organised rental housing in India.</p><p style="margin-top:10px;">Key provisions include: mandatory written tenancy agreements, defined security deposit limits, a dedicated Rent Authority for dispute resolution, and clear eviction timelines. Read our complete <a href="./mta.html" onclick="navigate('mta')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Model Tenancy Act, 2021 reference guide →</a> or download the <a href="https://mohua.gov.in/upload/uploadfiles/files/Model-Tenancy-Act-English-02_06_2021.pdf" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dk);font-weight:600;">official MTA PDF from MoHUA.gov.in ↗</a></p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What are the security deposit limits under the Model Tenancy Act?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>The Model Tenancy Act, 2021 caps security deposits as follows:</p><ul style="margin:8px 0 0 18px;line-height:1.9;"><li><strong>Residential properties:</strong> Maximum 2 months' rent</li><li><strong>Non-residential (commercial) properties:</strong> Maximum 6 months' rent</li></ul><p style="margin-top:10px;">This is a significant reform — in many Indian cities, landlords had traditionally demanded 6–12 months' rent as deposit for residential units. The MTA cap aims to make renting more affordable and reduce the financial barrier for tenants. Note: the MTA applies only in states that have formally adopted it. Check your state's current status. See the full <a href="./mta.html" onclick="navigate('mta')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">MTA guide →</a></p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is a Rent Authority under the Model Tenancy Act?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>The Model Tenancy Act requires every state to designate a <strong>Rent Authority</strong> — a government officer (typically at district level) empowered to: receive and register tenancy agreements, adjudicate disputes between landlords and tenants, order eviction in cases of default or overstay, and determine fair rent increases. The Rent Authority is designed to be a faster, lower-cost alternative to civil courts. Applications must be decided within 60 days, and appeals go to a <strong>Rental Tribunal</strong> (district judge level) and then to the High Court. This is a major upgrade from the pre-MTA era, where landlord-tenant disputes could drag on for years in civil courts.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Is the Model Tenancy Act applicable across all states in India?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>No — the Model Tenancy Act is a central model law, which means states and union territories must individually adopt and enact it as their own legislation before it becomes applicable in that state. As of 2025–26, a number of states have adopted the MTA in full or in modified form, while others continue under their older state-specific Rent Control Acts (such as the Delhi Rent Control Act, 1958 or the Maharashtra Rent Control Act, 1999). Always verify which law applies in your specific state before executing a tenancy agreement. Our <a href="./mta.html" onclick="navigate('mta')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">MTA guide →</a> summarises the key provisions applicable pan-India.</p></div></div>
+      </div>
+
+      <!-- ─── RENT AGREEMENTS & LEGAL (unchanged + expanded with interlinks) ─── -->
+      <div class="faq-category reveal">
+        <h2 class="faq-cat-title">Rent Agreements &amp; Legal</h2>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is a Rent Agreement?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>A Rent Agreement is a legal contract between landlord and renter outlining the terms and conditions of tenancy. It ensures both parties' rights and responsibilities. It generally includes personal details of both parties, property description, maintenance responsibilities, duration, rent and security deposit, utility payment responsibilities, termination &amp; renewal terms, and inventory.</p><p style="margin-top:10px;">See our <a href="./rent-agreement.html" onclick="navigate('rent-agreement')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">sample Rent Agreement reference →</a> for a full clause-by-clause breakdown.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Is registration of a Rent Agreement mandatory in India?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p><strong>Unregistered Rent Agreement:</strong> An unregistered agreement (generally on ₹100/- stamp paper) is not registered with any government authority. Usually valid for a short duration (less than 11 months) and used for informal arrangements.<br><br><strong>Registered Rent Agreement:</strong> Registered with the Sub-Registrar's office. Legally binding and provides more protection. Registration is mandatory for agreements exceeding 11 months. Stamp paper value varies between 0.25% to 6% of annual rent depending on the renting period and state.</p><p style="margin-top:10px;">View our complete <a href="./rent-agreement.html" onclick="navigate('rent-agreement')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Rent Agreement reference guide →</a></p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">Why is an 11-month rent agreement preferred?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>An agreement for more than 11 months must be registered with the sub-registrar's court, requiring stamp duty and registration fees. An 11-month agreement is a simple solution to avoid extra costs and legal formalities. Also, a shorter period is always better than a long-term commitment. After 11 months, both parties can renew with updated terms — a common and practical arrangement across India.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is a Lock-in Period in a Rent Agreement?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Under a lock-in clause, the renter agrees not to vacate the property before the end of a specified period (generally first 3–6 months). If the renter breaks the lock-in period, a certain amount from the deposit may be deducted by the landlord. Lock-in periods protect landlords from early vacancy and are especially common in metro cities. Always clearly specify the lock-in duration and the deduction amount in the <a href="./rent-agreement.html" onclick="navigate('rent-agreement')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">rent agreement</a> to avoid disputes.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What is the difference between a Lease Deed and a Rent Agreement?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p><strong>Lease Deed:</strong> Used for long-term rentals (usually more than a year). Always requires registration with the Sub-Registrar and payment of stamp duty. Provides stronger legal protection.<br><strong>Rent Agreement (Leave &amp; Licence):</strong> Commonly used for residential properties for short-term rentals (up to 11 months). Registration optional but advisable. More flexible and commonly preferred for residential tenancies in India.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What are the income tax implications on rental income?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Rental income in the hands of the property owner is charged to tax under the head <strong>"Income from House Property."</strong> A standard 30% deduction is allowed from the net annual value for repairs and maintenance. If the recipient of rent is not the owner, income is taxable under <strong>"Income from Other Sources"</strong> or under profits and gains from business or profession, as applicable. TDS at 10% (<a href="https://www.incometax.gov.in/iec/foportal/help/individual/return-applicable-1#taxdeductedatsourceonrent" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dk);font-weight:600;">Section 194-I — Income Tax India ↗</a>) is applicable if annual rent exceeds ₹2.4 lakhs — the tenant must deduct and deposit this with the government.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">From where can I get/purchase e-stamp paper?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><p>Stock Holding Corporation of India Ltd (SHCIL) is an authorised provider of e-stamp paper and allows online purchase at <a href="https://www.shcilestamp.com" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dk);font-weight:600;">shcilestamp.com ↗</a>. Before using e-stamping, ensure your state offers this facility and check SHCIL's website for participating states. Physical stamp papers are available at all Sub-Registrar offices. Most states now offer e-stamping as the preferred method — it is faster, tamper-proof, and accepted in court.</p></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)"><h3 class="faq-q-text">What are the laws governing Rent Agreements in India?</h3><span class="faq-chevron">+</span></div><div class="faq-a"><ol><li><strong><a href="https://indiacode.nic.in/handle/123456789/2187" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dk);font-weight:600;">The Indian Contract Act, 1872 ↗</a></strong> — governs formation and enforcement of contracts, including rent agreements.</li><li><strong><a href="https://indiacode.nic.in/handle/123456789/2338" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dk);font-weight:600;">The Transfer of Property Act, 1882 ↗</a></strong> — specifically deals with lease agreements (Sections 105, 106, 108).</li><li><strong><a href="https://indiacode.nic.in/handle/123456789/2368" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dk);font-weight:600;">The Registration Act, 1908 ↗</a></strong> — registration mandatory for agreements of 12 months or more.</li><li><strong>The Rent Control Act</strong> — state-specific acts protecting tenants from arbitrary rent increases and eviction.</li><li><strong><a href="https://mohua.gov.in/upload/uploadfiles/files/Model-Tenancy-Act-English-02_06_2021.pdf" target="_blank" rel="noopener noreferrer" style="color:var(--gold-dk);font-weight:600;">The Model Tenancy Act, 2021 ↗</a></strong> — introduced to modernise rental laws; standardised agreements, Rent Authorities, Tribunals, and security deposit limits.</li></ol><p style="margin-top:12px;">You can read the full <a href="./mta.html" onclick="navigate('mta')" style="color:var(--gold-dk);cursor:pointer;font-weight:600;">Model Tenancy Act, 2021 →</a></p></div></div>
+      </div>
+    </div>
+  </section>
+  <section style="padding:8px 60px 40px;max-width:900px;margin:0 auto;" aria-label="Related platform resources">
+    <p style="font-size:13px;line-height:1.9;color:var(--mid);">
+      Browse <a href="./renters-list.html" onclick="navigate('renters-list')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Prospective Renters' List →</a> &nbsp;|&nbsp;
+      <a href="./fees.html" onclick="navigate('fees')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Transparent fee structure →</a> &nbsp;|&nbsp;
+      <a href="./rent-agreement.html" onclick="navigate('rent-agreement')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Rent Agreement reference →</a> &nbsp;|&nbsp;
+      <a href="./mta.html" onclick="navigate('mta')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Model Tenancy Act guide →</a> &nbsp;|&nbsp;
+      <a href="./blog.html" onclick="navigate('blog')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Blog &amp; Articles →</a>
+    </p>
+  </section>
+
+  <div id="faq-footer"></div>
+</div>
+
+<!-- ═══════════════════ PAGE: TERMS OF USE (SEO-OPTIMIZED) ═══════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════════
+     [PAGE:terms] — PAGE 9: TERMS & CONDITIONS (SEO-OPTIMIZED)
+     Search [PAGE:terms] to jump here
+═══════════════════════════════════════════════════════════════ -->
+
+<template id="footer-template">
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <h4 style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin:0 0 16px;">Contact</h4>
+        <p class="footer-brand-desc" style="margin:0;line-height:1.9;">
+          <strong style="color:rgba(255,255,255,0.92);font-weight:700;">VAMY Properties Pvt Ltd</strong><br>
+          Phone: +91 73031 04550<br>
+          <span style="font-size:11.5px;color:var(--mid);">(WhatsApp only)</span><br>
+          Email: <a href="mailto:renterfinder1@gmail.com" style="color:var(--gold-dk);text-decoration:none;">renterfinder1@gmail.com</a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <h4>For Renters</h4>
+        <ul>
+          <li><a href="./login.html" onclick="navigate('login')">List Your Profile</a></li>
+          <li><a href="./properties.html" onclick="navigate('properties')">Browse Properties</a></li>
+          <li><a href="./services.html" onclick="navigate('services')">How It Works</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>For Landlords</h4>
+        <ul>
+          <li><a href="./login.html" onclick="navigate('login')">List a Property</a></li>
+          <li><a href="./renters-list.html" onclick="navigate('renters-list')">Renter's List</a></li>
+          <li><a href="./fees.html" onclick="navigate('fees')">Closing Fees</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="./blog.html" onclick="navigate('blog')">Blog &amp; Articles</a></li>
+          <li><a href="./refer.html" onclick="navigate('refer')">Refer &amp; Earn</a></li>
+          <li><a href="./internship.html" onclick="navigate('internship')">Internship</a></li>
+          <li><a href="./feedback.html" onclick="navigate('feedback')">Share Feedback</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="./privacy.html" onclick="navigate('privacy')">Privacy Policy</a></li>
+          <li><a href="./terms.html" onclick="navigate('terms')">Terms of Use</a></li>
+          <li><a href="./disclaimer.html" onclick="navigate('disclaimer')">Disclaimer</a></li>
+          <li><a href="./mta.html" onclick="navigate('mta')">Model Tenancy Act</a></li>
+          <li><a href="./rent-agreement.html" onclick="navigate('rent-agreement')">Rent Agreement (Sample)</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+  <div style="background:var(--offwhite);padding:16px 60px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);">
+    <p style="font-size:12px;color:var(--mid);margin:0;">© 2026 RenterFinder.com · No Buying. No Selling. Only Renting. · India &nbsp;·&nbsp; <a href="/sitemap.xml" target="_blank" rel="noopener" style="color:var(--mid);text-decoration:none;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--mid)'">Sitemap</a></p>
+    <div class="socials">
+      <a class="social-btn" href="https://x.com/RenterFinderIn" target="_blank" rel="noopener" title="Follow us on X" aria-label="Follow RenterFinder on X (Twitter)" style="border-color:rgba(4,4,41,0.15);color:var(--dark);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.836L2.25 2.25h6.919l4.257 5.625zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+      <a class="social-btn" href="https://www.instagram.com/renterfinder?igsh=NXVpemJjZ2VqbThl" target="_blank" rel="noopener" title="Follow us on Instagram" aria-label="Follow RenterFinder on Instagram" style="border-color:rgba(4,4,41,0.15);color:var(--dark);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      </a>
+      <a class="social-btn" href="https://youtube.com/@renterfinder?si=c_pFfNqNpFqLK-Ou" target="_blank" rel="noopener" title="Watch us on YouTube" aria-label="Watch RenterFinder on YouTube" style="border-color:rgba(4,4,41,0.15);color:var(--dark);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      </a>
+      <a class="social-btn" href="https://www.facebook.com/share/1AwvyYavAo/" target="_blank" rel="noopener" title="Follow us on Facebook" aria-label="Follow RenterFinder on Facebook" style="border-color:rgba(4,4,41,0.15);color:var(--dark);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      </a>
+    </div>
+  </div>
+</template>
+
+<script src="script.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  renderFooters();
+  initReveal();
+  
+});
+</script>
+</body>
+</html>
