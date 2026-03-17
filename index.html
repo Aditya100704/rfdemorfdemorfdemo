@@ -407,7 +407,7 @@
 <!-- sitemap.xml → https://www.renterfinder.com/sitemap.xml (see sitemap.xml in repo) -->
 <!-- llms.txt    → https://www.renterfinder.com/llms.txt    (see llms.txt in repo)   -->
 <!-- logo.svg    → https://www.renterfinder.com/logo.svg    (serve the brand SVG)    -->
-<!-- og-image.jpg→ https://www.renterfinder.com/og-image.jpg(1200×630 OG image)      -->
+<!-- og-image.jpg→ https://www.renterfinder.com/images/og-image.jpg(1200×630 OG image)      -->
 
 <!-- ═══ SITEMAP DISCOVERY ═══ -->
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
@@ -415,7 +415,7 @@
 <!-- ═══ PRIMARY SEO META TAGS ═══ -->
 <title>RenterFinder.com — India's Only Rental-Only Platform</title>
 <meta name="description" content="India's first rental-only platform. Find a renter online or browse rental homes. ₹125 listing fee, 12-day platform service fee. No hidden charges. Pan-India.">
-<meta name="keywords" content="find tenant online India, rental platform India, find renter online, no broker rental, landlord tenant matching, RenterFinder, rental property listing India, pan-India rental platform">
+<meta name="keywords" content="find tenant online India, find renter online, no broker rental, landlord tenant matching, RenterFinder, rental property listing India, landlord tenant platform, rent listing marketplace, list your rental property free India, landlord tools online, tenant match service, manage rentals online India">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="author" content="RenterFinder.com">
 <meta name="theme-color" content="#040429">
@@ -441,7 +441,7 @@
 <meta property="og:title" content="RenterFinder.com — India's Only Rental-Only Platform">
 <meta property="og:description" content="India's first rental-only platform. Find a renter online or browse rental homes. ₹125 listing fee, 12-day platform service fee. No hidden charges. Pan-India.">
 <meta property="og:url" content="https://www.renterfinder.com/">
-<meta property="og:image" content="https://www.renterfinder.com/og-image.jpg">
+<meta property="og:image" content="https://www.renterfinder.com/images/og-image.jpg">
 <meta property="og:image:width" content="1748">
 <meta property="og:image:height" content="1240">
 <meta property="og:image:alt" content="RenterFinder.com — India's rental-only property matching platform for landlords and tenants">
@@ -453,7 +453,7 @@
 <meta name="twitter:creator" content="@RenterFinderIn">
 <meta name="twitter:title" content="RenterFinder.com — India's Only Rental-Only Platform">
 <meta name="twitter:description" content="India's first rental-only platform. Find a renter online or browse rental homes. ₹125 listing fee, 12-day platform service fee. No hidden charges. Pan-India.">
-<meta name="twitter:image" content="https://www.renterfinder.com/og-image.jpg">
+<meta name="twitter:image" content="https://www.renterfinder.com/images/og-image.jpg">
 <meta name="twitter:image:alt" content="RenterFinder.com — India's rental-only property matching platform">
 
 <!-- ═══ GEO & LANGUAGE TARGETING ═══ -->
@@ -502,22 +502,16 @@
 <!-- ═══ STRUCTURED DATA — AboutPage (Google Knowledge Graph) ═══ -->
 
 
-<!-- ═══ STRUCTURED DATA — WebSite (enables Google sitelinks search) ═══ -->
+<!-- ═══ STRUCTURED DATA — WebSite ═══ -->
+<!-- NOTE vRF173 SEO V68: SearchAction removed — /properties?q= endpoint does not exist in this SPA.
+     Re-add potentialAction only once a functional search URL is implemented. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "RenterFinder.com",
   "url": "https://www.renterfinder.com",
-  "description": "India's only rental-exclusive property platform — no buying, no selling, only renting.",
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": {
-      "@type": "EntryPoint",
-      "urlTemplate": "https://www.renterfinder.com/properties?q={search_term_string}"
-    },
-    "query-input": "required name=search_term_string"
-  }
+  "description": "India's only rental-exclusive property platform — no buying, no selling, only renting."
 }
 </script>
 
@@ -592,10 +586,13 @@
 </script>
 
 <!-- ═══ STRUCTURED DATA — AggregateRating (for star ratings in SERPs) ═══ -->
+<!-- NOTE vRF173 SEO V68: @type changed OnlineBusiness → LocalBusiness.
+     LocalBusiness is a Google-recognised parent type for AggregateRating rich results.
+     OnlineBusiness is not in Google's supported type list and would never trigger star snippets. -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "OnlineBusiness",
+  "@type": "LocalBusiness",
   "name": "RenterFinder.com",
   "url": "https://www.renterfinder.com",
   "image": "https://www.renterfinder.com/logo.svg",
@@ -825,6 +822,56 @@
 <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="styles.css"></noscript></noscript>
+
+<!-- ═══ STRUCTURED DATA — FAQPage (Homepage) ═══ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is RenterFinder.com?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RenterFinder.com is India's first and only rental-exclusive property platform. No buying, no selling — only renting. Landlords can post properties and search the Prospective Renters' List; renters can upload profiles and browse listings. Pan-India coverage, broker-free, transparent flat fees."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does RenterFinder.com charge?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RenterFinder.com charges only two fees: a Profile Listing Fee of ₹125 for 3 months (currently free until 31 July 2026), and a Platform Service Fee of 12 days' rent — 6 days' rent to arrange the property meeting and 6 days' rent at deal closure. No hidden charges."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Prospective Renters' List?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Prospective Renters' List is India's only live tenant list — landlords can search a renter or search a tenant online by city, budget, and family size, then contact them directly without a broker. Renters upload their own profile; landlords browse and select from the list."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is RenterFinder.com available across all of India?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. RenterFinder.com offers pan-India coverage — every city, town, and rural area. There is no restriction on geography. Both landlords and renters from any part of India can register and use the platform."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is RenterFinder.com different from brokers?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Brokers typically charge 15–90 days' rent as commission. RenterFinder.com charges only 12 days' rent as a Platform Service Fee, paid in two stages. There is no third-party agent involved in negotiations. Landlords and renters deal directly with each other."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -864,6 +911,7 @@
   <section class="hero" aria-label="Hero — India's only rental-exclusive property platform">
     <div class="hero-left">
       <div class="hero-eyebrow">No Buying. No Selling. Only Renting.</div>
+      <h2 class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">India's Landlord Tenant Platform — Search a Renter, Search a Tenant, Prospective Renters List India</h2>
       <h1>Let's Find a<br><em>Good Renter</em><br>for Your Home.</h1>
       <div class="hero-btns">
         <button class="btn-gold hero-btn-equal" onclick="navigate('login')" aria-label="Renter: List your profile on RenterFinder.com">Renter: List Your Profile</button>
@@ -890,11 +938,11 @@
   <section class="whats-new" aria-label="What's new on RenterFinder.com — rental listing features">
     <div class="whats-new-inner">
       <div class="wn-content reveal">
-        <span class="section-label">What's New</span>
+        <span class="section-label">India's Rent Listing Marketplace</span>
         <h2>A Fresh Way to<br><em>Rent &amp; Get Rented</em> in India</h2>
         <div class="wn-features">
           <div class="wn-feat"><div class="wn-feat-num">01</div><div class="wn-feat-text"><strong>New Initiative for Renters</strong><p>Just upload your profile to advertise your requirements and wait for a landlord's call. No more chasing "To Let" signboards.</p></div></div>
-          <div class="wn-feat"><div class="wn-feat-num">02</div><div class="wn-feat-text"><strong>Prospective Renter's List</strong><p>Landlords can shortlist renters from the Renter's List and select one to offer their property on rent.</p></div></div>
+          <div class="wn-feat"><div class="wn-feat-num">02</div><div class="wn-feat-text"><strong>Search a Renter — Prospective Renters' List</strong><p>India's only live tenant list. Landlords search a renter or tenant directly by city, budget and family size — no broker, no waiting.</p></div></div>
           <div class="wn-feat"><div class="wn-feat-num">03</div><div class="wn-feat-text"><strong>Limited & Active Profiles</strong><p>All profiles deactivate automatically in 3 months. No dead stock, no stale listings — ever.</p></div></div>
           <div class="wn-feat"><div class="wn-feat-num">04</div><div class="wn-feat-text"><strong>Professional Service</strong><p>On minimal payment basis. Profile Listing Fees — ₹125/- for 3 months &amp; Platform Service Fees — 12 days rent only.</p></div></div>
         </div>
@@ -1139,12 +1187,12 @@
   <!-- Features Grid — Why Choose RenterFinder.com for Rental Property in India -->
   <section class="features-section" aria-label="Why choose RenterFinder.com — 8 unique rental platform features">
     <div class="feat-header reveal">
-      <span class="section-label">Why RenterFinder.com</span>
+      <span class="section-label">Why RenterFinder.com — Manage Rentals Online India</span>
       <h2 class="section-title light">India's Only Rental-Exclusive Platform.<br><em>Built for Renters &amp; Landlords.</em></h2>
     </div>
     <div class="features-grid">
       <!-- Block 3 moved to position 1: Prospective Renter's List (Unique) -->
-      <div class="feat-card highlight reveal" onclick="openFeatureModal(2)" style="cursor:pointer;" title="Learn more"><div class="feat-unique-tag">Unique</div><div class="feat-card-icon">📋</div><h3>Prospective<br>Renters' List</h3><p>A world first — renters publish profiles, landlords search and select. Reverses the traditional dynamic.</p><div class="feat-card-more">Click to learn more →</div></div>
+      <div class="feat-card highlight reveal" onclick="openFeatureModal(2)" style="cursor:pointer;" title="Learn more"><div class="feat-unique-tag">Unique</div><div class="feat-card-icon">📋</div><h3>Prospective<br>Renters' List</h3><p>Search a renter, search a tenant — landlords browse India's live tenant list and select directly. No broker.</p><div class="feat-card-more">Click to learn more →</div></div>
       <!-- Block 2: Services All Over India -->
       <div class="feat-card reveal" onclick="openFeatureModal(1)" style="cursor:pointer;" title="Learn more"><div class="feat-card-icon" style="position:relative;overflow:hidden;flex-shrink:0;"><div style="position:absolute;inset:0;border-radius:50%;display:flex;flex-direction:column;overflow:hidden;opacity:0.35;"><div style="flex:1;background:#FF9933;"></div><div style="flex:1;background:#ffffff;"></div><div style="flex:1;background:#138808;"></div></div><span style="position:relative;z-index:1;font-size:13px;font-weight:800;color:var(--gold);letter-spacing:0.5px;font-family:'Outfit',sans-serif;">IND</span></div><h3>Services Available<br>All Over India</h3><p>Rural or urban, any region, small town or neighbourhood — truly pan-India, no restrictions.</p><div class="feat-card-more">Click to learn more →</div></div>
       <!-- Block 1 moved to position 3: No Buying No Selling -->
@@ -1152,7 +1200,7 @@
       <div class="feat-card reveal" onclick="openFeatureModal(3)" style="cursor:pointer;" title="Learn more"><div class="feat-card-icon">⏱️</div><h3>Limited Profiles<br>For Easy Search</h3><p>₹125 (discounted from ₹499 — 75% off) profile listing fee keeps profiles genuine and limited. Auto-deactivation keeps the portal always clutter-free.</p><div class="feat-card-more">Click to learn more →</div></div>
       <div class="feat-card reveal" onclick="openFeatureModal(4)" style="cursor:pointer;" title="Learn more"><div class="feat-card-icon">💰</div><h3>Affordable for All,<br>Minimal Platform Fee</h3><p>Only 12 days' rent as Platform Service Fee — far less than the 15–90 days charged by traditional property agents.</p><div class="feat-card-more">Click to learn more →</div></div>
       <div class="feat-card reveal" onclick="openFeatureModal(5)" style="cursor:pointer;" title="Learn more"><div class="feat-card-icon">👁️</div><h3>All Fees Visible,<br>No Hidden Charge</h3><p>Two fees only — clearly listed. No calls asking for extra payments. What you see is exactly what you pay.</p><div class="feat-card-more">Click to learn more →</div></div>
-      <div class="feat-card reveal" onclick="openFeatureModal(6)" style="cursor:pointer;" title="Learn more"><div class="feat-card-icon">🤝</div><h3>Only Introduction<br>Service</h3><p>We connect you, then step back. No agent involvement in finalising the deal — you negotiate directly.</p><div class="feat-card-more">Click to learn more →</div></div>
+      <div class="feat-card reveal" onclick="openFeatureModal(6)" style="cursor:pointer;" title="Learn more"><div class="feat-card-icon">🤝</div><h3>Only Introduction<br>Service</h3><p>We connect you, then step back. No agent involvement in finalising the deal — you negotiate directly. <a href="./services.html" style="color:var(--gold);text-decoration:none;">See our services →</a></p><div class="feat-card-more">Click to learn more →</div></div>
       <div class="feat-card reveal" onclick="openFeatureModal(7)" style="cursor:pointer;" title="Learn more"><div class="feat-card-icon">🎓</div><h3>Private School<br>For Property Renting</h3><p>Professional, transparent, structured — experience the difference of a premium rental service for a minimal fee.</p><div class="feat-card-more">Click to learn more →</div></div>
     </div>
 
@@ -1161,7 +1209,7 @@
       <div class="feat-scroll-track">
         <!-- Original 4 columns -->
         <div class="feat-col">
-          <div class="feat-card highlight" onclick="openFeatureModal(2)" style="cursor:pointer;" title="Learn more"><div class="feat-unique-tag">Unique</div><div class="feat-card-icon">📋</div><h3>Prospective<br>Renters' List</h3><p>A world first — renters publish profiles, landlords search and select.</p><div class="feat-card-more">Learn more →</div></div>
+          <div class="feat-card highlight" onclick="openFeatureModal(2)" style="cursor:pointer;" title="Learn more"><div class="feat-unique-tag">Unique</div><div class="feat-card-icon">📋</div><h3>Prospective<br>Renters' List</h3><p>Search a renter or tenant — browse India's live tenant list directly.</p><div class="feat-card-more">Learn more →</div></div>
           <div class="feat-card" onclick="openFeatureModal(1)" style="cursor:pointer;" title="Learn more"><div class="feat-card-icon" style="position:relative;overflow:hidden;flex-shrink:0;"><div style="position:absolute;inset:0;border-radius:50%;display:flex;flex-direction:column;overflow:hidden;opacity:0.35;"><div style="flex:1;background:#FF9933;"></div><div style="flex:1;background:#ffffff;"></div><div style="flex:1;background:#138808;"></div></div><span style="position:relative;z-index:1;font-size:13px;font-weight:800;color:var(--gold);letter-spacing:0.5px;font-family:'Outfit',sans-serif;">IND</span></div><h3>Services All<br>Over India</h3><p>Rural or urban, any region — truly pan-India, no restrictions.</p><div class="feat-card-more">Learn more →</div></div>
         </div>
         <div class="feat-col">
@@ -1220,7 +1268,7 @@
   <section class="renters-section" aria-label="Prospective Renters List — landlords find ideal tenants in India">
     <div class="renters-inner">
       <div class="reveal renters-left">
-        <span class="section-label">Our Unique Feature</span>
+        <span class="section-label">Search a Renter — India's Only Tenant List for Landlords</span>
         <h2 class="section-title" style="margin-bottom:16px;">Landlords — Browse &amp; Select<br>Your <em>Ideal Renter.</em></h2>
         <p style="font-size:15px;color:var(--mid);line-height:1.7;max-width:420px;margin-bottom:32px;">Browse India's first Prospective Renters' List — a curated directory of genuine tenants looking for rental homes in your city, locality, and budget range.</p>
         <div class="renter-flow">
@@ -1255,7 +1303,7 @@
     <div class="home-props-inner">
       <div class="home-props-header reveal">
         <div>
-          <span class="section-label">Browse Rentals</span>
+          <span class="section-label">Browse Rentals · <a href="./blog.html" style="color:var(--gold-dk);font-size:11px;font-weight:600;text-decoration:none;">Read Landlord Guides →</a></span>
           <h2 class="section-title" style="margin-bottom:10px;">Latest Rental <em>Property Listings</em></h2>
           <p style="font-size:15px;color:var(--mid);line-height:1.65;max-width:480px;">1BHK, 2BHK, 3BHK rental properties listed by property owners — updated regularly across Delhi, Mumbai, Bangalore, Pune, Hyderabad, Chennai &amp; all Indian cities.</p>
         </div>
@@ -1565,6 +1613,7 @@
     <div class="home-cta-row">
       <div class="home-cta-text">
         <h2>Ready to find your<br><em>perfect rental match?</em></h2>
+        <p class="home-cta-sub" style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:4px;letter-spacing:0.5px;">India's landlord tenant platform — no broker, transparent fees</p>
         <p>Join landlords and tenants across India who found their ideal rental match through RenterFinder.com — India's only property rental-exclusive platform. List free during our inaugural offer.</p>
         <p style="font-size:13px;margin-top:12px;line-height:1.8;">Need help with paperwork? Use our <a href="./rent-agreement.html" onclick="navigate('rent-agreement')" style="color:var(--gold);font-weight:600;cursor:pointer;">Rent Agreement reference →</a> or browse our <a href="./faq.html" onclick="navigate('faq')" style="color:var(--gold);font-weight:600;cursor:pointer;">FAQ for landlords →</a></p>
       </div>

@@ -971,8 +971,6 @@ pt.innerHTML = [
 '<option>Co-Working Space</option>',
 '<option>Bank / Clinic / Studio</option>',
 '<option>Restaurant / Food Outlet</option>',
-'<option>Warehouse / Godown / Basement</option>',
-'<option>Boys / Girls Hostel</option>',
 '<option>Commercial Land on Rent</option>',
 '<option>Others</option>'
 ].join('');
@@ -987,7 +985,6 @@ pt.innerHTML = [
 '<option>Independent House / Villa</option>',
 '<option>Duplex / Rowhouse</option>',
 '<option>Co-Living / PG</option>',
-'<option>Boys / Girls Hostel</option>',
 '<option>Serviced Apartment</option>',
 '<option>Penthouse</option>',
 '<option>Farmhouse</option>',
@@ -1586,6 +1583,18 @@ injectSchema({
 ]
 });
 }
+function injectPropertiesFaqSchema() {
+injectSchema({
+"@context": "https://schema.org",
+"@type": "FAQPage",
+"mainEntity": [
+{"@type":"Question","name":"How do I find rental properties on RenterFinder.com?","acceptedAnswer":{"@type":"Answer","text":"Browse the Rental Properties page to see 1BHK, 2BHK, 3BHK flats, apartments, and houses listed directly by landlords across India. Use the filters to narrow by city, BHK type, and budget. Every listing is posted by the actual property owner — no broker involved."}},
+{"@type":"Question","name":"Are the rental properties listed by owners or brokers?","acceptedAnswer":{"@type":"Answer","text":"All properties on RenterFinder.com are listed directly by landlords and property owners. Brokers are not permitted to post on the platform. This means renters deal directly with the owner, avoiding brokerage fees entirely."}},
+{"@type":"Question","name":"What types of rental properties are available on RenterFinder.com?","acceptedAnswer":{"@type":"Answer","text":"RenterFinder.com lists a wide range of residential rental properties across India including 1BHK flats, 2BHK apartments, 3BHK homes, furnished flats, independent houses, studio apartments, and short-term rentals. Properties are available across all major Indian cities and towns."}},
+{"@type":"Question","name":"Is there a fee for renters to browse properties on RenterFinder.com?","acceptedAnswer":{"@type":"Answer","text":"Browsing rental properties on RenterFinder.com is free. Renters pay a Profile Listing Fee of ₹125 (discounted from ₹499) to publish their renter profile for 3 months. When a deal is finalised, the Platform Service Fee of 12 days' rent applies — significantly less than a traditional broker's fee of 30 to 90 days' rent."}}
+]
+});
+}
 var _origShowPage = window.showPage;
 window.showPage = function(key) {
 _origShowPage(key);
@@ -1594,7 +1603,7 @@ if (key === 'home') injectHomeFaqSchema();
 if (key === 'about') injectAboutSchemas();
 if (key === 'services') { injectServicesSchemas(); injectServicesFaqSchema(); }
 if (key === 'fees') injectFeesSchemas();
-if (key === 'properties') injectPropertiesSchemas();
+if (key === 'properties') { injectPropertiesSchemas(); injectPropertiesFaqSchema(); }
 if (key === 'renters-list') injectRentersListSchema();
 if (key === 'internship') injectInternshipSchema();
 if (key === 'refer') injectReferSchema();

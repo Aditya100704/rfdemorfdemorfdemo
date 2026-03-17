@@ -396,7 +396,7 @@
 <!-- sitemap.xml → https://www.renterfinder.com/sitemap.xml (see sitemap.xml in repo) -->
 <!-- llms.txt    → https://www.renterfinder.com/llms.txt    (see llms.txt in repo)   -->
 <!-- logo.svg    → https://www.renterfinder.com/logo.svg    (serve the brand SVG)    -->
-<!-- og-image.jpg→ https://www.renterfinder.com/og-image.jpg(1200×630 OG image)      -->
+<!-- og-image.jpg→ https://www.renterfinder.com/images/og-image.jpg(1200×630 OG image)      -->
 
 <!-- ═══ SITEMAP DISCOVERY ═══ -->
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
@@ -430,7 +430,7 @@
 <meta property="og:title" content="Refer & Earn ₹500 — RenterFinder.com Referral Programme">
 <meta property="og:description" content="Refer a friend to RenterFinder.com and earn ₹500 per successful deal. Simple 4-step process. Available across India. No cap on how many referrals you make.">
 <meta property="og:url" content="https://www.renterfinder.com/refer">
-<meta property="og:image" content="https://www.renterfinder.com/og-image.jpg">
+<meta property="og:image" content="https://www.renterfinder.com/images/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="RenterFinder.com — India's rental-only property matching platform for landlords and tenants">
@@ -442,7 +442,7 @@
 <meta name="twitter:creator" content="@RenterFinderIn">
 <meta name="twitter:title" content="Refer & Earn ₹500 — RenterFinder.com Referral Programme">
 <meta name="twitter:description" content="Refer a friend to RenterFinder.com and earn ₹500 per successful deal. Simple 4-step process. Available across India. No cap on how many referrals you make.">
-<meta name="twitter:image" content="https://www.renterfinder.com/og-image.jpg">
+<meta name="twitter:image" content="https://www.renterfinder.com/images/og-image.jpg">
 <meta name="twitter:image:alt" content="RenterFinder.com — India's rental-only property matching platform">
 
 <!-- ═══ GEO & LANGUAGE TARGETING ═══ -->
@@ -634,6 +634,33 @@
   ]
 }
 </script>
+
+<!-- ═══ STRUCTURED DATA — Offer (Refer & Earn) ═══ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Offer",
+  "name": "RenterFinder.com Referral Programme — Refer & Earn ₹500",
+  "description": "Refer a friend to RenterFinder.com and earn ₹500 per successful deal. No cap on referrals. Available pan-India.",
+  "url": "https://www.renterfinder.com/refer",
+  "offeredBy": {
+    "@type": "Organization",
+    "name": "RenterFinder.com",
+    "url": "https://www.renterfinder.com"
+  },
+  "priceSpecification": {
+    "@type": "PriceSpecification",
+    "price": "500",
+    "priceCurrency": "INR",
+    "description": "₹500 reward per successful referral deal"
+  },
+  "eligibleRegion": {
+    "@type": "Country",
+    "name": "India"
+  },
+  "availability": "https://schema.org/InStock"
+}
+</script>
 </head>
 <body>
 
@@ -676,7 +703,7 @@
         <span class="bc-sep">›</span>
         <span class="bc-current">Refer &amp; Earn</span>
       </nav>
-      <div class="page-hero-eyebrow">Earn With Us</div>
+      <div class="page-hero-eyebrow">Refer &amp; Earn — Rental Referral Programme India</div>
       <h1>Refer &amp; <em>Earn ₹500</em></h1>
       <p>Refer friends, family, or colleagues to RenterFinder.com and earn ₹500 for every successful rental deal closed using your unique referral code. Unlimited referrals — no cap on earnings.</p>
     </div>
@@ -689,7 +716,7 @@
       <div class="reveal refer-hero-card" style="background:var(--dark);border-radius:16px;padding:48px 52px;margin-bottom:60px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;border:1px solid rgba(201,166,104,0.2);">
         <div>
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;color:var(--gold);margin-bottom:12px;">Refer &amp; Earn Program</div>
-          <h2 style="font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:700;color:var(--white);line-height:1.2;letter-spacing:-1px;margin-bottom:16px;">Earn <em style="color:var(--gold);font-style:italic;">₹500</em><br>per successful deal</h2>
+          <h2 style="font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:700;color:var(--white);line-height:1.2;letter-spacing:-1px;margin-bottom:16px;">Earn <em style="color:var(--gold);font-style:italic;">₹500</em><br>Per Successful Rental Deal</h2>
           <p style="font-size:14.5px;color:rgba(255,255,255,0.55);line-height:1.75;margin-bottom:28px;">RenterFinder.com offers a rewarding opportunity through our Refer &amp; Earn Program. Refer anyone searching for a rental property or a reliable tenant — and earn ₹500 for every deal that gets finalised using your unique referral code.</p>
           <a href="/cdn-cgi/l/email-protection#386a5d564c5d4a7e51565c5d4a09785f55595154165b5755074b4d5a525d5b4c056a5d5e5d4a4a5954187b575c5d186a5d494d5d4b4c" style="display:inline-block;background:var(--gold);color:var(--dark);font-size:13px;font-weight:700;padding:13px 26px;border-radius:6px;text-decoration:none;letter-spacing:0.5px;">Get My Referral Code →</a>
         </div>
@@ -711,7 +738,7 @@
 
       <!-- Steps -->
       <div class="reveal" style="margin-bottom:52px;">
-        <span class="section-label">How to Participate</span>
+        <span class="section-label">How to Earn — Rental Referral Programme India</span>
         <h2 class="section-title" style="margin-bottom:40px;">Four Simple <em>Steps</em></h2>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;" class="refer-steps-grid">
           <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:28px 28px 24px;">
@@ -757,6 +784,14 @@
         </p>
       </div>
     </div>
+  </section>
+  <section aria-label="About the RenterFinder referral programme" style="padding:60px 60px 52px;">
+    <h2 style="font-size:clamp(17px,2vw,24px);font-weight:600;color:var(--dark);margin-bottom:20px;">How the RenterFinder Referral Programme Works — Earn ₹500 Per Deal, Pan-India</h2>
+    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:16px;">The RenterFinder.com Refer &amp; Earn programme is open to anyone across India — whether you are a landlord, a renter, a housing society member, a resident welfare association, a real estate professional, or simply someone who knows people looking for rental properties or trustworthy tenants. There is no upper limit on the number of referrals you can make, and no cap on the total amount you can earn. Every completed deal that uses your referral code pays you ₹500, regardless of the city, property type, or rent amount involved.</p>
+    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:16px;">To participate, contact us at <a href="mailto:renterfinder1@gmail.com" style="color:var(--gold-dk);font-weight:600;">renterfinder1@gmail.com</a> with your Name, Date of Birth, Address, Aadhaar Number, Mobile Number, and Email ID. We will issue you a unique referral code that you can share with anyone looking to rent a property or find a genuine tenant. When your referred contacts register on RenterFinder.com using your code, they automatically receive a discounted Platform Service Fee of 10 days' rent instead of the standard 12 days' rent — saving them money and giving them a direct incentive to use your code.</p>
+    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:16px;">RenterFinder.com operates as India's only rental-exclusive platform, connecting landlords and renters directly without any broker involvement. Both landlords and renters pay a Profile Listing Fee of ₹125 for 3 months, and a Platform Service Fee of 12 days' rent split into 6 days to arrange the property meeting and 6 days at deal closure. Because the platform covers every city and town across India — from metros like Delhi, Mumbai, Bangalore, Hyderabad, Chennai, Kolkata, and Pune to tier-2 cities like Jaipur, Lucknow, Patna, Bhopal, Ranchi, Nagpur, and beyond — your referral network can span the entire country without any geographic restriction.</p>
+    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:16px;">Your ₹500 reward is paid after the deal is finalised and the full Platform Service Fee has been received by RenterFinder.com from the referred client. There is no joining fee, no subscription, and no upfront cost to join the programme. The referral programme is particularly well suited to anyone already embedded in the rental ecosystem — housing society secretaries, relocation professionals, HR managers who help new joiners find accommodation, student placement coordinators, and individuals who regularly encounter people relocating for work or study.</p>
+    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:4px;">For full details on how the platform works, visit our <a href="./services.html" onclick="navigate('services')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">Services page →</a> or review our <a href="./fees.html" onclick="navigate('fees')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">transparent fee structure →</a>. Common questions about the platform are answered in our <a href="./faq.html" onclick="navigate('faq')" style="color:var(--gold-dk);font-weight:600;cursor:pointer;">FAQ →</a>.</p>
   </section>
   <div id="refer-footer"></div>
 </div>

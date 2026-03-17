@@ -396,15 +396,15 @@
 <!-- sitemap.xml → https://www.renterfinder.com/sitemap.xml (see sitemap.xml in repo) -->
 <!-- llms.txt    → https://www.renterfinder.com/llms.txt    (see llms.txt in repo)   -->
 <!-- logo.svg    → https://www.renterfinder.com/logo.svg    (serve the brand SVG)    -->
-<!-- og-image.jpg→ https://www.renterfinder.com/og-image.jpg(1200×630 OG image)      -->
+<!-- og-image.jpg→ https://www.renterfinder.com/images/og-image.jpg(1200×630 OG image)      -->
 
 <!-- ═══ SITEMAP DISCOVERY ═══ -->
 <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
 
 <!-- ═══ PRIMARY SEO META TAGS ═══ -->
 <title>Transparent Rental Fees — ₹125 & 12 Days | RenterFinder</title>
-<meta name="description" content="RenterFinder charges only two fees — ₹125 Profile Listing Fee and 12 days' rent Platform Service Fee. No hidden charges. Lowest rental fees in India.">
-<meta name="keywords" content="rental fees India, platform service fee, 12 days rent fee, no brokerage charges, transparent rental pricing, RenterFinder pricing, cheapest rental platform India">
+<meta name="description" content="RenterFinder charges only two fees: ₹125 listing fee for 3 months and 12 days' rent service fee on match. No hidden charges. Most affordable pricing in India.">
+<meta name="keywords" content="rental fees India, platform service fee, 12 days rent fee, no brokerage charges, transparent rental pricing, RenterFinder pricing, most affordable rental platform India, landlord service pricing India, tenant-finding fee cost, pricing to list rental property, pay-as-you-go tenant lead cost">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="author" content="RenterFinder.com">
 <meta name="theme-color" content="#040429">
@@ -428,9 +428,9 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="RenterFinder.com">
 <meta property="og:title" content="Transparent Rental Fees — ₹125 & 12 Days | RenterFinder">
-<meta property="og:description" content="RenterFinder charges only two fees — ₹125 Profile Listing Fee and 12 days' rent Platform Service Fee. No hidden charges. Lowest rental fees in India.">
+<meta property="og:description" content="RenterFinder charges only two fees: ₹125 listing fee for 3 months and 12 days' rent service fee on match. No hidden charges. Most affordable pricing in India.">
 <meta property="og:url" content="https://www.renterfinder.com/fees">
-<meta property="og:image" content="https://www.renterfinder.com/og-image.jpg">
+<meta property="og:image" content="https://www.renterfinder.com/images/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="RenterFinder.com — India's rental-only property matching platform for landlords and tenants">
@@ -441,8 +441,8 @@
 <meta name="twitter:site" content="@RenterFinderIn">
 <meta name="twitter:creator" content="@RenterFinderIn">
 <meta name="twitter:title" content="Transparent Rental Fees — ₹125 & 12 Days | RenterFinder">
-<meta name="twitter:description" content="RenterFinder charges only two fees — ₹125 Profile Listing Fee and 12 days' rent Platform Service Fee. No hidden charges. Lowest rental fees in India.">
-<meta name="twitter:image" content="https://www.renterfinder.com/og-image.jpg">
+<meta name="twitter:description" content="RenterFinder charges only two fees: ₹125 listing fee for 3 months and 12 days' rent service fee on match. No hidden charges. Most affordable pricing in India.">
+<meta name="twitter:image" content="https://www.renterfinder.com/images/og-image.jpg">
 <meta name="twitter:image:alt" content="RenterFinder.com — India's rental-only property matching platform">
 
 <!-- ═══ GEO & LANGUAGE TARGETING ═══ -->
@@ -548,7 +548,8 @@
     "@type": "Organization",
     "name": "RenterFinder.com",
     "url": "https://www.renterfinder.com"
-  }
+  },
+  "keywords": "rental fees India, platform service fee, landlord service pricing India, most affordable rental platform India, transparent pricing"
 }
 </script>
 
@@ -648,6 +649,48 @@
   ]
 }
 </script>
+
+<!-- ═══ STRUCTURED DATA — FAQPage (Fees) ═══ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How much does it cost to list on RenterFinder.com?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Profile Listing Fee is ₹125 for 3 months (currently free until 31 July 2026 as an inaugural offer). This is paid separately by both the landlord and the renter. It includes full profile visibility to all users across India."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Platform Service Fee on RenterFinder.com?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Platform Service Fee is 12 days' rent, paid in two stages: 6 days' rent to arrange the property meeting (non-refundable), and 6 days' rent at deal closure when the rental agreement is signed. It is paid separately by both landlord and renter."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are there any hidden charges on RenterFinder.com?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. RenterFinder.com charges only two fees — the Profile Listing Fee (₹125 for 3 months) and the Platform Service Fee (12 days' rent). There are no registration fees, subscription charges, or any other hidden costs. Both fees are inclusive of all applicable taxes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the re-activation fee?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "If your profile has been deactivated after the 3-month validity period and you wish to re-list within 6 months, a re-activation fee of ₹99 applies. This is cheaper than a fresh listing fee and reinstates your profile for another active period."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -690,16 +733,17 @@
         <span aria-hidden="true">›</span>
         <span aria-current="page">Fees</span>
       </nav>
-      <div class="page-hero-eyebrow">Transparent Pricing</div>
+      <div class="page-hero-eyebrow">Landlord Service Pricing India</div>
       <h1>Transparent Rental <em>Fees</em> — No Hidden Charges</h1>
-      <p>No hidden charges. No surprises. Everything you'll ever pay on RenterFinder.com is listed right here — the same for landlords and renters across Delhi, Mumbai, Bangalore, Pune &amp; all Indian cities.</p>
+      <p>No hidden charges. No surprises. Transparent pricing to list rental property — the same for landlords and renters across Delhi, Mumbai, Bangalore, Pune &amp; all Indian cities. Most affordable rental platform in India.</p>
     </div>
   </div>
 
-  <div class="fees-intro reveal" aria-label="RenterFinder.com charges only two fees — profile listing fee and platform service fee, no hidden charges">
-    <span class="section-label">Our Pricing</span>
-    <h2 class="section-title">Two Fees. <em>Nothing Else</em> — Complete Transparency.</h2>
-    <p>We charge only two types of fees — Profile Listing Fee and Platform Service Fee (including all taxes). All details are visible on this page. No other hidden charges at all. The lowest rental platform service fee in India.</p>
+  <div class="fees-intro reveal"  aria-label="RenterFinder.com charges only two fees — profile listing fee and platform service fee, no hidden charges">
+    <span class="section-label">Pricing to List Rental Property</span>
+    <h2 class="section-title">Two Fees. <em>Nothing Else</em> — Most Affordable Rental Platform Pricing India.</h2>
+  <p style="font-size:13px;color:var(--mid);margin-top:8px;letter-spacing:0.3px;">Rental platform fees India · Tenant-finding fee cost · Pricing to list rental property</p>
+    <p>We charge only two types of fees — Profile Listing Fee and Platform Service Fee (including all taxes). All details are visible on this page. No other hidden charges at all. The most affordable rental platform service fee in India.</p>
   </div>
 
   <!-- Profile Listing Fee ₹125 (discounted from ₹499 — 75% off) and Platform Service Fee 12 days rent — transparent rental pricing for landlords and tenants -->
@@ -758,7 +802,7 @@
     </div>
 
     <div class="fees-breakdown reveal" aria-label="Complete fee breakdown table — profile listing fee, re-activation fee, and platform service fee for rental matching on RenterFinder.com">
-      <h3>Complete Fee Breakdown</h3>
+      <h3>Complete Fee Breakdown — Pay-As-You-Go Tenant Lead Cost</h3>
       <div class="fees-breakdown-scroll">
       <table class="breakdown-table">
         <thead><tr><th>Fee Type</th><th>Amount</th><th>When Paid</th><th>Refundable?</th></tr></thead>
@@ -780,21 +824,55 @@
 
   
   <!-- ═══ SEO V19: Content block — Fees page ═══ -->
-  <section aria-label="Complete guide to RenterFinder.com fees" style="padding:40px 24px 32px;max-width:900px;margin:0 auto;">
+  <section aria-label="Complete guide to RenterFinder.com fees" style="padding:60px 60px 52px;">
     <h2 style="font-size:clamp(18px,2vw,26px);font-weight:600;color:var(--dark);margin-bottom:16px;">Complete Guide to RenterFinder.com Fees</h2>
 
-    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:16px;">RenterFinder.com charges only two fees — a Profile Listing Fee and a Platform Service Fee. Both fees are paid separately by the landlord and the renter. There are no hidden charges, no registration fees, no subscription fees, and no commission escalations. Both fees are transparent, fixed, and listed publicly on this page. This section explains exactly what each fee covers and when it is due.</p>
+    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:28px;">RenterFinder.com charges only two fees — a Profile Listing Fee and a Platform Service Fee. Both fees are paid separately by the landlord and the renter. There are no hidden charges, no registration fees, no subscription fees, and no commission escalations. Both fees are transparent, fixed, and listed publicly on this page. This section explains exactly what each fee covers and when it is due.</p>
 
-    <h3 style="font-size:16px;font-weight:600;color:var(--dark);margin:24px 0 10px;">Fee 1 — Profile Listing Fee (Landlords &amp; Renters): ₹125 (discounted from ₹499 — 75% off) for 3 Months</h3>
-    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:12px;">Both landlords and renters pay a one-time Profile Listing Fee of ₹125 (discounted from ₹499 — 75% off) separately. This fee activates their profile on the platform for a period of 3 months. During this time, their profile — including their preferred city, BHK type, monthly budget, occupation, and contact details — is visible to all users on RenterFinder.com.</p>
-    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:12px;">The ₹125 Profile Listing Fee is non-refundable. After 3 months, profiles are automatically deactivated to ensure only active listings remain. If a landlord or renter has not found a match within 3 months, they can re-activate their profile for another cycle at ₹99 (re-activation fee). The Profile Listing Fee is inclusive of all applicable taxes.</p>
+    <!-- Row 1: Fee 1 text (left) + keys image (right) -->
+    <div class="content-image-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;margin-bottom:48px;">
+      <div>
+        <h3 style="font-size:16px;font-weight:600;color:var(--dark);margin:0 0 10px;">Fee 1 — Profile Listing Fee: ₹125 (discounted from ₹499 — 75% off) for 3 Months</h3>
+        <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:12px;">Both landlords and renters pay a one-time Profile Listing Fee of ₹125 (discounted from ₹499 — 75% off) separately. This fee activates their profile on the platform for a period of 3 months. During this time, their profile — including their preferred city, BHK type, monthly budget, occupation, and contact details — is visible to all users on RenterFinder.com.</p>
+        <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:0;">The ₹125 Profile Listing Fee is non-refundable. After 3 months, profiles are automatically deactivated to ensure only active listings remain. If a landlord or renter has not found a match within 3 months, they can re-activate their profile for another cycle at ₹99 (re-activation fee). The Profile Listing Fee is inclusive of all applicable taxes.</p>
+      </div>
+      <figure style="margin:0;border-radius:14px;overflow:hidden;box-shadow:0 6px 32px rgba(4,4,41,0.10);line-height:0;">
+        <img
+          src="images/landlord-handing-keys-to-renter-india.png"
+          alt="Landlord handing over house keys to a renter after signing the rental agreement — transparent fee process via RenterFinder.com"
+          width="600"
+          height="600"
+          loading="lazy"
+          style="width:100%;height:auto;display:block;"
+        />
+      </figure>
+    </div>
 
-    <h3 style="font-size:16px;font-weight:600;color:var(--dark);margin:24px 0 10px;">Fee 2 — Platform Service Fee (Landlords &amp; Renters): 12 Days' Rent</h3>
-    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:12px;">Both landlords and renters pay a Platform Service Fee of 12 days' rent separately, split into two equal parts. The first 6 days' rent is charged to arrange the formal property meeting — this confirms both parties are serious and is non-refundable. The second 6 days' rent is charged at deal closure, when the rental agreement is signed.</p>
-    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:12px;">For context, traditional brokers in India typically charge between 15 and 90 days' rent as brokerage commission. RenterFinder.com's 12-day Platform Service Fee is significantly lower than the market norm. It is charged in two stages — at meeting and at closure — not as an upfront retainer. The Platform Service Fee is inclusive of all applicable taxes and is non-refundable once the respective stage has been completed.</p>
-    <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:12px;background:#fdf8ee;border-left:3px solid var(--gold);padding:12px 16px;border-radius:4px;"><strong>3 Match Options Guarantee:</strong> If the deal does not close after the property meeting, and both parties report this within 7 days, RenterFinder.com will provide <strong>3 additional match options</strong> within the next 3 months — at no extra charge. The original 6 days' meeting charge already paid counts towards all 3 further attempts. If none of the new matches close within 3 months, the account deactivates and the meeting charge is not refunded.</p>
+    <!-- Row 2: moving-checklist image (left) + Fee 2 text (right) -->
+    <div class="content-image-2col fees-row2" style="display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;margin-bottom:24px;">
+      <figure class="fees-row2-img" style="margin:0;border-radius:14px;overflow:hidden;box-shadow:0 6px 32px rgba(4,4,41,0.10);line-height:0;">
+        <img
+          src="images/renter-checking-moving-checklist-india.png"
+          alt="Indian renter reviewing moving checklist next to a RenterFinder.com branded moving truck — platform service fee explained"
+          width="600"
+          height="600"
+          loading="lazy"
+          style="width:100%;height:auto;display:block;"
+        />
+      </figure>
+      <div>
+        <h3 style="font-size:16px;font-weight:600;color:var(--dark);margin:0 0 10px;">Fee 2 — Platform Service Fee: 12 Days' Rent</h3>
+        <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:12px;">Both landlords and renters pay a Platform Service Fee of 12 days' rent separately, split into two equal parts. The first 6 days' rent is charged to arrange the formal property meeting — this confirms both parties are serious and is non-refundable. The second 6 days' rent is charged at deal closure, when the rental agreement is signed.</p>
+        <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:12px;">For context, traditional brokers in India typically charge between 15 and 90 days' rent as brokerage commission. RenterFinder.com's 12-day Platform Service Fee is significantly lower than the market norm. It is charged in two stages — at meeting and at closure — not as an upfront retainer. The Platform Service Fee is inclusive of all applicable taxes and is non-refundable once the respective stage has been completed.</p>
+        <!-- 3-match callout: inside grid on 1441px+, pulled full-width on 999-1440px via CSS -->
+        <p class="fees-3match-callout" style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:0;background:#fdf8ee;border-left:3px solid var(--gold);padding:12px 16px;border-radius:4px;"><strong>3 Match Options Guarantee:</strong> If the deal does not close after the property meeting, and both parties report this within 7 days, RenterFinder.com will provide <strong>3 additional match options</strong> within the next 3 months — at no extra charge. The original 6 days' meeting charge already paid counts towards all 3 further attempts. If none of the new matches close within 3 months, the account deactivates and the meeting charge is not refunded.</p>
+      </div>
+    </div>
+    <!-- 3-match callout duplicate: visible only on 999px–1440px (full-width below grid) -->
+    <p class="fees-3match-fullwidth" style="display:none;font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:24px;background:#fdf8ee;border-left:3px solid var(--gold);padding:12px 16px;border-radius:4px;"><strong>3 Match Options Guarantee:</strong> If the deal does not close after the property meeting, and both parties report this within 7 days, RenterFinder.com will provide <strong>3 additional match options</strong> within the next 3 months — at no extra charge. The original 6 days' meeting charge already paid counts towards all 3 further attempts. If none of the new matches close within 3 months, the account deactivates and the meeting charge is not refunded.</p>
 
-    <h3 style="font-size:16px;font-weight:600;color:var(--dark);margin:24px 0 10px;">Profile Re-activation Fee: ₹99</h3>
+    <!-- Full-width: remaining sections -->
+    <h3 style="font-size:16px;font-weight:600;color:var(--dark);margin:0 0 10px;">Profile Re-activation Fee: ₹99</h3>
     <p style="font-size:14px;line-height:1.8;color:var(--mid);margin-bottom:12px;">If a profile has been deactivated (after the 3-month validity expires) and the landlord or renter wishes to re-list within 6 months of deactivation, a re-activation fee of ₹99 applies. This reinstates the profile for a further active period. Re-activation within 6 months is significantly cheaper than a fresh ₹125 listing — making it cost-effective for users still searching. The ₹99 re-activation fee is non-refundable and inclusive of all taxes.</p>
 
     <h3 style="font-size:16px;font-weight:600;color:var(--dark);margin:24px 0 10px;">What RenterFinder.com Does Not Charge</h3>
