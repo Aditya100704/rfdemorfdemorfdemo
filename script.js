@@ -76,7 +76,16 @@ return;
 const pageFiles = {"home": "index.html", "about": "about.html", "services": "services.html", "fees": "fees.html", "properties": "properties.html", "renters-list": "renters-list.html", "login": "login.html", "faq": "faq.html", "terms": "terms.html", "disclaimer": "disclaimer.html", "privacy": "privacy.html", "mta": "mta.html", "refer": "refer.html", "internship": "internship.html", "rent-agreement": "rent-agreement.html", "blog": "blog.html", "feedback": "feedback.html", "dashboard": "dashboard.html"};
 var prefix = '';
 if (window.location.pathname.indexOf('/blog/') !== -1) { prefix = '../'; }
-if (pageFiles[key]) { window.location.href = prefix + pageFiles[key]; }
+if (pageFiles[key]) {
+  var ov = document.getElementById('rf-page-transition');
+  if (ov) {
+    ov.style.opacity = '1';
+    ov.style.pointerEvents = 'all';
+    setTimeout(function(){ window.location.href = prefix + pageFiles[key]; }, 220);
+  } else {
+    window.location.href = prefix + pageFiles[key];
+  }
+}
 }
 function renderFooters() {
 const tpl = document.getElementById('footer-template').innerHTML;

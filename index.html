@@ -871,8 +871,35 @@
   ]
 }
 </script>
+<style>
+body{opacity:0;transition:opacity 0.18s ease;}
+body.rf-ready{opacity:1;}
+</style>
+<script>
+(function(){
+  var s=document.createElement('link');
+  s.rel='stylesheet';
+  // will be swapped in by preload onload — this just ensures body shows if preload fires before DOMContentLoaded
+})();
+document.addEventListener('DOMContentLoaded',function(){
+  document.body.classList.add('rf-ready');
+});
+window.addEventListener('pageshow',function(){
+  document.body.classList.add('rf-ready');
+  var ov=document.getElementById('rf-page-transition');
+  if(ov){ov.style.opacity='0';ov.style.pointerEvents='none';}
+});
+</script>
 </head>
 <body>
+<div id="rf-page-transition" style="position:fixed;inset:0;background:#040429;z-index:99999;opacity:0;pointer-events:none;transition:opacity 0.22s ease;display:flex;align-items:center;justify-content:center;" aria-hidden="true">
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="24" cy="24" r="20" stroke="rgba(201,166,104,0.2)" stroke-width="3"/>
+    <path d="M24 4 a20 20 0 0 1 20 20" stroke="#c9a668" stroke-width="3" stroke-linecap="round">
+      <animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur="0.7s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+</div>
 
 <!-- ═══ NOSCRIPT FALLBACK ═══ -->
 <!-- noscript body removed V57: page content renders via CSS without JS; misleading JS-required message deleted -->
