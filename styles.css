@@ -497,17 +497,25 @@ to { opacity:1; transform:translateY(0); }
    Home sections use padding:60px with no max-width → content spans full width.
    Inner page sections match this at 1441px+ by expanding their inner containers.
 ──────────────────────────────────────────────────────────────── */
+@media(min-width:1441px){
+  #page-home .hero-left { zoom: 1.2; }
+  #page-home > *:not(.hero) { zoom: 1.2; }
+}
 @media(min-width:1800px){
-  #page-home .hero-left { zoom: 1.15; }
+  #page-home .hero-left { zoom: 1.35; }
+  #page-home > *:not(.hero) { zoom: 1.35; }
 }
 @media(min-width:2100px){
-  #page-home .hero-left { zoom: 1.3; }
+  #page-home .hero-left { zoom: 1.55; }
+  #page-home > *:not(.hero) { zoom: 1.55; }
 }
 @media(min-width:2560px){
-  #page-home .hero-left { zoom: 1.5; }
+  #page-home .hero-left { zoom: 1.85; }
+  #page-home > *:not(.hero) { zoom: 1.85; }
 }
 @media(min-width:3200px){
-  #page-home .hero-left { zoom: 1.8; }
+  #page-home .hero-left { zoom: 2.2; }
+  #page-home > *:not(.hero) { zoom: 2.2; }
 }
 /* ── ALL INNER PAGE CONTENT ZOOM ─────────────────────────────────
    Zooms every content section on every page (text, tables, images,
@@ -516,69 +524,85 @@ to { opacity:1; transform:translateY(0); }
    (which uses viewport units and must not be zoomed).
    login / dashboard / feedback excluded (utility pages).
 ──────────────────────────────────────────────────────────────── */
+@media(min-width:1441px){
+  #page-about > *:not(.page-hero) { zoom: 1.2; }
+  #page-fees > *:not(.page-hero) { zoom: 1.2; }
+  #page-faq > *:not(.page-hero) { zoom: 1.2; }
+  #page-services > *:not(.page-hero) { zoom: 1.2; }
+  #page-mta > *:not(.page-hero) { zoom: 1.2; }
+  #page-rent-agreement > *:not(.page-hero) { zoom: 1.2; }
+  #page-renters-list > *:not(.page-hero) { zoom: 1.2; }
+  #page-properties > *:not(.page-hero) { zoom: 1.2; }
+  #page-blog > *:not(.page-hero) { zoom: 1.2; }
+  #page-internship > *:not(.page-hero) { zoom: 1.2; }
+  #page-refer > *:not(.page-hero) { zoom: 1.2; }
+  #page-terms > *:not(.page-hero) { zoom: 1.2; }
+  #page-privacy > *:not(.page-hero) { zoom: 1.2; }
+  #page-disclaimer > *:not(.page-hero) { zoom: 1.2; }
+}
 @media(min-width:1800px){
-  #page-about > *:not(.page-hero) { zoom: 1.15; }
-  #page-fees > *:not(.page-hero) { zoom: 1.15; }
-  #page-faq > *:not(.page-hero) { zoom: 1.15; }
-  #page-services > *:not(.page-hero) { zoom: 1.15; }
-  #page-mta > *:not(.page-hero) { zoom: 1.15; }
-  #page-rent-agreement > *:not(.page-hero) { zoom: 1.15; }
-  #page-renters-list > *:not(.page-hero) { zoom: 1.15; }
-  #page-properties > *:not(.page-hero) { zoom: 1.15; }
-  #page-blog > *:not(.page-hero) { zoom: 1.15; }
-  #page-internship > *:not(.page-hero) { zoom: 1.15; }
-  #page-refer > *:not(.page-hero) { zoom: 1.15; }
-  #page-terms > *:not(.page-hero) { zoom: 1.15; }
-  #page-privacy > *:not(.page-hero) { zoom: 1.15; }
-  #page-disclaimer > *:not(.page-hero) { zoom: 1.15; }
+  #page-about > *:not(.page-hero) { zoom: 1.35; }
+  #page-fees > *:not(.page-hero) { zoom: 1.35; }
+  #page-faq > *:not(.page-hero) { zoom: 1.35; }
+  #page-services > *:not(.page-hero) { zoom: 1.35; }
+  #page-mta > *:not(.page-hero) { zoom: 1.35; }
+  #page-rent-agreement > *:not(.page-hero) { zoom: 1.35; }
+  #page-renters-list > *:not(.page-hero) { zoom: 1.35; }
+  #page-properties > *:not(.page-hero) { zoom: 1.35; }
+  #page-blog > *:not(.page-hero) { zoom: 1.35; }
+  #page-internship > *:not(.page-hero) { zoom: 1.35; }
+  #page-refer > *:not(.page-hero) { zoom: 1.35; }
+  #page-terms > *:not(.page-hero) { zoom: 1.35; }
+  #page-privacy > *:not(.page-hero) { zoom: 1.35; }
+  #page-disclaimer > *:not(.page-hero) { zoom: 1.35; }
 }
 @media(min-width:2100px){
-  #page-about > *:not(.page-hero) { zoom: 1.3; }
-  #page-fees > *:not(.page-hero) { zoom: 1.3; }
-  #page-faq > *:not(.page-hero) { zoom: 1.3; }
-  #page-services > *:not(.page-hero) { zoom: 1.3; }
-  #page-mta > *:not(.page-hero) { zoom: 1.3; }
-  #page-rent-agreement > *:not(.page-hero) { zoom: 1.3; }
-  #page-renters-list > *:not(.page-hero) { zoom: 1.3; }
-  #page-properties > *:not(.page-hero) { zoom: 1.3; }
-  #page-blog > *:not(.page-hero) { zoom: 1.3; }
-  #page-internship > *:not(.page-hero) { zoom: 1.3; }
-  #page-refer > *:not(.page-hero) { zoom: 1.3; }
-  #page-terms > *:not(.page-hero) { zoom: 1.3; }
-  #page-privacy > *:not(.page-hero) { zoom: 1.3; }
-  #page-disclaimer > *:not(.page-hero) { zoom: 1.3; }
+  #page-about > *:not(.page-hero) { zoom: 1.55; }
+  #page-fees > *:not(.page-hero) { zoom: 1.55; }
+  #page-faq > *:not(.page-hero) { zoom: 1.55; }
+  #page-services > *:not(.page-hero) { zoom: 1.55; }
+  #page-mta > *:not(.page-hero) { zoom: 1.55; }
+  #page-rent-agreement > *:not(.page-hero) { zoom: 1.55; }
+  #page-renters-list > *:not(.page-hero) { zoom: 1.55; }
+  #page-properties > *:not(.page-hero) { zoom: 1.55; }
+  #page-blog > *:not(.page-hero) { zoom: 1.55; }
+  #page-internship > *:not(.page-hero) { zoom: 1.55; }
+  #page-refer > *:not(.page-hero) { zoom: 1.55; }
+  #page-terms > *:not(.page-hero) { zoom: 1.55; }
+  #page-privacy > *:not(.page-hero) { zoom: 1.55; }
+  #page-disclaimer > *:not(.page-hero) { zoom: 1.55; }
 }
 @media(min-width:2560px){
-  #page-about > *:not(.page-hero) { zoom: 1.5; }
-  #page-fees > *:not(.page-hero) { zoom: 1.5; }
-  #page-faq > *:not(.page-hero) { zoom: 1.5; }
-  #page-services > *:not(.page-hero) { zoom: 1.5; }
-  #page-mta > *:not(.page-hero) { zoom: 1.5; }
-  #page-rent-agreement > *:not(.page-hero) { zoom: 1.5; }
-  #page-renters-list > *:not(.page-hero) { zoom: 1.5; }
-  #page-properties > *:not(.page-hero) { zoom: 1.5; }
-  #page-blog > *:not(.page-hero) { zoom: 1.5; }
-  #page-internship > *:not(.page-hero) { zoom: 1.5; }
-  #page-refer > *:not(.page-hero) { zoom: 1.5; }
-  #page-terms > *:not(.page-hero) { zoom: 1.5; }
-  #page-privacy > *:not(.page-hero) { zoom: 1.5; }
-  #page-disclaimer > *:not(.page-hero) { zoom: 1.5; }
+  #page-about > *:not(.page-hero) { zoom: 1.85; }
+  #page-fees > *:not(.page-hero) { zoom: 1.85; }
+  #page-faq > *:not(.page-hero) { zoom: 1.85; }
+  #page-services > *:not(.page-hero) { zoom: 1.85; }
+  #page-mta > *:not(.page-hero) { zoom: 1.85; }
+  #page-rent-agreement > *:not(.page-hero) { zoom: 1.85; }
+  #page-renters-list > *:not(.page-hero) { zoom: 1.85; }
+  #page-properties > *:not(.page-hero) { zoom: 1.85; }
+  #page-blog > *:not(.page-hero) { zoom: 1.85; }
+  #page-internship > *:not(.page-hero) { zoom: 1.85; }
+  #page-refer > *:not(.page-hero) { zoom: 1.85; }
+  #page-terms > *:not(.page-hero) { zoom: 1.85; }
+  #page-privacy > *:not(.page-hero) { zoom: 1.85; }
+  #page-disclaimer > *:not(.page-hero) { zoom: 1.85; }
 }
 @media(min-width:3200px){
-  #page-about > *:not(.page-hero) { zoom: 1.8; }
-  #page-fees > *:not(.page-hero) { zoom: 1.8; }
-  #page-faq > *:not(.page-hero) { zoom: 1.8; }
-  #page-services > *:not(.page-hero) { zoom: 1.8; }
-  #page-mta > *:not(.page-hero) { zoom: 1.8; }
-  #page-rent-agreement > *:not(.page-hero) { zoom: 1.8; }
-  #page-renters-list > *:not(.page-hero) { zoom: 1.8; }
-  #page-properties > *:not(.page-hero) { zoom: 1.8; }
-  #page-blog > *:not(.page-hero) { zoom: 1.8; }
-  #page-internship > *:not(.page-hero) { zoom: 1.8; }
-  #page-refer > *:not(.page-hero) { zoom: 1.8; }
-  #page-terms > *:not(.page-hero) { zoom: 1.8; }
-  #page-privacy > *:not(.page-hero) { zoom: 1.8; }
-  #page-disclaimer > *:not(.page-hero) { zoom: 1.8; }
+  #page-about > *:not(.page-hero) { zoom: 2.2; }
+  #page-fees > *:not(.page-hero) { zoom: 2.2; }
+  #page-faq > *:not(.page-hero) { zoom: 2.2; }
+  #page-services > *:not(.page-hero) { zoom: 2.2; }
+  #page-mta > *:not(.page-hero) { zoom: 2.2; }
+  #page-rent-agreement > *:not(.page-hero) { zoom: 2.2; }
+  #page-renters-list > *:not(.page-hero) { zoom: 2.2; }
+  #page-properties > *:not(.page-hero) { zoom: 2.2; }
+  #page-blog > *:not(.page-hero) { zoom: 2.2; }
+  #page-internship > *:not(.page-hero) { zoom: 2.2; }
+  #page-refer > *:not(.page-hero) { zoom: 2.2; }
+  #page-terms > *:not(.page-hero) { zoom: 2.2; }
+  #page-privacy > *:not(.page-hero) { zoom: 2.2; }
+  #page-disclaimer > *:not(.page-hero) { zoom: 2.2; }
 }
 
 /* ── CONTENT WIDTH EXPANSION: fees, faq, blog at 1100px+ ─────────
