@@ -414,7 +414,6 @@
 <meta name="apple-mobile-web-app-title" content="RenterFinder">
 <meta name="application-name" content="RenterFinder.com">
 <meta name="format-detection" content="telephone=no">
-<link rel="canonical" href="https://www.renterfinder.com/services">
 
 <!-- ═══ GEO / AI DISCOVERY ═══ -->
 <!-- llms.txt: AI search crawlers can find content permissions at /llms.txt -->
@@ -770,7 +769,7 @@
         <div class="svc-card-body">
           <p style="font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:20px;">Landlords can search online for a prospective renter with full background details for their rental property. They can also upload their property profile to advertise their flat or shop available for rent.</p>
           <ul class="svc-list">
-            <li><strong>Search a renter or search a tenant</strong> from India's live tenant list — genuine profiles with budget, location, family size, and move-in date</li>
+            <li>Browse India's live tenant list and search for a renter or tenant directly — genuine profiles with budget, preferred location, family size, and move-in date all in one place</li>
             <li>View full renter background: family size, budget range, preferred location, move-in date, and more</li>
             <li>Upload your property profile to advertise your flat, house, or shop available for rent</li>
             <li>Receive interest notifications when a renter matches your property requirements</li>
@@ -819,20 +818,23 @@
     <h2 class="section-title light reveal" style="margin-bottom:16px;">Three Simple <em>Steps</em> to Your Rental Match</h2>
     <p style="font-size:15px;color:rgba(255,255,255,0.45);max-width:520px;line-height:1.65;margin:0 auto 56px;text-align:center;" class="reveal">We facilitate your rental match in three clear, transparent steps — from profile to property viewing.</p>
     <div class="process-grid">
-      <div class="process-step reveal">
+      <div class="process-step reveal" onclick="openSvcModal('step',0)" style="cursor:pointer;" title="Read more">
         <div class="pstep-num">1</div>
         <h4>Match Profiles</h4>
         <p>Both renter and landlord upload their profiles. Our platform helps match requirements across a wide range of options — no broker needed.</p>
+        <div class="svc-card-more">Read more →</div>
       </div>
-      <div class="process-step reveal">
+      <div class="process-step reveal" onclick="openSvcModal('step',1)" style="cursor:pointer;" title="Read more">
         <div class="pstep-num">2</div>
         <h4>Chat & Clear Doubts</h4>
         <p>Once a match is identified, we facilitate a moderated chat to address queries — rent terms, bills, pets, property condition. All doubts cleared before paying anything.</p>
+        <div class="svc-card-more">Read more →</div>
       </div>
-      <div class="process-step reveal">
+      <div class="process-step reveal" onclick="openSvcModal('step',2)" style="cursor:pointer;" title="Read more">
         <div class="pstep-num">3</div>
         <h4>Property Viewing & Deal</h4>
         <p>After the 6-day advance is paid, we share contact details and arrange a property viewing at a mutually convenient date and time. Both parties negotiate directly.</p>
+        <div class="svc-card-more">Read more →</div>
       </div>
     </div>
   </section>
@@ -844,12 +846,12 @@
     <div class="promise-carousel-wrap">
     <div class="promise-scroll-outer" id="promise-scroll">
     <div class="promise-grid">
-      <div class="promise-card reveal"><h3>3 Match Guarantee</h3><p>If the deal does not close after the first match, we provide three additional options within the next three months using the same meeting charge already paid — at no extra cost.</p></div>
-      <div class="promise-card reveal"><h3>Zero Hidden Fees</h3><p>Only two fees: Profile Listing Fee and Platform Service Fee (12 days' rent). All details are visible at our Fees tab. No other charges — ever.</p></div>
-      <div class="promise-card reveal"><h3>Genuine Listings Only</h3><p>Paid portal — profiles are limited, genuine, and mostly listed by landlords or renters themselves. No spam, no fakes.</p></div>
-      <div class="promise-card reveal"><h3>Privacy First</h3><p>Contact details are shared only after both parties agree and the advance payment is made. All chats are moderated for your safety.</p></div>
-      <div class="promise-card reveal"><h3>Equal Treatment</h3><p>No premium service. All clients are treated equally — profiles displayed on a latest listings first basis. Fair for everyone.</p></div>
-      <div class="promise-card reveal"><h3>No Agent Interference</h3><p>We only introduce prospective landlord and renter to each other. Rent negotiation and all terms are finalised directly between the two parties.</p></div>
+      <div class="promise-card reveal" onclick="openSvcModal('promise',0)" style="cursor:pointer;" title="Read more"><h3>3 Match Guarantee</h3><p>If the deal does not close after the first match, we provide three additional options within the next three months using the same meeting charge already paid — at no extra cost.</p><div class="svc-card-more">Read more →</div></div>
+      <div class="promise-card reveal" onclick="openSvcModal('promise',1)" style="cursor:pointer;" title="Read more"><h3>Zero Hidden Fees</h3><p>Only two fees: Profile Listing Fee and Platform Service Fee (12 days' rent). All details are visible at our Fees tab. No other charges — ever.</p><div class="svc-card-more">Read more →</div></div>
+      <div class="promise-card reveal" onclick="openSvcModal('promise',2)" style="cursor:pointer;" title="Read more"><h3>Genuine Listings Only</h3><p>Paid portal — profiles are limited, genuine, and mostly listed by landlords or renters themselves. No spam, no fakes.</p><div class="svc-card-more">Read more →</div></div>
+      <div class="promise-card reveal" onclick="openSvcModal('promise',3)" style="cursor:pointer;" title="Read more"><h3>Privacy First</h3><p>Contact details are shared only after both parties agree and the advance payment is made. All chats are moderated for your safety.</p><div class="svc-card-more">Read more →</div></div>
+      <div class="promise-card reveal" onclick="openSvcModal('promise',4)" style="cursor:pointer;" title="Read more"><h3>Equal Treatment</h3><p>No premium service. All clients are treated equally — profiles displayed on a latest listings first basis. Fair for everyone.</p><div class="svc-card-more">Read more →</div></div>
+      <div class="promise-card reveal" onclick="openSvcModal('promise',5)" style="cursor:pointer;" title="Read more"><h3>No Agent Interference</h3><p>We only introduce prospective landlord and renter to each other. Rent negotiation and all terms are finalised directly between the two parties.</p><div class="svc-card-more">Read more →</div></div>
     </div>
     </div><!-- /promise-scroll-outer -->
     <div class="values-nav" id="promise-nav" style="display:none;">
@@ -970,11 +972,98 @@
 
 <script src="script.js" defer></script>
 <script>
+var _svcStepData = [
+  {
+    title: 'Step 1 — Match Profiles',
+    body: `<p>The first step on this rental listing platform India is straightforward: both the landlord and the renter upload their profiles. Landlords describe their property — location, BHK type, preferred tenant type, rent range. Renters describe their requirements — budget, preferred city and area, family size, move-in date, and any specific needs like a pet-friendly home or a property near a particular office area.</p><p style="margin-top:14px;">Once both profiles are live, our platform facilitates the match. This is how to find tenants fast in India without a broker — instead of waiting for phone calls from agents, landlords can proactively browse the Prospective Renters' List and identify profiles that match their property. Renters can similarly browse property listings posted directly by landlords. Both sides have far more control than they would in a traditional broker-led transaction.</p><p style="margin-top:14px;">This is also what makes RenterFinder different from the best website to find tenants India currently offers — the matching is two-directional. You're not just posting and waiting. You can actively search, shortlist, and initiate. For anyone trying to list rental property without broker India, this is the first step that changes everything.</p>`
+  },
+  {
+    title: 'Step 2 — Chat & Clear Doubts',
+    body: `<p>Once a potential match is identified on this rental platform India, we facilitate a moderated chat between the landlord and renter before any money changes hands. This is where both parties can ask the questions they actually care about — and get real answers before committing.</p><p style="margin-top:14px;">For landlords, this might mean asking about the renter's occupation, family composition, whether they have pets, or how they expect utility bills to be split. For renters, it might mean asking about parking, society rules, whether the landlord lives on the premises, or what the maintenance charges are. These are the conversations that usually happen awkwardly at a site visit after everyone has already travelled — here they happen first, at no cost.</p><p style="margin-top:14px;">This step is a big part of why RenterFinder is considered one of the safe rental platforms in India. Contact details are not shared at this stage — the chat is moderated by the platform. This protects both sides, especially renters who may be cautious about sharing personal information with strangers. How RenterFinder works is designed to build confidence before commitment — and this moderated chat step is central to that.</p>`
+  },
+  {
+    title: 'Step 3 — Property Viewing & Deal',
+    body: `<p>After the chat confirms both sides are interested, the landlord pays the 6-day advance portion of the Platform Service Fee. At this point, RenterFinder shares full contact details and arranges a property viewing at a mutually convenient date and time. This is how to rent house without agent India in the most practical sense — both parties meet, see the property, and negotiate terms directly with no broker in the room.</p><p style="margin-top:14px;">The property viewing is your chance to confirm what you've already discussed in the chat. The landlord can assess the renter in person. The renter can verify the property condition, check water and electricity supply, meet the society members if relevant, and ask any remaining questions. If both parties are satisfied, they proceed to finalise the rent, the deposit, and the agreement — directly, with no intermediary taking a commission cut.</p><p style="margin-top:14px;">When the agreement is signed and the renter moves in, the remaining 6-day portion of the Platform Service Fee is paid to RenterFinder. That's it — no follow-on charges, no renewal fees, no hidden costs. This is the complete process for how to find tenants without broker in India, from first contact to signed agreement, using a rental marketplace India can actually trust.</p>`
+  }
+];
+
+var _svcPromiseData = [
+  {
+    title: '3 Match Guarantee',
+    body: `<p>Finding the right tenant or the right property isn't always instant — and we understand that. Which is why every landlord who pays the 6-day advance to arrange a property meeting gets a guarantee: if the first match doesn't result in a signed agreement, we'll facilitate up to three more match attempts within the next three months, at no additional charge.</p><p style="margin-top:14px;">This matters because it changes the risk calculation entirely. When you're trying to find tenants India without a broker, there's always a concern that a failed first meeting means wasted money. With the 3 Match Guarantee, that concern disappears. You've paid for an outcome — a deal — not just one introduction. For landlords trying to list property for rent India and get a reliable tenant, this is the kind of protection that makes a rental listing platform India worth using over an agent.</p><p style="margin-top:14px;">For renters, the same logic applies. If the first property doesn't work out for reasons beyond your control, you're not left starting from scratch. The platform keeps working to find rental properties India within your requirements until a match closes. This is part of how RenterFinder works as a rental platform India that's genuinely on your side.</p>`
+  },
+  {
+    title: 'Zero Hidden Fees',
+    body: `<p>There are exactly two fees on this platform — a Profile Listing Fee of ₹125 for three months, and a Platform Service Fee of 12 days' rent split as 6 days to arrange the meeting and 6 days at deal closure. That is the complete cost. There is no registration fee, no consultation charge, no premium visibility fee, no background check fee, and no surprise invoice at the end.</p><p style="margin-top:14px;">This is one of the starkest differences between RenterFinder and the traditional rental marketplace India operates on. Why avoid brokerage in India? Because brokerage charges in Indian cities can run between 15 and 90 days' rent — often with no clear justification, no service guarantee, and no recourse if things go wrong. As an alternative to property brokers in India, our fee structure is transparent, proportionate, and only charged when a deal actually happens.</p><p style="margin-top:14px;">Every detail of our pricing is publicly available on the Fees page before you sign up for anything. If you want to post property for rent India or find rental properties India, you should know what you're paying before you commit — not after. That's the only honest way to run a no brokerage rental platform.</p>`
+  },
+  {
+    title: 'Genuine Listings Only',
+    body: `<p>Fake listings, ghost profiles, and broker posts disguised as owner listings have made many Indian rental platforms effectively unusable. You search for verified tenants India, find dozens of profiles, and discover that half are outdated, a quarter are from agents pretending to be owners, and the rest have disconnected numbers. We built RenterFinder specifically to eliminate this.</p><p style="margin-top:14px;">Every profile on this rental listing platform India — whether a landlord listing a property or a renter uploading their requirements — requires a paid listing fee to go live. This small barrier removes the bulk of fake, inactive, and spam entries. People genuinely trying to find tenants fast in India, or find rental properties India for themselves, pay to be here. People testing the system or posting duplicate broker listings typically don't.</p><p style="margin-top:14px;">All listings also auto-deactivate after three months, which keeps the platform current. This is part of how RenterFinder works as one of the safe rental platforms in India — the quality is maintained by the structure of the platform itself, not by a moderation team chasing bad actors. When you browse, you can trust that the profiles you're seeing are real and active.</p>`
+  },
+  {
+    title: 'Privacy First',
+    body: `<p>Contact details — phone numbers, email addresses, and precise addresses — are never shared until both parties have confirmed interest and the advance payment has been made. Until that point, all communication goes through RenterFinder's moderated chat. This is a deliberate design decision, not an afterthought.</p><p style="margin-top:14px;">For renters, especially those searching for safe rental platforms in India, this matters enormously. Single women relocating for work, families moving to a new city, students finding their first flat — these are people who need the reassurance that their personal information won't be handed out to strangers before they're ready. The moderated chat means you can have a full conversation, ask everything you need to ask, and decide whether to proceed — all without giving out a phone number.</p><p style="margin-top:14px;">For landlords, privacy protection works the other way: your property address isn't broadcast to every person who views your listing. It's shared only with someone who has been through the chat process and made a financial commitment to the meeting. This is how to find tenants fast in India without opening yourself up to time-wasters. A rental platform India can be efficient and private at the same time — that's what RenterFinder is designed to prove.</p>`
+  },
+  {
+    title: 'Equal Treatment',
+    body: `<p>There is no premium tier on this platform. No one can pay to appear at the top of the Prospective Renters' List or the property listings. No advertiser can push their profile above yours. Profiles appear in the order they were last listed or reactivated — and that is the only ranking factor on this rental listing platform India.</p><p style="margin-top:14px;">This matters for a simple reason: a fair rental marketplace India is one where the quality of your listing, not the size of your marketing budget, determines whether you get found. A landlord with a modest 2BHK in Nagpur gets the same visibility as one listing a premium flat in Bandra. A renter in Tier-2 city trying to find rental properties India has the same access as someone in Mumbai. This is how to find tenants fast in India the honest way — show up, list your property, and let the platform do the matching fairly.</p><p style="margin-top:14px;">Equal treatment also means the platform applies the same rules to everyone. There's no preferential treatment based on how many properties you've listed, how long you've been on the platform, or how much you've spent. Every user — landlord or renter — is a client, not a product. That's a distinction most rental platforms in India have stopped making.</p>`
+  },
+  {
+    title: 'No Agent Interference',
+    body: `<p>Once RenterFinder has made the introduction between a landlord and renter, the platform steps back. Rent negotiation, agreement terms, deposit amount, move-in date, maintenance responsibilities — all of this is decided directly between the two parties. No agent sits in on the meeting. No broker calls to "check in" and push for a faster close. No middleman takes a cut from the outcome of a negotiation they didn't facilitate.</p><p style="margin-top:14px;">This is the core promise of a no brokerage rental platform — and it's what most people in India actually want when they say they're looking for an alternative to property brokers in India. They don't mind paying a fair platform fee. What they resent is an agent who earns more when rent goes higher, who withholds information to keep both sides dependent on them, and who disappears the moment anything goes wrong after move-in. RenterFinder removes all of that.</p><p style="margin-top:14px;">How RenterFinder works as a rental platform India is simple: we are a connector, not a controller. We build the infrastructure that makes the introduction possible — the Prospective Renters' List, the moderated chat, the fee structure, the 3 Match Guarantee. But the rental relationship itself is yours. That's what renting in India should feel like when you list rental property without broker India or find tenants India through a platform that respects both sides.</p>`
+  }
+];
+
+function openSvcModal(type, idx) {
+  var d = type === 'step' ? _svcStepData[idx] : _svcPromiseData[idx];
+  document.getElementById('svc-modal-title').textContent = d.title;
+  document.getElementById('svc-modal-body').innerHTML = d.body;
+  var overlay = document.getElementById('svc-modal-overlay');
+  var modal = document.getElementById('svc-modal');
+  overlay.style.display = 'block';
+  modal.style.display = 'flex';
+  modal.style.opacity = '0';
+  requestAnimationFrame(function() {
+    modal.style.opacity = '1';
+    modal.style.transform = 'translate(-50%,-50%) scale(1)';
+  });
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSvcModal() {
+  document.getElementById('svc-modal-overlay').style.display = 'none';
+  var modal = document.getElementById('svc-modal');
+  modal.style.display = 'none';
+  modal.style.transform = 'translate(-50%,-50%) scale(0.96)';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeSvcModal();
+});
+
 document.addEventListener('DOMContentLoaded', function() {
   renderFooters();
   initReveal();
   
 });
 </script>
+
+<!-- Services Modal -->
+<div id="svc-modal-overlay" onclick="closeSvcModal()" style="display:none;position:fixed;inset:0;background:rgba(4,4,41,0.65);z-index:9000;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);cursor:pointer;"></div>
+<div id="svc-modal" role="dialog" aria-modal="true" aria-labelledby="svc-modal-title" style="display:none;flex-direction:column;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.96);z-index:9001;background:#fff;border-radius:16px;padding:0;max-width:520px;width:calc(100% - 40px);max-height:88vh;box-shadow:0 24px 80px rgba(4,4,41,0.22);border:1px solid rgba(201,166,104,0.2);transition:transform 0.2s ease,opacity 0.2s ease;">
+  <div style="padding:36px 40px 20px;flex-shrink:0;position:relative;border-bottom:1px solid rgba(201,166,104,0.15);">
+    <button onclick="closeSvcModal()" aria-label="Close" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;font-size:20px;color:#7a7066;line-height:1;padding:4px 8px;border-radius:6px;">✕</button>
+    <h3 id="svc-modal-title" style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:#040429;letter-spacing:-0.5px;margin:0;padding-right:32px;"></h3>
+  </div>
+  <div id="svc-modal-body" style="font-size:14px;color:#7a7066;line-height:1.8;overflow-y:auto;padding:24px 40px 36px;flex:1;"></div>
+</div>
+
+<style>
+.svc-card-more { font-size:12px;font-weight:600;color:var(--gold-dk);margin-top:14px;letter-spacing:0.3px; }
+.process-step:hover .svc-card-more,.promise-card:hover .svc-card-more { text-decoration:underline; }
+.process-step .svc-card-more { color:rgba(201,166,104,0.8); }
+@media(max-width:560px){ #svc-modal { padding:0; } #svc-modal > div:first-child { padding:28px 24px 16px; } #svc-modal-body { padding:16px 24px 28px; } }
+</style>
 </body>
 </html>
