@@ -867,10 +867,15 @@
       return;
     }
 
+    // Track which collections have loaded at least once
+    const _loaded = { chats: false, modlog: false, deals: false, appeals: false, assignments: false };
+    function _checkAllLoaded() {
+      if (Object.values(_loaded).every(Boolean)) loadDashboard();
+    }
+
     // All chats
     _unsubList.push(RF.onAllChats(chats => {
       _chats = chats;
-      // For each chat, subscribe to its messages (only if not already subscribed)
       chats.forEach(c => {
         if (!_msgCache[c.chatId]) {
           _msgCache[c.chatId] = [];
@@ -880,14 +885,16 @@
             });
         }
       });
-      loadDashboard();
+      _loaded.chats = true;
+      _checkAllLoaded();
     }));
 
     // Modlog
     _unsubList.push(RF.onModLog(log => {
       _modlog = log;
       try { localStorage.setItem('rf_modlog', JSON.stringify(log)); } catch {}
-      loadDashboard();
+      _loaded.modlog = true;
+      _checkAllLoaded();
     }));
 
     // Deals
@@ -895,21 +902,24 @@
       _deals = {};
       deals.forEach(d => { _deals[d.chatId] = d; });
       try { localStorage.setItem('rf_deals', JSON.stringify(deals)); } catch {}
-      loadDashboard();
+      _loaded.deals = true;
+      _checkAllLoaded();
     }));
 
     // Appeals
     _unsubList.push(RF.onAppeals(appeals => {
       _appeals = appeals;
       try { localStorage.setItem('rf_appeals', JSON.stringify(appeals)); } catch {}
-      loadDashboard();
+      _loaded.appeals = true;
+      _checkAllLoaded();
     }));
 
-    // Assignments
+    // Assignments — CRITICAL: must load before chats render
     _unsubList.push(RF.onAssignments(map => {
       _assignments = map;
       try { localStorage.setItem('rf_chat_assignments', JSON.stringify(map)); } catch {}
-      loadDashboard();
+      _loaded.assignments = true;
+      _checkAllLoaded();
     }));
 
     // Mods active
@@ -1115,8 +1125,12 @@
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:60px 20px;"><div class="empty-icon">🤝</div><h3>No deals yet</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Deals appear here once both parties confirm interest in a chat.</p></div>`;
       return;
     }
-    // Sort newest first
-    const sorted = [...deals].sort((a,b) => (b.initiatedTs||b.completedTs||0) - (a.initiatedTs||a.completedTs||0));
+    // Sort newest first using any available timestamp
+    const sorted = [...deals].sort((a,b) => {
+      const tsA = a.initiatedTs || a.completedTs || a.confirmedATs || a.confirmedBTs || 0;
+      const tsB = b.initiatedTs || b.completedTs || b.confirmedATs || b.confirmedBTs || 0;
+      return tsB - tsA;
+    });
     const active = sorted.filter(d => d.stage !== 'Cancelled' && !d.stage_complete);
     container.innerHTML = '';
     if (!active.length) {

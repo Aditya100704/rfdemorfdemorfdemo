@@ -111,8 +111,13 @@ const RF = (() => {
   }
 
   function onModLog(callback) {
-    return db.collection('modlog').orderBy('ts', 'desc')
-      .onSnapshot(snap => callback(snap.docs.map(d => d.data())));
+  function onModLog(callback) {
+    return db.collection('modlog')
+      .onSnapshot(snap => {
+        const data = snap.docs.map(d => d.data());
+        data.sort((a,b) => (b.ts||0) - (a.ts||0));
+        callback(data);
+      });
   }
 
   // ── APPEALS ──────────────────────────────────────────────────
@@ -125,8 +130,12 @@ const RF = (() => {
   }
 
   function onAppeals(callback) {
-    return db.collection('appeals').orderBy('ts', 'desc')
-      .onSnapshot(snap => callback(snap.docs.map(d => d.data())));
+    return db.collection('appeals')
+      .onSnapshot(snap => {
+        const data = snap.docs.map(d => d.data());
+        data.sort((a,b) => (b.ts||0) - (a.ts||0));
+        callback(data);
+      });
   }
 
   // ── ASSIGNMENTS ──────────────────────────────────────────────
