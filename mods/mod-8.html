@@ -796,7 +796,7 @@
   }
 
   // ── FIRESTORE REAL-TIME LISTENERS ────────────────────────────
-  const _isLocal = location.protocol === 'file:';
+  // _isLocal defined in firebase-config.js
 
   function _loadFromLocalStorage() {
     try { _chats       = JSON.parse(localStorage.getItem('rf_chats_index')) || []; } catch {}

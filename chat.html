@@ -1064,6 +1064,9 @@
     const preCheck = regexPreFilter(text);
     if (preCheck.blocked) return { decision: 'BLOCK', reason: preCheck.reason, violationType: preCheck.violationType };
 
+    // Skip AI call when running locally — regex only
+    if (_isLocal) return { decision: 'ALLOW', reason: '', violationType: '' };
+
     // Call Cloud Function (Anthropic key is secure on server)
     try {
       const res = await fetch(MODERATE_URL, {

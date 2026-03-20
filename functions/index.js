@@ -6,13 +6,14 @@ const ANTHROPIC_KEY = defineSecret('ANTHROPIC_KEY');
 const ALLOWED_ORIGINS = [
   'https://aditya100704.github.io',
   'http://localhost',
-  'http://127.0.0.1'
+  'http://127.0.0.1',
+  'null'  // local file:// testing
 ];
 
 function setCors(req, res) {
-  const origin = req.headers.origin;
-  const allowed = !origin || ALLOWED_ORIGINS.includes(origin);
-  res.set('Access-Control-Allow-Origin', allowed ? (origin || '*') : 'https://aditya100704.github.io');
+  const origin = req.headers.origin || 'null';
+  const allowed = ALLOWED_ORIGINS.includes(origin);
+  res.set('Access-Control-Allow-Origin', allowed ? origin : 'https://aditya100704.github.io');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
 }
