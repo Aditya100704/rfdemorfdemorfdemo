@@ -1261,20 +1261,25 @@
     document.getElementById('appeal-counter').textContent = `${this.value.length} / 500`;
   });
 
-  function submitAppeal() {
+  async function submitAppeal() {
     const text = document.getElementById('appeal-text').value.trim();
     if (!text || text.length < 10) { document.getElementById('appeal-text').style.borderColor = '#ef4444'; return; }
+    const appeal = {
+      id: Date.now(), chatId: CHAT_ID, listing: LISTING,
+      userId: USERS[currentIdentity].id,
+      userName: USERS[currentIdentity].name,
+      userRole: USERS[currentIdentity].role,
+      text, ts: Date.now(), status: 'pending'
+    };
+    // Dual-write: localStorage + Firestore
     try {
       const appeals = JSON.parse(localStorage.getItem(APPEALS_KEY)) || [];
-      appeals.unshift({
-        id: Date.now(), chatId: CHAT_ID, listing: LISTING,
-        userId: USERS[currentIdentity].id,
-        userName: USERS[currentIdentity].name,
-        userRole: USERS[currentIdentity].role,
-        text, ts: Date.now(), status: 'pending'
-      });
+      appeals.unshift(appeal);
       localStorage.setItem(APPEALS_KEY, JSON.stringify(appeals));
     } catch {}
+    if (!_isLocal) {
+      try { await RF.saveAppeal(appeal); } catch(e) { console.error('saveAppeal', e); }
+    }
     document.getElementById('appeal-form-view').style.display = 'none';
     document.getElementById('appeal-success-view').style.display = 'block';
   }

@@ -1202,12 +1202,12 @@
     const field = `pay_${stageKey}_${party}`;
     deal[field] = !deal[field];
     deal[`${field}_ts`] = deal[field] ? Date.now() : null;
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    await saveDeals(deals);
+    await syncDealToChat(chatId, deal);
     loadDashboard();
   }
 
-  function proceedPaymentStage(chatId, stageKey) {
+  async function proceedPaymentStage(chatId, stageKey) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1218,13 +1218,13 @@
     deal[`stage_${stageKey}_ts`] = Date.now();
     const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    await saveDeals(deals);
+    await syncDealToChat(chatId, deal);
     showToast(`✓ ${label} stage completed`, 'success');
     loadDashboard();
   }
 
-  function proceedActionStage(chatId, stageKey) {
+  async function proceedActionStage(chatId, stageKey) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1232,13 +1232,13 @@
     deal[`stage_${stageKey}_ts`] = Date.now();
     const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    await saveDeals(deals);
+    await syncDealToChat(chatId, deal);
     showToast(`✓ ${label} confirmed`, 'success');
     loadDashboard();
   }
 
-  function completeAndArchive(chatId) {
+  async function completeAndArchive(chatId) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1252,15 +1252,15 @@
       const chat = idx.find(c => c.chatId === chatId);
       if (chat) { chat.archived = true; chat.archivedTs = Date.now(); chat.dealComplete = true; localStorage.setItem('rf_chats_index', JSON.stringify(idx)); }
     } catch {}
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    await saveDeals(deals);
+    await syncDealToChat(chatId, deal);
     showToast('🏆 Deal archived successfully', 'success');
     loadDashboard();
   }
 
   let pendingCancelChatId = null;
 
-  function cancelDeal(chatId) {
+  async function cancelDeal(chatId) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1283,14 +1283,14 @@
     if (!deal) { closeCancelDealConfirm(); return; }
     deal.stage = 'Cancelled'; deal.cancelledTs = Date.now();
     postDealSystemMsg(chatId, '❌ This deal has been cancelled by RenterFinder moderation.');
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    await saveDeals(deals);
+    await syncDealToChat(chatId, deal);
     closeCancelDealConfirm();
     showToast('Deal cancelled', 'error');
     loadDashboard();
   }
 
-  function reinstateDeal(chatId) {
+  async function reinstateDeal(chatId) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1298,8 +1298,8 @@
     deal.cancelledTs = null;
     delete deal.stage_complete;
     postDealSystemMsg(chatId, '✅ This deal has been reinstated by RenterFinder moderation. Both parties may continue.');
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    await saveDeals(deals);
+    await syncDealToChat(chatId, deal);
     showToast('✓ Deal reinstated', 'success');
     loadDashboard();
   }
@@ -1311,21 +1311,30 @@
     const el = document.getElementById(`notes-${chatId}`);
     if (!el) return;
     deal.notes = el.value;
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    await saveDeals(deals);
+    await syncDealToChat(chatId, deal);
     showToast('Notes saved ✓', 'success');
   }
 
-  function syncDealToChat(chatId, deal) {
+  async function syncDealToChat(chatId, deal) {
+    // Dual-write: localStorage + Firestore
     try { localStorage.setItem(`rf_deal_${chatId}`, JSON.stringify(deal)); } catch {}
+    if (!_isLocal) {
+      try { await RF.saveDeal(chatId, deal); } catch(e) { console.error('syncDealToChat', e); }
+    }
   }
 
-  function postDealSystemMsg(chatId, text) {
+  async function postDealSystemMsg(chatId, text) {
+    const msg = { id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true, chatId };
+    // Dual-write: localStorage + Firestore
     try {
-      const msgs = _msgCache[chatId] || [];
-      msgs.push({ id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true });
+      const msgs = _msgCache[chatId] ? [..._msgCache[chatId]] : [];
+      msgs.push(msg);
       localStorage.setItem(`rf_chat_${chatId}`, JSON.stringify(msgs));
     } catch {}
+    if (!_isLocal) {
+      try { await RF.saveMessage(chatId, msg); } catch(e) { console.error('postDealSystemMsg', e); }
+    }
   }
 
   function fmtTs(ts) {
