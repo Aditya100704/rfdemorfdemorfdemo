@@ -545,85 +545,318 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="../firebase-db.js"></script>
 <script>
   const MOD_PASSWORD = 'Mod@RF2025';
   const SESSION_KEY  = 'rf_mod_session_mod-10';
   const MOD_ID = 'mod-10';
   const MOD_NAME = 'Mod 10';
-  const getAssignments = () => { try { return JSON.parse(localStorage.getItem('rf_chat_assignments'))||{}; } catch { return {}; } };
-  (function(){ try { const s=JSON.parse(localStorage.getItem('rf_mods_active'))||{}; if(s['mod-1']===undefined)s['mod-1']=true; if(s['mod-2']===undefined)s['mod-2']=true; localStorage.setItem('rf_mods_active',JSON.stringify(s)); } catch{} })();
   const AUTO_REFRESH_SECS = 30;
+
+  // getModeActive/getAssignments now read from in-memory cache (populated by Firestore)
+  // saveModeActive/saveAssignments write to Firestore via RF
+  const saveModeActive = async (v) => {
+    _modsActive = v;
+    try { localStorage.setItem('rf_mods_active', JSON.stringify(v)); } catch {}
+    try {
+      const batch = db.batch();
+      Object.entries(v).forEach(([id, active]) => batch.set(db.collection('modsActive').doc(id), { active, id }));
+      await batch.commit();
+    } catch(e) { console.error('saveModeActive', e); }
+  };
+  const saveAssignments = async (v) => {
+    _assignments = v;
+    try { localStorage.setItem('rf_chat_assignments', JSON.stringify(v)); } catch {}
+    try {
+      const batch = db.batch();
+      Object.entries(v).forEach(([chatId, modId]) => batch.set(db.collection('assignments').doc(chatId), { modId, chatId }));
+      await batch.commit();
+    } catch(e) { console.error('saveAssignments', e); }
+  };
+
+  async function reassignChat(chatId, modId) {
+    const assignments = { ...getAssignments() };
+    if (modId) {
+      assignments[chatId] = modId;
+      try { await RF.saveAssignment(chatId, modId); } catch(e) { console.error('reassignChat', e); }
+    } else {
+      delete assignments[chatId];
+      try { await RF.deleteAssignment(chatId); } catch(e) { console.error('deleteAssignment', e); }
+    }
+    _assignments = assignments;
+    try { localStorage.setItem('rf_chat_assignments', JSON.stringify(assignments)); } catch {}
+    const modName = modId ? (MODS.find(m => m.id === modId)?.name || modId) : 'nobody';
+    showToast(`Chat reassigned to ${modName}`, 'success');
+    loadDashboard();
+  }
+
+  // Deterministic hash — same chatId always maps to same mod, no counter needed
+  function hashChatId(chatId) {
+    let h = 0;
+    for (let i = 0; i < chatId.length; i++) {
+      h = ((h << 5) - h) + chatId.charCodeAt(i);
+      h |= 0;
+    }
+    return Math.abs(h);
+  }
+
+  async function assignNewChats() {
+    const active     = getModeActive();
+    const activeMods = MODS.filter(m => active[m.id]);
+    const pool       = activeMods.length ? activeMods : [MODS[0]];
+    const assignments= getAssignments();
+    const chats      = getChatsIndex();
+    const newAssigns = {};
+    chats.forEach(c => {
+      if (!assignments[c.chatId]) {
+        newAssigns[c.chatId] = pool[hashChatId(c.chatId) % pool.length].id;
+      }
+    });
+    if (Object.keys(newAssigns).length) {
+      const merged = { ...assignments, ...newAssigns };
+      await saveAssignments(merged);
+    }
+  }
+
+  async function toggleMod(modId) {
+    const active = { ...getModeActive() };
+    active[modId] = !active[modId];
+    await saveModeActive(active);
+    await assignNewChats();
+    renderModPanel();
+    loadDashboard();
+  }
+
+  function toggleModPanel() {
+    const body    = document.getElementById('mod-mgmt-body');
+    const chevron = document.getElementById('mod-mgmt-chevron');
+    body.classList.toggle('open');
+    chevron.classList.toggle('open');
+  }
+
+  function renderModPanel() {
+    const active      = getModeActive();
+    const assignments = getAssignments();
+    const activeCount = MODS.filter(m => active[m.id]).length;
+    const totalAssigned = Object.keys(assignments).length;
+    document.getElementById('mod-mgmt-meta').textContent = `${activeCount} active · ${totalAssigned} chats assigned`;
+    const grid = document.getElementById('mod-grid');
+    grid.innerHTML = '';
+    MODS.forEach(m => {
+      const isActive   = !!active[m.id];
+      const chatCount  = Object.values(assignments).filter(v => v === m.id).length;
+      const card       = document.createElement('div');
+      card.className   = `mod-card${isActive?' active-mod':''}`;
+      card.innerHTML   = `
+        <div class="mod-card-avatar">${m.name.replace('Mod ','M')}</div>
+        <div class="mod-card-info">
+          <div class="mod-card-name">${m.name}</div>
+          <div class="mod-card-count">${chatCount} chat${chatCount!==1?'s':''} assigned</div>
+          <a class="mod-card-link" href="${m.path}" target="_blank">Open Dashboard ↗</a>
+        </div>
+        <label class="mod-toggle" title="${isActive?'Deactivate':'Activate'} ${m.name}">
+          <input type="checkbox" ${isActive?'checked':''} onchange="toggleMod('${m.id}')">
+          <span class="mod-toggle-slider"></span>
+        </label>`;
+      grid.appendChild(card);
+    });
+  }
+
   function attemptLogin() {
     const pwd = document.getElementById('pwd-input').value;
     if (pwd === MOD_PASSWORD) {
-      sessionStorage.setItem(SESSION_KEY, '1');
+      sessionStorage.setItem(SESSION_KEY,'1');
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('dashboard').classList.add('show');
+      startFirestoreListeners();
       startAutoRefresh();
-      loadDashboard();
     } else {
       document.getElementById('login-error').classList.add('show');
       document.getElementById('pwd-input').value = '';
     }
   }
   function logout() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
-  document.addEventListener('DOMContentLoaded', () => {
-    const el = document.getElementById('pwd-input');
-    if (el) el.addEventListener('keydown', e => { if(e.key==='Enter') attemptLogin(); });
-  });
-
+  document.getElementById('pwd-input').addEventListener('keydown', e => { if(e.key==='Enter') attemptLogin(); });
 
   // ── #8 AUTO-REFRESH ──────────────────────────────────────────
   let refreshTimer = null;
   let countdown    = AUTO_REFRESH_SECS;
 
   function startAutoRefresh() {
-    clearInterval(refreshTimer);
-    countdown = AUTO_REFRESH_SECS;
-    refreshTimer = setInterval(() => {
-      countdown--;
+    // Firestore real-time listeners handle all updates automatically
+    // Just update the countdown display to show "live"
+    const el = document.getElementById('refresh-countdown');
+    if (el) el.textContent = '(live)';
+    setInterval(() => {
       const el = document.getElementById('refresh-countdown');
-      if (el) el.textContent = `(${countdown}s)`;
-      if (countdown <= 0) {
-        countdown = AUTO_REFRESH_SECS;
-        loadDashboard();
-      }
-    }, 1000);
+      if (el) el.textContent = '(live)';
+    }, 5000);
   }
 
-  // ── DATA HELPERS ─────────────────────────────────────────────
-  const getModLog     = () => { try { return JSON.parse(localStorage.getItem('rf_modlog')) || []; } catch { return []; } };
-  const getChatsIndex = () => { try { return JSON.parse(localStorage.getItem('rf_chats_index')) || []; } catch { return []; } };
-  const getChatMsgs   = id => { try { return JSON.parse(localStorage.getItem(`rf_chat_${id}`)) || []; } catch { return []; } };
-  const getChatVio    = id => { try { return JSON.parse(localStorage.getItem(`rf_violations_${id}`)) || {}; } catch { return {}; } };
-  const getBanned     = ()  => { try { return JSON.parse(localStorage.getItem('rf_banned_users')) || {}; } catch { return {}; } };
-  const saveBanned    = b   => localStorage.setItem('rf_banned_users', JSON.stringify(b));
-  // ── CHAT JOIN SLOT SYSTEM ────────────────────────────────────
-  function getJoinSlots(chatId) {
-    try { return JSON.parse(localStorage.getItem(`rf_mod_joined_${chatId}`)) || { admin: null, mod: null }; }
-    catch { return { admin: null, mod: null }; }
+  // ── INIT ─────────────────────────────────────────────────────
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('dashboard').classList.add('show');
+    startFirestoreListeners();
+    startAutoRefresh();
   }
-  function saveJoinSlots(chatId, slots) {
-    localStorage.setItem(`rf_mod_joined_${chatId}`, JSON.stringify(slots));
-  }
-  const isModJoined = id => {
-    const s = getJoinSlots(id);
-    return !!(s.admin || s.mod);
+
+  // ── IN-MEMORY CACHE (populated by Firestore real-time listeners) ───
+  let _chats      = [];   // array of chat meta docs
+  let _modlog     = [];   // array of modlog entries
+  let _deals      = {};   // keyed by chatId
+  let _appeals    = [];
+  let _assignments= {};   // chatId -> modId
+  let _modsActive = { 'mod-1': true, 'mod-2': true };
+  let _banned     = {};
+  let _msgCache   = {};   // chatId -> array of messages
+  let _unsubList  = [];   // store unsubs to clean up
+
+  // ── GETTERS (read from cache) ────────────────────────────────
+  const getChatsIndex = () => _chats;
+  const getModLog     = () => _modlog;
+  const getDeals      = () => Object.values(_deals);
+  const getAppeals    = () => _appeals;
+  const getAssignments= () => _assignments;
+  const getBanned     = () => _banned;
+  const getModeActive = () => {
+    if (_modsActive['mod-1'] === undefined) _modsActive['mod-1'] = true;
+    if (_modsActive['mod-2'] === undefined) _modsActive['mod-2'] = true;
+    return _modsActive;
   };
-  function isAdminJoined(chatId) { return !!getJoinSlots(chatId).admin; }
-  function isModSlotJoined(chatId) { return !!getJoinSlots(chatId).mod; }
-  function getJoinUrl(chatId) {
-    const chat = getChatsIndex().find(c => c.chatId === chatId);
-    const listing = chat ? chat.listing : '';
-    const userB   = chat ? chat.userB   : '';
-    return `../chat.html?chatId=${encodeURIComponent(chatId)}&userId=user-landlord-001&otherId=user-renter-001&otherName=${encodeURIComponent(userB)}&listing=${encodeURIComponent(listing)}&role=mod&modId=mod-10&modName=${encodeURIComponent('Mod 10')}`;
+  const getChatMsgs = id => _msgCache[id] || [];
+  const getChatVio  = id => {
+    const c = _chats.find(c => c.chatId === id);
+    return (c && c.violations) ? c.violations : { A: 0, B: 0 };
+  };
+
+  // ── JOIN SLOTS (Firestore-backed) ────────────────────────────
+  function getJoinSlots(chatId) {
+    const c = _chats.find(c => c.chatId === chatId);
+    return (c && c.joinSlots) ? c.joinSlots : { admin: null, mod: null };
   }
-  const getDeals    = () => { try { return JSON.parse(localStorage.getItem('rf_deals')) || []; } catch { return []; } };
-  const saveDeals   = d  => localStorage.setItem('rf_deals', JSON.stringify(d));
-  const getAppeals    = ()  => { try { return JSON.parse(localStorage.getItem('rf_appeals')) || []; } catch { return []; } };
-  const saveAppeals   = a   => localStorage.setItem('rf_appeals', JSON.stringify(a));
-  function saveModLog(log)  { localStorage.setItem('rf_modlog', JSON.stringify(log)); }
-  function updateLogEntry(id, patch) { const log = getModLog(); const i = log.findIndex(e => e.id === id); if(i !== -1){ Object.assign(log[i], patch); saveModLog(log); } }
+  async function saveJoinSlots(chatId, slots) {
+    // Dual-write: localStorage + Firestore
+    try { localStorage.setItem(`rf_mod_joined_${chatId}`, JSON.stringify(slots)); } catch {}
+    try { await RF.updateChatMeta(chatId, { joinSlots: slots }); } catch(e) { console.error('saveJoinSlots', e); }
+  }
+  const isModJoined = id => { const s = getJoinSlots(id); return !!(s.admin || s.mod); };
+  function isAdminJoined(chatId) { return !!getJoinSlots(chatId).admin; }
+  function getJoinUrl(chatId) {
+    const chat = _chats.find(c => c.chatId === chatId) || {};
+    return `../chat.html?chatId=${encodeURIComponent(chatId)}&userId=user-landlord-001&otherId=user-renter-001&otherName=${encodeURIComponent(chat.userB||'')}&listing=${encodeURIComponent(chat.listing||'')}&role=mod&modId=mod-10&modName=${encodeURIComponent('Mod 10')}`;
+  }
+
+  // ── WRITERS (dual-write localStorage + Firestore) ────────────
+  const saveBanned = async (b) => {
+    _banned = b;
+    try { localStorage.setItem('rf_banned_users', JSON.stringify(b)); } catch {}
+    try {
+      const batch = db.batch();
+      Object.entries(b).forEach(([uid, data]) => batch.set(db.collection('banned').doc(uid), data));
+      await batch.commit();
+    } catch(e) { console.error('saveBanned', e); }
+  };
+
+  const saveDeals = async (arr) => {
+    arr.forEach(d => { _deals[d.chatId] = d; });
+    try { localStorage.setItem('rf_deals', JSON.stringify(arr)); } catch {}
+    try {
+      const batch = db.batch();
+      arr.forEach(d => batch.set(db.collection('deals').doc(d.chatId), d));
+      await batch.commit();
+    } catch(e) { console.error('saveDeals', e); }
+  };
+
+  const saveAppeals = async (arr) => {
+    _appeals = arr;
+    try { localStorage.setItem('rf_appeals', JSON.stringify(arr)); } catch {}
+    try {
+      const batch = db.batch();
+      arr.forEach(a => batch.set(db.collection('appeals').doc(String(a.id)), a));
+      await batch.commit();
+    } catch(e) { console.error('saveAppeals', e); }
+  };
+
+  function saveModLog(log) {
+    _modlog = log;
+    try { localStorage.setItem('rf_modlog', JSON.stringify(log)); } catch {}
+  }
+
+  async function updateLogEntry(id, patch) {
+    _modlog = _modlog.map(e => String(e.id) === String(id) ? {...e, ...patch} : e);
+    try { localStorage.setItem('rf_modlog', JSON.stringify(_modlog)); } catch {}
+    try { await db.collection('modlog').doc(String(id)).update(patch); } catch(e) { console.error('updateLogEntry', e); }
+  }
+
+  // ── FIRESTORE REAL-TIME LISTENERS ────────────────────────────
+  let _listenersStarted = false;
+  function startFirestoreListeners() {
+    if (_listenersStarted) return;
+    _listenersStarted = true;
+
+    // All chats
+    _unsubList.push(RF.onAllChats(chats => {
+      _chats = chats;
+      // For each chat, subscribe to its messages (only if not already subscribed)
+      chats.forEach(c => {
+        if (!_msgCache[c.chatId]) {
+          _msgCache[c.chatId] = [];
+          db.collection('chats').doc(c.chatId).collection('messages')
+            .orderBy('ts','asc').onSnapshot(snap => {
+              _msgCache[c.chatId] = snap.docs.map(d => d.data());
+            });
+        }
+      });
+      loadDashboard();
+    }));
+
+    // Modlog
+    _unsubList.push(RF.onModLog(log => {
+      _modlog = log;
+      try { localStorage.setItem('rf_modlog', JSON.stringify(log)); } catch {}
+      loadDashboard();
+    }));
+
+    // Deals
+    _unsubList.push(RF.onDeals(deals => {
+      _deals = {};
+      deals.forEach(d => { _deals[d.chatId] = d; });
+      try { localStorage.setItem('rf_deals', JSON.stringify(deals)); } catch {}
+      loadDashboard();
+    }));
+
+    // Appeals
+    _unsubList.push(RF.onAppeals(appeals => {
+      _appeals = appeals;
+      try { localStorage.setItem('rf_appeals', JSON.stringify(appeals)); } catch {}
+      loadDashboard();
+    }));
+
+    // Assignments
+    _unsubList.push(RF.onAssignments(map => {
+      _assignments = map;
+      try { localStorage.setItem('rf_chat_assignments', JSON.stringify(map)); } catch {}
+      loadDashboard();
+    }));
+
+    // Mods active
+    _unsubList.push(RF.onModsActive(map => {
+      _modsActive = map;
+      try { localStorage.setItem('rf_mods_active', JSON.stringify(map)); } catch {}
+      renderModPanel();
+    }));
+
+    // Banned users
+    _unsubList.push(RF.onBanned(banned => {
+      _banned = banned;
+      try { localStorage.setItem('rf_banned_users', JSON.stringify(banned)); } catch {}
+    }));
+  }
 
   function showToast(msg, type='') {
     const t = document.getElementById('toast');
@@ -635,10 +868,10 @@
 
   // ── LOAD DASHBOARD ───────────────────────────────────────────
   function loadDashboard() {
+    assignNewChats();
+    renderModPanel();
     const modLog  = getModLog();
-    const allChats = getChatsIndex();
-    const assignments = getAssignments();
-    const chats = allChats.filter(c => assignments[c.chatId] === MOD_ID);
+    const chats   = getChatsIndex().filter(c => _assignments[c.chatId] === MOD_ID);
     const appeals = getAppeals();
 
     let totalMsgs = 0, suspended = 0;
@@ -672,27 +905,31 @@
     renderDealsList(getDeals(), document.getElementById('deals-list'));
     renderAppealsList(appeals, document.getElementById('appeals-list'));
     renderUsersTable(chats, modLog, getBanned());
+    renderArchivedList(document.getElementById('archived-list'));
+    renderHistoryList(document.getElementById('history-list'));
   }
 
   // ── CHATS LIST ───────────────────────────────────────────────
   function renderChatsList(chats, container) {
     if (!chats.length) { container.innerHTML = `<div class="empty-state"><div class="empty-icon">💬</div><h3>No chats assigned to Mod 10</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Ensure Mod 10 is Active in the Admin Dashboard.</p></div>`; return; }
     container.innerHTML = '';
-    const modLog = getModLog();
+    const modLog      = getModLog();
+    const active      = getModeActive();
+    const assignments = getAssignments();
     chats.forEach(c => {
-      const msgs   = getChatMsgs(c.chatId);
-      const v      = getChatVio(c.chatId);
-      const maxV   = Math.max(...Object.values(v).concat([0]));
-      const isSusp = maxV >= 3;
-      const hasFlg = modLog.some(m => m.chatId === c.chatId);
-      const lastTs = c.lastTs ? new Date(c.lastTs).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'No messages';
-      const slots  = getJoinSlots(c.chatId);
-      const myJoined   = slots.mod && slots.mod.id === MOD_ID;
-      const otherMod   = slots.mod && slots.mod.id !== MOD_ID;
-      const adminIn    = !!slots.admin;
-      const url = getJoinUrl(c.chatId);
+      const msgs        = getChatMsgs(c.chatId);
+      const v           = getChatVio(c.chatId);
+      const maxV        = Math.max(...Object.values(v).concat([0]));
+      const isSusp      = maxV >= 3;
+      const hasFlg      = modLog.some(m => m.chatId === c.chatId);
+      const modIn       = isModJoined(c.chatId);
+      const lastTs      = c.lastTs ? new Date(c.lastTs).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'No messages';
+      const currentMod  = assignments[c.chatId] || '';
+      const modOptions  = MODS.map(m =>
+        `<option value="${m.id}" ${currentMod===m.id?'selected':''}>${m.name}${active[m.id]?' ✓':''}</option>`
+      ).join('');
       const row = document.createElement('div');
-      row.className = `chat-row${hasFlg?' flagged':''}${isSusp?' suspended':''}`;
+      row.className = `chat-row${hasFlg?' flagged':''}${isSusp?' suspended':''}${c.needsMonitoring?' needs-monitoring':''}`;
       row.innerHTML = `
         <div class="chat-icon">🏠</div>
         <div class="chat-meta">
@@ -701,18 +938,33 @@
         </div>
         <div class="chat-badges">
           ${isSusp?'<span class="badge badge-banned">Suspended</span>':hasFlg?'<span class="badge badge-flagged">⚠ Flagged</span>':'<span class="badge badge-active">Active</span>'}
+          ${c.needsMonitoring?'<span class="badge badge-monitor">🔴 Monitor</span>':''}
+          ${modIn?'<span class="badge badge-mod">🛡️ Joined</span>':''}
           <span class="badge badge-msgs">${msgs.length} msg${msgs.length!==1?'s':''}</span>
-          ${adminIn?'<span class="badge badge-mod">🛡️ Admin active</span>':''}
         </div>
-        <div class="chat-actions" style="gap:6px;flex-wrap:wrap;">
+        <div class="chat-actions" style="flex-wrap:wrap;gap:6px;align-items:center;">
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div class="assign-label">Assigned to</div>
+            <select class="assign-select" onchange="reassignChat('${c.chatId}',this.value)">
+              <option value="" ${!currentMod?'selected':''}>— Unassigned —</option>
+              ${modOptions}
+            </select>
+          </div>
           <button class="chat-action-btn btn-view" onclick="viewChat('${c.chatId}','${escH(c.listing)}','${escH(c.userA)}','${escH(c.userB)}')">View</button>
-          ${myJoined
-            ? `<a href="${url}" target="_blank" class="chat-action-btn btn-join joined" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">✓ Joined ↗</a>
-               <button class="chat-action-btn" style="font-size:10px;opacity:0.6;" onclick="leaveChat('${c.chatId}')">Leave</button>`
-            : otherMod
-              ? `<button class="chat-action-btn btn-join" disabled style="opacity:0.45;">🔒 ${slots.mod.name} active</button>`
-              : `<button class="chat-action-btn btn-join" onclick="joinChat('${c.chatId}')">🛡️ Join Chat</button>`
-          }
+          ${(()=>{
+            const slots = getJoinSlots(c.chatId);
+            const adminJoined = !!slots.admin;
+            const modJoined   = !!slots.mod;
+            const url = getJoinUrl(c.chatId);
+            if (adminJoined) {
+              return `<a href="${url}" target="_blank" class="chat-action-btn btn-join joined" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">✓ You Joined ↗</a>
+                      <button class="chat-action-btn" style="font-size:10px;opacity:0.6;" onclick="leaveChat('${c.chatId}')">Leave</button>`;
+            }
+            const modLabel = modJoined ? `🛡️ ${slots.mod.name} in chat` : '';
+            const canJoin  = !adminJoined;
+            return `<button class="chat-action-btn btn-join" onclick="joinChat('${c.chatId}')" ${canJoin?'':'disabled'}>🛡️ Join as Admin</button>
+                    ${modJoined?`<span style="font-size:10px;color:#6ee7b7;white-space:nowrap;">${escH(modLabel)}</span>`:''}`;
+          })()}
         </div>`;
       container.appendChild(row);
     });
@@ -834,7 +1086,7 @@
       // Auto-tick meeting stage if parties have confirmed a date
       if (stage.key === 'meeting' && !d.stage_meeting) {
         try {
-          const meeting = JSON.parse(localStorage.getItem(`rf_meeting_${d.chatId}`));
+          const meeting = d.meeting || null;
           if (meeting?.status === 'confirmed') {
             d.stage_meeting    = true;
             d.stage_meeting_ts = meeting.confirmedTs || Date.now();
@@ -973,7 +1225,7 @@
     deal.completedTs       = Date.now();
     postDealSystemMsg(chatId, '🏆 Deal fully completed and archived by RenterFinder. Congratulations to both parties!');
     try {
-      const idx  = JSON.parse(localStorage.getItem('rf_chats_index')) || [];
+      const idx  = _chats;
       const chat = idx.find(c => c.chatId === chatId);
       if (chat) { chat.archived = true; chat.archivedTs = Date.now(); chat.dealComplete = true; localStorage.setItem('rf_chats_index', JSON.stringify(idx)); }
     } catch {}
@@ -1047,7 +1299,7 @@
 
   function postDealSystemMsg(chatId, text) {
     try {
-      const msgs = JSON.parse(localStorage.getItem(`rf_chat_${chatId}`)) || [];
+      const msgs = _msgCache[chatId] || [];
       msgs.push({ id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true });
       localStorage.setItem(`rf_chat_${chatId}`, JSON.stringify(msgs));
     } catch {}
@@ -1223,15 +1475,19 @@
     const payload = { originalId: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text };
     localStorage.setItem(`rf_mod_approve_${entry.chatId}`, JSON.stringify(payload));
     try {
-      const msgs = JSON.parse(localStorage.getItem(`rf_chat_${entry.chatId}`)) || [];
+      // Messages handled via Firestore RF.saveMessage
       if (!msgs.find(m => m.id === logId)) {
         msgs.push({ id: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text, ts: Date.now(), moderatorApproved: true });
         localStorage.setItem(`rf_chat_${entry.chatId}`, JSON.stringify(msgs));
       }
     } catch {}
     try {
-      const vio = JSON.parse(localStorage.getItem(`rf_violations_${entry.chatId}`)) || {};
-      if ((vio[entry.senderIdentity] || 0) > 0) { vio[entry.senderIdentity]--; localStorage.setItem(`rf_violations_${entry.chatId}`, JSON.stringify(vio)); }
+      const chatMeta = _chats.find(c => c.chatId === entry.chatId) || {};
+      const vio = chatMeta.violations || {};
+      if ((vio[entry.senderIdentity] || 0) > 0) {
+        vio[entry.senderIdentity]--;
+        try { await RF.saveViolations(entry.chatId, vio); } catch(e) { console.error('saveViolations', e); }
+      }
     } catch {}
     updateLogEntry(logId, { status: 'approved' });
     showToast('✓ Message approved and delivered', 'success');
@@ -1243,20 +1499,20 @@
   // ── JOIN CHAT ────────────────────────────────────────────────
   function joinChat(chatId) {
     const slots = getJoinSlots(chatId);
-    if (slots.mod && slots.mod.id === 'mod-10') {
-      // Already joined — just re-open
+    if (slots.admin) {
+      // Already joined as admin — just open the chat
       window.open(getJoinUrl(chatId), '_blank');
       return;
     }
     slots.mod = { id: 'mod-10', name: 'Mod 10', ts: Date.now() };
     saveJoinSlots(chatId, slots);
-    showToast('🛡️ Joined chat as Mod 10', 'info');
+    showToast('🛡️ Joined chat as Admin', 'info');
     window.open(getJoinUrl(chatId), '_blank');
     setTimeout(loadDashboard, 400);
   }
   function leaveChat(chatId) {
     const slots = getJoinSlots(chatId);
-    slots.mod = null;
+    slots.admin = null;
     saveJoinSlots(chatId, slots);
     showToast('Left chat', '');
     loadDashboard();
@@ -1285,14 +1541,25 @@
   let pendingBanId = null, pendingBanName = null;
   function confirmBan(userId, userName) { pendingBanId = userId; pendingBanName = userName; document.getElementById('confirm-msg').textContent = `Ban ${userName}? They will be unable to send further messages.`; document.getElementById('confirm-box').classList.add('show'); }
   function closeConfirm() { document.getElementById('confirm-box').classList.remove('show'); }
-  function executeBan() {
+  async function executeBan() {
     if (!pendingBanId) return;
-    const banned = getBanned(); banned[pendingBanId] = { name: pendingBanName, ts: Date.now() }; saveBanned(banned);
-    closeConfirm(); showToast(`🚫 ${pendingBanName} has been banned`, 'error'); loadDashboard();
+    const banned = { ...getBanned() };
+    banned[pendingBanId] = { name: pendingBanName, ts: Date.now() };
+    await saveBanned(banned);
+    closeConfirm();
+    showToast(`🚫 ${pendingBanName} has been banned`, 'error');
+    loadDashboard();
   }
-  function toggleBan(uid, name) {
-    const banned = getBanned();
-    if (banned[uid]) { delete banned[uid]; saveBanned(banned); showToast(`${name} unbanned`, ''); } else { confirmBan(uid, name); }
+  async function toggleBan(uid, name) {
+    const banned = { ...getBanned() };
+    if (banned[uid]) {
+      delete banned[uid];
+      await saveBanned(banned);
+      try { await db.collection('banned').doc(uid).delete(); } catch {}
+      showToast(`${name} unbanned`, '');
+    } else {
+      confirmBan(uid, name);
+    }
     loadDashboard();
   }
 
@@ -1634,13 +1901,6 @@
     });
   }
 
-  // ── INIT ─────────────────────────────────────────────────────
-  if (sessionStorage.getItem(SESSION_KEY) === '1') {
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('dashboard').classList.add('show');
-    startAutoRefresh();
-    loadDashboard();
-  }
 </script>
 </body>
 </html>
