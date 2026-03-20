@@ -742,14 +742,6 @@
     }, 5000);
   }
 
-  // ── INIT ─────────────────────────────────────────────────────
-  if (sessionStorage.getItem(SESSION_KEY) === '1') {
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('dashboard').classList.add('show');
-    startFirestoreListeners();
-    startAutoRefresh();
-  }
-
   // ── IN-MEMORY CACHE (populated by Firestore real-time listeners) ───
   let _chats      = [];   // array of chat meta docs
   let _modlog     = [];   // array of modlog entries
@@ -1975,6 +1967,13 @@
     });
   }
 
+// ── INIT ─────────────────────────────────────────────────────
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('dashboard').classList.add('show');
+    startFirestoreListeners();
+    startAutoRefresh();
+  }
 </script>
 </body>
 </html>
