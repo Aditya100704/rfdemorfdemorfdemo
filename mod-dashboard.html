@@ -605,6 +605,7 @@
   const saveModeActive = async (v) => {
     _modsActive = v;
     try { localStorage.setItem('rf_mods_active', JSON.stringify(v)); } catch {}
+    if (_isLocal) return;
     try {
       const batch = db.batch();
       Object.entries(v).forEach(([id, active]) => batch.set(db.collection('modsActive').doc(id), { active, id }));
@@ -614,6 +615,7 @@
   const saveAssignments = async (v) => {
     _assignments = v;
     try { localStorage.setItem('rf_chat_assignments', JSON.stringify(v)); } catch {}
+    if (_isLocal) return;
     try {
       const batch = db.batch();
       Object.entries(v).forEach(([chatId, modId]) => batch.set(db.collection('assignments').doc(chatId), { modId, chatId }));
@@ -837,10 +839,39 @@
   }
 
   // ── FIRESTORE REAL-TIME LISTENERS ────────────────────────────
+  const _isLocal = location.protocol === 'file:';
+
+  function _loadFromLocalStorage() {
+    try { _chats       = JSON.parse(localStorage.getItem('rf_chats_index')) || []; } catch {}
+    try { _modlog      = JSON.parse(localStorage.getItem('rf_modlog')) || []; } catch {}
+    try {
+      const rawDeals = JSON.parse(localStorage.getItem('rf_deals')) || [];
+      rawDeals.forEach(d => { if (d.chatId) _deals[d.chatId] = d; });
+    } catch {}
+    try { _appeals     = JSON.parse(localStorage.getItem('rf_appeals')) || []; } catch {}
+    try { _assignments = JSON.parse(localStorage.getItem('rf_chat_assignments')) || {}; } catch {}
+    try { _banned      = JSON.parse(localStorage.getItem('rf_banned_users')) || {}; } catch {}
+    try {
+      const raw = JSON.parse(localStorage.getItem('rf_mods_active')) || {};
+      _modsActive = { 'mod-1': true, 'mod-2': true, ...raw };
+    } catch {}
+    _chats.forEach(c => {
+      try { _msgCache[c.chatId] = JSON.parse(localStorage.getItem(`rf_chat_${c.chatId}`)) || []; } catch {}
+    });
+    loadDashboard();
+  }
+
   let _listenersStarted = false;
   function startFirestoreListeners() {
     if (_listenersStarted) return;
     _listenersStarted = true;
+
+    if (_isLocal) {
+      // Local: load from localStorage and poll every 2s
+      _loadFromLocalStorage();
+      setInterval(_loadFromLocalStorage, 2000);
+      return;
+    }
 
     // All chats
     _unsubList.push(RF.onAllChats(chats => {
@@ -1511,7 +1542,7 @@
   }
 
   // ── APPROVE MESSAGE ──────────────────────────────────────────
-  function approveMessage(logId) {
+  async function approveMessage(logId) {
     const log   = getModLog();
     const entry = log.find(e => e.id === logId);
     if (!entry) return;

@@ -650,6 +650,8 @@
   const loadViolations = () => _violations;
   const saveViolations = async (v) => {
     _violations = v;
+    try { localStorage.setItem(`rf_violations_${CHAT_ID}`, JSON.stringify(v)); } catch {}
+    if (_isLocal) return;
     try { await RF.saveViolations(CHAT_ID, v); } catch(e) { console.error('saveViolations', e); }
   };
 
@@ -657,6 +659,8 @@
   function getJoinSlots() { return _joinSlots; }
   async function saveJoinSlots(slots) {
     _joinSlots = slots;
+    try { localStorage.setItem(`rf_mod_joined_${CHAT_ID}`, JSON.stringify(slots)); } catch {}
+    if (_isLocal) return;
     try { await RF.saveJoinSlots(CHAT_ID, slots); } catch(e) { console.error('saveJoinSlots', e); }
   }
   const isModJoined = () => !!((_joinSlots||{}).admin || (_joinSlots||{}).mod);
@@ -672,6 +676,12 @@
 
   // Mod log
   async function appendModLog(e) {
+    try {
+      const log = JSON.parse(localStorage.getItem('rf_modlog')) || [];
+      log.unshift(e); if (log.length > 500) log.splice(500);
+      localStorage.setItem('rf_modlog', JSON.stringify(log));
+    } catch {}
+    if (_isLocal) return;
     try { await RF.appendModLog(e); } catch(err) { console.error('appendModLog', err); }
   }
 
@@ -679,6 +689,8 @@
   function loadDeal() { return _deal; }
   async function saveDeal(d) {
     _deal = d;
+    try { localStorage.setItem(`rf_deal_${CHAT_ID}`, JSON.stringify(d)); } catch {}
+    if (_isLocal) return;
     try { await RF.saveDeal(CHAT_ID, d); } catch(e) { console.error('saveDeal', e); }
   }
   async function registerDealGlobally(deal) {
@@ -689,6 +701,8 @@
   const loadMeeting = () => _meeting;
   async function saveMeeting(m) {
     _meeting = m;
+    try { localStorage.setItem(`rf_meeting_${CHAT_ID}`, JSON.stringify(m)); } catch {}
+    if (_isLocal) return;
     try { await RF.saveMeeting(CHAT_ID, m); } catch(e) { console.error('saveMeeting', e); }
   }
   async function syncMeetingToDeal(meeting) {
@@ -710,7 +724,27 @@
 
   // ── REAL-TIME LISTENERS ───────────────────────────────────────
   function startFirestoreListeners() {
-    // Messages — real-time
+    if (_isLocal) {
+      // Local: poll localStorage every second for cross-tab updates
+      renderMessages();
+      setInterval(() => {
+        try {
+          const msgs = JSON.parse(localStorage.getItem(`rf_chat_${CHAT_ID}`)) || [];
+          if (msgs.length !== _messages.length) { _messages = msgs; renderMessages(); }
+          const vio = JSON.parse(localStorage.getItem(`rf_violations_${CHAT_ID}`));
+          if (vio) _violations = vio;
+          const deal = JSON.parse(localStorage.getItem(`rf_deal_${CHAT_ID}`));
+          if (JSON.stringify(deal) !== JSON.stringify(_deal)) { _deal = deal; updateDealBar(); updateCalendarBtn(); }
+          const mtg = JSON.parse(localStorage.getItem(`rf_meeting_${CHAT_ID}`));
+          if (JSON.stringify(mtg) !== JSON.stringify(_meeting)) { _meeting = mtg; updateCalendarBtn(); }
+          const slots = JSON.parse(localStorage.getItem(`rf_mod_joined_${CHAT_ID}`));
+          if (slots) _joinSlots = slots;
+        } catch {}
+      }, 1000);
+      return;
+    }
+
+    // Production: Firestore real-time listeners
     _unsubMessages = RF.onMessages(CHAT_ID, (msgs) => {
       _messages = msgs;
       renderMessages();
@@ -748,6 +782,26 @@
   }
 
   async function registerChat() {
+    // Always register in localStorage (works locally + as fallback)
+    try {
+      const idx = JSON.parse(localStorage.getItem('rf_chats_index')) || [];
+      if (!idx.find(c => c.chatId === CHAT_ID)) {
+        idx.push({ chatId: CHAT_ID, userA: USERS.A.name, userB: USERS.B.name, listing: LISTING, started: Date.now() });
+        localStorage.setItem('rf_chats_index', JSON.stringify(idx));
+      }
+    } catch {}
+
+    if (_isLocal) {
+      // Load state from localStorage
+      try { _messages   = JSON.parse(localStorage.getItem(`rf_chat_${CHAT_ID}`)) || []; } catch {}
+      try { _violations = JSON.parse(localStorage.getItem(`rf_violations_${CHAT_ID}`)) || { A:0, B:0 }; } catch {}
+      try { _deal       = JSON.parse(localStorage.getItem(`rf_deal_${CHAT_ID}`)); } catch {}
+      try { _meeting    = JSON.parse(localStorage.getItem(`rf_meeting_${CHAT_ID}`)); } catch {}
+      try { _joinSlots  = JSON.parse(localStorage.getItem(`rf_mod_joined_${CHAT_ID}`)) || { admin:null, mod:null }; } catch {}
+      autoAssignChatLocal(CHAT_ID);
+      return;
+    }
+
     try {
       const meta = await RF.registerChat(CHAT_ID, {
         userA: USERS.A.name, userB: USERS.B.name, listing: LISTING,
@@ -759,6 +813,21 @@
       if (meta.joinSlots) _joinSlots = meta.joinSlots;
     } catch(e) { console.error('registerChat', e); }
     await autoAssignChat(CHAT_ID);
+  }
+
+  function autoAssignChatLocal(chatId) {
+    try {
+      const assignments = JSON.parse(localStorage.getItem('rf_chat_assignments')) || {};
+      if (assignments[chatId]) return;
+      const active = JSON.parse(localStorage.getItem('rf_mods_active')) || { 'mod-1': true, 'mod-2': true };
+      const ALL_MODS = ['mod-1','mod-2','mod-3','mod-4','mod-5','mod-6','mod-7','mod-8','mod-9','mod-10'];
+      const pool = ALL_MODS.filter(id => active[id] !== false);
+      if (!pool.length) pool.push('mod-1');
+      let h = 0;
+      for (let i = 0; i < chatId.length; i++) { h = ((h << 5) - h) + chatId.charCodeAt(i); h |= 0; }
+      assignments[chatId] = pool[Math.abs(h) % pool.length];
+      localStorage.setItem('rf_chat_assignments', JSON.stringify(assignments));
+    } catch {}
   }
 
   async function autoAssignChat(chatId) {
@@ -809,16 +878,7 @@
   }
 
   // ── #6 READ RECEIPTS ─────────────────────────────────────────
-  function markRead() {
-    try {
-      const msgs = loadMessages();
-      if (!msgs.length) return;
-      const last = msgs[msgs.length - 1];
-      const reads = JSON.parse(localStorage.getItem(READ_KEY)) || {};
-      reads[currentIdentity] = last.id;
-      localStorage.setItem(READ_KEY, JSON.stringify(reads));
-    } catch {}
-  }
+  // markRead defined above in data layer
 
   function getReadStatus() {
     try { return JSON.parse(localStorage.getItem(READ_KEY)) || {}; } catch { return {}; }
@@ -827,17 +887,7 @@
   // ── #12 TYPING INDICATOR ─────────────────────────────────────
   let typingTimeout = null;
 
-  function broadcastTyping(isTyping) {
-    try {
-      const state = JSON.parse(localStorage.getItem(TYPING_KEY)) || {};
-      if (isTyping) {
-        state[currentIdentity] = Date.now();
-      } else {
-        delete state[currentIdentity];
-      }
-      localStorage.setItem(TYPING_KEY, JSON.stringify(state));
-    } catch {}
-  }
+
 
   function getOtherTyping() {
     try {
@@ -1072,7 +1122,13 @@
     // Moderator bypass
     if (currentIdentity === 'MOD') {
       const newMsg = { id: Date.now(), senderIdentity:'MOD', senderId:USERS.MOD.id, senderName:USERS.MOD.name, text, ts:Date.now(), isMod:true };
-      await RF.saveMessage(CHAT_ID, newMsg);
+      if (_isLocal) {
+        _messages.push(newMsg);
+        try { localStorage.setItem(`rf_chat_${CHAT_ID}`, JSON.stringify(_messages)); } catch {}
+        renderMessages();
+      } else {
+        await RF.saveMessage(CHAT_ID, newMsg);
+      }
       updateChatIndex(text || '[image]');
       isSending = false;
       sendBtn.disabled = false;
@@ -1138,7 +1194,13 @@
         text, ts: Date.now(),
         ...(imageB64 ? { imageB64 } : {})
       };
-      await RF.saveMessage(CHAT_ID, newMsg);
+      if (_isLocal) {
+        _messages.push(newMsg);
+        try { localStorage.setItem(`rf_chat_${CHAT_ID}`, JSON.stringify(_messages)); } catch {}
+        renderMessages();
+      } else {
+        await RF.saveMessage(CHAT_ID, newMsg);
+      }
       updateChatIndex(text || '[image]');
     }
 
@@ -1357,7 +1419,7 @@
     document.getElementById('deal-modal').classList.remove('show');
   }
 
-  function confirmDeal() {
+  async function confirmDeal() {
     const deal = loadDeal() || {
       chatId:    CHAT_ID,
       listing:   LISTING,
@@ -1400,16 +1462,7 @@
     renderMessages();
   }
 
-  function registerDealGlobally(deal) {
-    try {
-      const deals = JSON.parse(localStorage.getItem(DEALS_KEY)) || [];
-      const existing = deals.findIndex(d => d.chatId === deal.chatId);
-      if (existing !== -1) deals[existing] = deal;
-      else deals.unshift(deal);
-      localStorage.setItem(DEALS_KEY, JSON.stringify(deals));
-      try { await RF.saveDeal(deal.chatId, deal); } catch(e) { console.error('registerDealGlobally Firestore', e); }
-    } catch {}
-  }
+  // registerDealGlobally defined above in data layer
 
   function checkDealOnLoad() {
     const deal = loadDeal();
@@ -1424,7 +1477,6 @@
   let calSelected  = {};           // { 'YYYY-MM-DD': { morning: bool, evening: bool } }
   let calPickedKey = null;         // Party 2's chosen key: 'YYYY-MM-DD|morning' etc.
 
-  const WELCOME_KEY = `rf_welcome_${CHAT_ID}`;
 
   function dismissWelcome() {
     localStorage.setItem(WELCOME_KEY, '1');
@@ -1639,7 +1691,7 @@
     }).join('');
   }
 
-  function submitProposedDates() {
+  async function submitProposedDates() {
     const keys = Object.keys(calSelected).sort();
     if (keys.length === 0) return;
 
@@ -1687,7 +1739,7 @@
     document.getElementById('cal-pick-confirm').disabled = false;
   }
 
-  function confirmPickedDate() {
+  async function confirmPickedDate() {
     if (!calPickedKey) return;
     const deal = loadDeal();
 
@@ -1735,7 +1787,7 @@
     document.getElementById('cal-modal').classList.add('show');
   }
 
-  function submitCounterDates() {
+  async function submitCounterDates() {
     const keys = Object.keys(calSelected).sort();
     if (keys.length === 0) return;
     const proposals = keys.map(k => ({ date: k, ...calSelected[k] }));
