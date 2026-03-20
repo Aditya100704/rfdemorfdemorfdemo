@@ -174,6 +174,16 @@
   .status-approved{background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);}
   .status-dismissed{background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid rgba(255,255,255,0.1);}
 
+  /* Appeals */
+  .appeal-list{display:flex;flex-direction:column;gap:12px;}
+  .appeal-card{background:var(--card);border:1px solid rgba(124,58,237,0.25);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+  .appeal-card.resolved{opacity:0.5;}
+  .appeal-header{display:flex;align-items:flex-start;gap:12px;}
+  .appeal-avatar{width:36px;height:36px;border-radius:50%;background:rgba(124,58,237,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#c4b5fd;flex-shrink:0;}
+  .appeal-msg-box{background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.2);border-radius:10px;padding:12px 14px;}
+  .appeal-msg-label{font-size:10px;font-weight:700;color:#a78bfa;letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;}
+  .appeal-msg-text{font-size:14px;color:var(--text);line-height:1.5;}
+  .appeal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
   .btn-reinstate{background:rgba(16,185,129,0.12);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);padding:7px 16px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;}
   .btn-reinstate:hover{background:rgba(16,185,129,0.25);}
   .btn-deny{background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);padding:7px 16px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;}
@@ -383,6 +393,8 @@
     .pipeline-title { font-size: 12px; }
     .pipeline-sub { font-size: 10px; }
 
+    /* Appeal cards */
+    .appeal-actions { justify-content: flex-start; }
   }
 
   @media (max-width: 480px) {
@@ -465,7 +477,7 @@
 <div id="login-screen">
   <div class="login-card">
     <div class="login-shield">🛡️</div>
-    <div class="login-logo"><h1>RenterFinder</h1><p>Mod 1 Dashboard</p></div>
+    <div class="login-logo"><h1>RenterFinder</h1><p>Mod 5 Dashboard</p></div>
     <div class="login-field">
       <label>PASSWORD</label>
       <input type="password" id="pwd-input" placeholder="Enter moderator password" autocomplete="current-password">
@@ -478,7 +490,7 @@
 <div id="dashboard">
   <div class="dash-topbar">
     <div class="dash-logo">RenterFinder</div>
-    <div class="dash-badge">MOD 1</div>
+    <div class="dash-badge">MOD 5</div>
     <div class="dash-topbar-right">
       <div class="auto-refresh-badge"><div class="auto-refresh-dot"></div> Auto-refresh <span class="refresh-countdown" id="refresh-countdown"></span></div>
       <button class="refresh-btn" onclick="loadDashboard()">↻ Now</button>
@@ -491,6 +503,7 @@
     <div class="dash-tab" data-tab="chats" onclick="switchTab('chats')">💬 All Chats <span class="tab-count green" id="tab-chats-count">0</span></div>
     <div class="dash-tab" data-tab="flagged" onclick="switchTab('flagged')">🚩 Flagged <span class="tab-count" id="tab-flagged-count">0</span></div>
     <div class="dash-tab" data-tab="deals" onclick="switchTab('deals')">🤝 Deal Tracker <span class="tab-count green" id="tab-deals-count">0</span></div>
+    <div class="dash-tab" data-tab="appeals" onclick="switchTab('appeals')">📝 Appeals <span class="tab-count purple" id="tab-appeals-count">0</span></div>
     <div class="dash-tab" data-tab="users" onclick="switchTab('users')">👥 Users</div>
   </div>
 
@@ -524,6 +537,11 @@
             <div class="stat-label">Active Deals</div>
             <div class="stat-value green" id="stat-deals">0</div>
             <div class="stat-arrow">→ Deal Tracker</div>
+          </div>
+          <div class="stat-card" onclick="switchTab('appeals')" title="View open appeals">
+            <div class="stat-label">Open Appeals</div>
+            <div class="stat-value blue" id="stat-appeals">0</div>
+            <div class="stat-arrow">→ Appeals</div>
           </div>
           <div class="stat-card" onclick="switchTab('users')" title="View suspended chats">
             <div class="stat-label">Suspended Chats</div>
@@ -564,6 +582,16 @@
         <span class="tab-search-count" id="search-deals-count"></span>
       </div>
       <div id="deals-list"></div>
+    </div>
+
+    <!-- APPEALS -->
+    <div class="tab-panel" id="panel-appeals">
+      <div class="section-header"><div class="section-title">User Appeals</div><div class="section-sub">Suspension appeals submitted by users</div></div>
+      <div class="tab-search-bar">
+        <div class="tab-search-wrap"><span class="search-icon">🔍</span><input class="tab-search-input" id="search-appeals" type="text" placeholder="Search by user name or chat ID…" oninput="filterAppeals()"></div>
+        <span class="tab-search-count" id="search-appeals-count"></span>
+      </div>
+      <div id="appeals-list" class="appeal-list"></div>
     </div>
 
     <!-- USERS -->
@@ -642,7 +670,7 @@
   const SESSION_KEY  = 'rf_mod_session_mod-5';
   const MOD_ID = 'mod-5';
   const MODS = Array.from({length:10},(_,i)=>({ id:`mod-${i+1}`, name:`Mod ${i+1}`, path:`mods/mod-${i+1}.html` }));
-  const MOD_NAME = 'Mod 1';
+  const MOD_NAME = 'Mod 5';
   const AUTO_REFRESH_SECS = 30;
 
   function toggleModPanel() { /* mod panel only on admin dashboard */ }
@@ -695,6 +723,7 @@
   let _assignments     = {};
   let _modLog          = [];
   let _deals           = [];
+  let _appeals         = [];
   let _banned          = {};
   let _modsActive      = { 'mod-1': true, 'mod-2': true };
 
@@ -705,6 +734,7 @@
   const getChatVio     = id => _vioByChat[id]        || {};
   const getBanned      = () => _banned;
   const getDeals       = () => _deals;
+  const getAppeals     = () => _appeals;
   const getModeActive  = () => _modsActive;
   const getAssignments = () => _assignments;
 
@@ -721,6 +751,7 @@
 
   const saveBanned = b => { _banned = b; Object.entries(b).forEach(([uid, data]) => RF.banUser(uid, data).catch(e => console.warn('[RF]', e))); };
   const saveDeals  = d => { _deals = Array.isArray(d) ? d : [d]; _deals.forEach(deal => { if (deal.chatId) RF.saveDeal(deal.chatId, deal).catch(e => console.warn('[RF]', e)); }); };
+  const saveAppeals = a => { _appeals = Array.isArray(a) ? a : [a]; _appeals.forEach(appeal => RF.saveAppeal(appeal).catch(e => console.warn('[RF]', e))); };
   const saveModeActive = v => { _modsActive = v; Object.entries(v).forEach(([modId, active]) => RF.setModActive(modId, active).catch(e => console.warn('[RF]', e))); };
   const saveAssignments = v => { _assignments = v; Object.entries(v).forEach(([chatId, modId]) => RF.saveAssignment(chatId, modId).catch(e => console.warn('[RF]', e))); };
 
@@ -757,6 +788,7 @@
     const allChats = getChatsIndex();
     const assignments = getAssignments();
     const chats = allChats.filter(c => assignments[c.chatId] === MOD_ID);
+    const appeals = getAppeals();
 
     let totalMsgs = 0, suspended = 0;
     chats.forEach(c => {
@@ -766,16 +798,19 @@
     });
 
     const pending      = modLog.filter(e => e.status === 'pending').length;
+    const openAppeals  = appeals.filter(a => a.status === 'pending').length;
     const activeDeals  = getDeals().filter(d => d.stage !== 'Cancelled' && !d.stage_complete).length;
 
     document.getElementById('stat-total-chats').textContent = chats.length;
     document.getElementById('stat-total-msgs').textContent  = totalMsgs;
     document.getElementById('stat-flagged').textContent     = pending;
     document.getElementById('stat-pending').textContent     = pending;
+    document.getElementById('stat-appeals').textContent     = openAppeals;
     document.getElementById('stat-deals').textContent       = activeDeals;
     document.getElementById('stat-suspended').textContent   = suspended;
     document.getElementById('tab-chats-count').textContent  = chats.length;
     document.getElementById('tab-flagged-count').textContent = pending;
+    document.getElementById('tab-appeals-count').textContent = openAppeals;
     document.getElementById('tab-deals-count').textContent  = activeDeals;
 
 
@@ -784,6 +819,7 @@
     document.getElementById('chat-count-sub').textContent = `${chats.length} chat${chats.length !== 1 ? 's' : ''} initiated`;
     renderFlaggedList(modLog.filter(e => e.status === 'pending'), document.getElementById('flagged-list'), modLog.filter(e => e.status !== 'pending').length);
     renderDealsList(getDeals(), document.getElementById('deals-list'));
+    renderAppealsList(appeals, document.getElementById('appeals-list'));
     renderUsersTable(chats, modLog, getBanned());
     const _al = document.getElementById('archived-list'); if (_al) renderArchivedList(_al);
     const _hl = document.getElementById('history-list'); if (_hl) renderHistoryList(_hl);
@@ -1285,6 +1321,67 @@
   }
 
 
+  // ── #14 APPEALS LIST ─────────────────────────────────────────
+  function renderAppealsList(appeals, container) {
+    const pending  = appeals.filter(a => a.status === 'pending');
+    const resolved = appeals.filter(a => a.status !== 'pending');
+    if (!pending.length && !resolved.length) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><h3>No appeals</h3><p>No users have submitted appeals yet.</p></div>`;
+      return;
+    }
+    if (!pending.length) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><h3>All caught up</h3><p>${resolved.length} appeal${resolved.length!==1?'s have':' has'} already been resolved.</p></div>`;
+      return;
+    }
+    container.innerHTML = '';
+    pending.forEach(a => {
+      const initials = String(a.userName||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const time     = new Date(a.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      const card     = document.createElement('div');
+      card.className = 'appeal-card';
+      card.innerHTML = `
+        <div class="appeal-header">
+          <div class="appeal-avatar">${initials}</div>
+          <div class="flag-info">
+            <div class="flag-who">${escH(a.userName)} <span style="color:var(--muted);font-weight:400;font-size:12px;">(${a.userRole})</span></div>
+            <div class="flag-when">${escH(a.listing)} · ${time}</div>
+          </div>
+          <span class="flag-count" style="background:rgba(124,58,237,0.15);color:#c4b5fd;border-color:rgba(124,58,237,0.3);">Pending Review</span>
+        </div>
+        <div class="appeal-msg-box"><div class="appeal-msg-label">User\'s Appeal</div><div class="appeal-msg-text">${escH(a.text)}</div></div>
+        <div class="appeal-actions">
+          <button class="btn-deny" onclick="resolveAppeal(${a.id},'denied')">Deny</button>
+          <button class="btn-reinstate" onclick="resolveAppeal(${a.id},'reinstated')">✓ Reinstate Chat</button>
+        </div>`;
+      container.appendChild(card);
+    });
+    if (resolved.length) {
+      const note = document.createElement('div');
+      note.style.cssText = 'text-align:center;font-size:12px;color:var(--muted);padding:12px 0 4px;';
+      note.textContent = `${resolved.length} resolved appeal${resolved.length!==1?'s':''} not shown`;
+      container.appendChild(note);
+    }
+  }
+  function resolveAppeal(id, status) {
+    const appeals = getAppeals();
+    const a = appeals.find(x => x.id === id);
+    if (!a) return;
+    a.status = status;
+    saveAppeals(appeals);
+
+    if (status === 'reinstated') {
+      // Reset violations for this chat
+      try {
+        const vio = {};
+        _vioByChat[a.chatId] = vio;
+        RF.saveViolations(a.chatId, vio).catch(e => console.warn("[RF] ban vio", e));
+      } catch {}
+      showToast('✓ Chat reinstated — violations cleared', 'success');
+    } else {
+      showToast('Appeal denied', '');
+    }
+    loadDashboard();
+  }
 
   // ── APPROVE MESSAGE ──────────────────────────────────────────
   function approveMessage(logId) {
@@ -1365,6 +1462,7 @@
 
   function renderUsersTable(chats, modLog, banned) {
     const tbody   = document.getElementById('users-tbody');
+    const appeals = getAppeals();
     const userMap = {};
 
     chats.forEach(c => {
@@ -1376,7 +1474,7 @@
           name, role, violations:0, abuseCount:0,
           lastTs: c.lastTs||c.started, chatId: c.chatId,
           listing: c.listing, userA: c.userA, userB: c.userB,
-          chats: [], flags: [], msgCount: 0
+          chats: [], flags: [], appeals: [], msgCount: 0
         };
         userMap[uid].violations = Math.max(userMap[uid].violations, v[side]||0);
         // Count only this user's messages
@@ -1394,6 +1492,13 @@
         if (e.violationType === 'abuse') userMap[uid].abuseCount++;
         userMap[uid].flags.push(e);
       }
+    });
+
+    appeals.forEach(a => {
+      // Match appeal to user by name+chatId
+      Object.values(userMap).forEach(u => {
+        if (u.chatId === a.chatId && u.name === a.userName) u.appeals.push(a);
+      });
     });
 
     const rows = Object.entries(userMap);
@@ -1481,6 +1586,23 @@
     }
     body.appendChild(flagSection);
 
+    // ── Appeals section
+    if (u.appeals.length) {
+      const appSection = document.createElement('div');
+      appSection.innerHTML = `<div class="upm-section-title">📝 Appeals (${u.appeals.length})</div>`;
+      u.appeals.sort((a,b)=>b.ts-a.ts).forEach(a => {
+        const statusLabel = a.status==='reinstated'?'✓ Reinstated':a.status==='denied'?'Denied':'Pending';
+        const div = document.createElement('div');
+        div.className = 'upm-flag-row';
+        div.style.borderColor = 'rgba(124,58,237,0.3)';
+        div.style.background  = 'rgba(124,58,237,0.05)';
+        div.innerHTML = `<div class="upm-flag-type" style="color:#a78bfa;">Appeal · ${statusLabel}</div>
+          <div class="upm-flag-text">${escH(a.text||'')}</div>
+          <div class="upm-flag-when">${new Date(a.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>`;
+        appSection.appendChild(div);
+      });
+      body.appendChild(appSection);
+    }
 
     document.getElementById('user-profile-overlay').classList.add('show');
   }
@@ -1532,6 +1654,18 @@
     if (el) el.textContent = q ? `${shown} result${shown!==1?'s':''}` : '';
   }
 
+  function filterAppeals() {
+    const q = document.getElementById('search-appeals').value.trim().toLowerCase();
+    const rows = document.querySelectorAll('#appeals-list .appeal-card, #appeals-list > div');
+    let shown = 0;
+    rows.forEach(row => {
+      const match = !q || row.textContent.toLowerCase().includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) shown++;
+    });
+    const el = document.getElementById('search-appeals-count');
+    if (el) el.textContent = q ? `${shown} result${shown!==1?'s':''}` : '';
+  }
 
   function filterUsers() {
     const q = document.getElementById('search-users').value.trim().toLowerCase();
@@ -1566,21 +1700,27 @@
   function renderHistoryList(container) {
     const now     = Date.now();
     const modLog  = getModLog();
+    const appeals = getAppeals();
 
     // Auto-purge entries older than 48hrs from storage
     const freshLog     = modLog.filter(e => (now - (e.ts || 0)) < HISTORY_TTL);
+    const freshAppeals = appeals.filter(a => (now - (a.ts || 0)) < HISTORY_TTL);
     if (freshLog.length !== modLog.length)     { _modLog  = freshLog;    freshLog.forEach(e => RF.updateModLogEntry(e.id, {}).catch(()=>{})); }
+    if (freshAppeals.length !== appeals.length){ _appeals = freshAppeals; }
 
-    const total = freshLog.length;
+    const total = freshLog.length + freshAppeals.length;
     const _thc = document.getElementById('tab-history-count'); if (_thc) _thc.textContent = total;
 
     if (!total) {
-      container.innerHTML = `<div class="empty-state"><div class="empty-icon">🕓</div><h3>No recent history</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Flagged messages from the last 48 hours appear here, then auto-delete.</p></div>`;
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">🕓</div><h3>No recent history</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Flagged messages and appeals from the last 48 hours appear here, then auto-delete.</p></div>`;
       return;
     }
 
     // Merge and sort newest first
-    const items = freshLog.map(e => ({ ...e, _type: 'flag' })).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    const items = [
+      ...freshLog.map(e => ({ ...e, _type: 'flag' })),
+      ...freshAppeals.map(a => ({ ...a, _type: 'appeal' }))
+    ].sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
     container.innerHTML = '';
     items.forEach(item => {
@@ -1605,6 +1745,19 @@
             <div class="flag-badges"><span class="vt-badge ${vtClass}">${vtLabel}</span>${statusTag}</div>
           </div>
           <div class="flag-msg-box"><div class="flag-msg-label">Blocked Message</div><div class="flag-msg-text">${escH(item.text||'')}</div></div>
+          <div style="text-align:right;margin-top:6px;">${expiryNote}</div>`;
+      } else {
+        const statusTag = item.status==='reinstated'?'<span class="flag-status-tag status-approved">✓ Reinstated</span>':item.status==='denied'?'<span class="flag-status-tag status-dismissed">Denied</span>':'<span class="flag-count" style="background:rgba(124,58,237,0.15);color:#c4b5fd;border-color:rgba(124,58,237,0.3);">Pending</span>';
+        card.innerHTML = `
+          <div class="flag-header">
+            <div class="flag-avatar" style="background:rgba(124,58,237,0.2);color:#c4b5fd;">${String(item.userName||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>
+            <div class="flag-info">
+              <div class="flag-who">${escH(item.userName||'Unknown')} <span style="color:var(--muted);font-size:11px;">(Appeal)</span></div>
+              <div class="flag-when">${escH(item.listing||'')} · ${time}</div>
+            </div>
+            <div class="flag-badges">${statusTag}</div>
+          </div>
+          <div class="flag-msg-box"><div class="flag-msg-label" style="color:#a78bfa;">Appeal Text</div><div class="flag-msg-text">${escH(item.text||'')}</div></div>
           <div style="text-align:right;margin-top:6px;">${expiryNote}</div>`;
       }
       container.appendChild(card);
@@ -1639,7 +1792,7 @@
     document.querySelectorAll('.dash-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tab}`));
     // Clear search on tab switch
-    ['chats','flagged','deals','users','archived','history'].forEach(id => {
+    ['chats','flagged','deals','appeals','users','archived','history'].forEach(id => {
       const el = document.getElementById(`search-${id}`);
       const ct = document.getElementById(`search-${id}-count`);
       if (el) el.value = '';
@@ -1701,6 +1854,10 @@
       deals.forEach(d => { if (d.chatId) _dealByChat[d.chatId] = d; });
     });
 
+    // Appeals → write to rf_appeals localStorage
+    RF.onAppeals(appeals => {
+      _appeals = appeals;
+    });
 
     // Banned → write to rf_banned_users localStorage
     RF.onBanned(banned => {
