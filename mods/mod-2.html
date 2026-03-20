@@ -1327,20 +1327,20 @@
   // ── JOIN CHAT ────────────────────────────────────────────────
   function joinChat(chatId) {
     const slots = getJoinSlots(chatId);
-    if (slots.admin) {
-      // Already joined as admin — just open the chat
+    if (slots.mod && slots.mod.id === 'mod-2') {
+      // Already joined — just re-open
       window.open(getJoinUrl(chatId), '_blank');
       return;
     }
     slots.mod = { id: 'mod-2', name: 'Mod 2', ts: Date.now() };
     saveJoinSlots(chatId, slots);
-    showToast('🛡️ Joined chat as Admin', 'info');
+    showToast('🛡️ Joined chat as Mod 2', 'info');
     window.open(getJoinUrl(chatId), '_blank');
     setTimeout(loadDashboard, 400);
   }
   function leaveChat(chatId) {
     const slots = getJoinSlots(chatId);
-    slots.admin = null;
+    slots.mod = null;
     saveJoinSlots(chatId, slots);
     showToast('Left chat', '');
     loadDashboard();
@@ -1724,8 +1724,7 @@
     document.getElementById('dashboard').classList.add('show');
     startAutoRefresh();
     loadDashboard();
-    // Start Firestore listeners if on hosted (not local file://)
-    if (!_isLocal) startFirestoreSync();
+    startFirestoreSync();
   }
 
   // ── FIRESTORE REAL-TIME LISTENERS — Firebase is the only source of truth ──

@@ -644,11 +644,21 @@
     if (changed) saveAssignments(assignments);
   }
 
-  function toggleMod(modId) {
+  async function toggleMod(modId) {
     const active = getModeActive();
     active[modId] = !active[modId];
     saveModeActive(active);
-    // Newly activated mod: re-run assignment so future chats include them
+    // Re-assign any currently unassigned chats to include the newly activated mod
+    const assignments = getAssignments();
+    const unassigned  = _chatsIndex.filter(c => !assignments[c.chatId]);
+    for (const c of unassigned) {
+      const pool = Object.entries(active).filter(([,v]) => v).map(([k]) => k);
+      if (!pool.length) pool.push('mod-1');
+      let h = 0;
+      for (let i = 0; i < c.chatId.length; i++) { h = ((h<<5)-h)+c.chatId.charCodeAt(i); h|=0; }
+      const assigned = pool[Math.abs(h) % pool.length];
+      await RF.saveAssignment(c.chatId, assigned).catch(e => console.warn('[RF] toggleMod assign', e));
+    }
     renderModPanel();
     loadDashboard();
   }
@@ -1819,8 +1829,7 @@
     document.getElementById('dashboard').classList.add('show');
     startAutoRefresh();
     loadDashboard();
-    // Start Firestore listeners if on hosted (not local file://)
-    if (!_isLocal) startFirestoreSync();
+    startFirestoreSync();
   }
 
   // ── FIRESTORE REAL-TIME LISTENERS — Firebase is the only source of truth ──
