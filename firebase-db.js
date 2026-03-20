@@ -107,7 +107,8 @@ const RF = (function() {
     );
   }
 
-  // ── APPEALS ──────────────────────────────────────────────────  async function saveAppeal(appeal) {
+  // ── APPEALS ──────────────────────────────────────────────────
+  async function saveAppeal(appeal) {
     try { await db.collection('appeals').doc(String(appeal.id)).set(appeal); }
     catch(e) { console.error('[RF] saveAppeal', e); }
   }

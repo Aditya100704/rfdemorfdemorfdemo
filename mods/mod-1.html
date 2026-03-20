@@ -1396,8 +1396,6 @@
       }
     });
 
-    });
-
     const rows = Object.entries(userMap);
     if (!rows.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:40px;">No users yet.</td></tr>`; return; }
     tbody.innerHTML = '';
@@ -1608,6 +1606,8 @@
           </div>
           <div class="flag-msg-box"><div class="flag-msg-label">Blocked Message</div><div class="flag-msg-text">${escH(item.text||'')}</div></div>
           <div style="text-align:right;margin-top:6px;">${expiryNote}</div>`;
+      }
+      container.appendChild(card);
     });
   }
 
