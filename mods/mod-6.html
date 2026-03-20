@@ -1070,7 +1070,9 @@
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:60px 20px;"><div class="empty-icon">🤝</div><h3>No deals yet</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Deals appear here once both parties confirm interest in a chat.</p></div>`;
       return;
     }
-    const active = deals.filter(d => d.stage !== 'Cancelled' && !d.stage_complete);
+    // Sort newest first
+    const sorted = [...deals].sort((a,b) => (b.initiatedTs||b.completedTs||0) - (a.initiatedTs||a.completedTs||0));
+    const active = sorted.filter(d => d.stage !== 'Cancelled' && !d.stage_complete);
     container.innerHTML = '';
     if (!active.length) {
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:40px;"><div class="empty-icon">🎉</div><h3>No active deals</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">All deals are in the Archived tab.</p></div>`;
@@ -1195,7 +1197,7 @@
       </div>`;
   }
 
-  function togglePayment(chatId, stageKey, party) {
+  async function togglePayment(chatId, stageKey, party) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1275,7 +1277,7 @@
     pendingCancelChatId = null;
   }
 
-  function executeCancelDeal() {
+  async function executeCancelDeal() {
     if (!pendingCancelChatId) return;
     const chatId = pendingCancelChatId;
     const deals  = getDeals();
@@ -1304,7 +1306,7 @@
     loadDashboard();
   }
 
-  function saveDealNotes(chatId) {
+  async function saveDealNotes(chatId) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1502,26 +1504,49 @@
   // ── APPROVE MESSAGE ──────────────────────────────────────────
   async function approveMessage(logId) {
     const log   = getModLog();
-    const entry = log.find(e => e.id === logId);
+    const entry = log.find(e => String(e.id) === String(logId));
     if (!entry) return;
-    const payload = { originalId: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text };
-    localStorage.setItem(`rf_mod_approve_${entry.chatId}`, JSON.stringify(payload));
-    try {
-      // Messages handled via Firestore RF.saveMessage
-      if (!msgs.find(m => m.id === logId)) {
-        msgs.push({ id: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text, ts: Date.now(), moderatorApproved: true });
-        localStorage.setItem(`rf_chat_${entry.chatId}`, JSON.stringify(msgs));
-      }
-    } catch {}
+
+    const approvedMsg = {
+      id: entry.originalId || entry.id,
+      senderIdentity: entry.senderIdentity,
+      senderId: entry.senderId,
+      senderName: entry.senderName,
+      text: entry.text,
+      ts: entry.ts || Date.now(),
+      moderatorApproved: true,
+      chatId: entry.chatId
+    };
+
+    // Write approved message to Firestore (appears in chat in real-time)
+    if (!_isLocal) {
+      try { await RF.saveMessage(entry.chatId, approvedMsg); } catch(e) { console.error('approveMessage RF.saveMessage', e); }
+    } else {
+      // Local fallback — write to localStorage
+      try {
+        const msgs = JSON.parse(localStorage.getItem(`rf_chat_${entry.chatId}`)) || [];
+        if (!msgs.find(m => String(m.id) === String(approvedMsg.id))) {
+          msgs.push(approvedMsg);
+          localStorage.setItem(`rf_chat_${entry.chatId}`, JSON.stringify(msgs));
+        }
+      } catch {}
+    }
+
+    // Reduce violation count
     try {
       const chatMeta = _chats.find(c => c.chatId === entry.chatId) || {};
-      const vio = chatMeta.violations || {};
+      const vio = { ...(chatMeta.violations || {}) };
       if ((vio[entry.senderIdentity] || 0) > 0) {
         vio[entry.senderIdentity]--;
-        try { await RF.saveViolations(entry.chatId, vio); } catch(e) { console.error('saveViolations', e); }
+        if (!_isLocal) {
+          try { await RF.saveViolations(entry.chatId, vio); } catch(e) { console.error('saveViolations', e); }
+        } else {
+          try { localStorage.setItem(`rf_violations_${entry.chatId}`, JSON.stringify(vio)); } catch {}
+        }
       }
     } catch {}
-    updateLogEntry(logId, { status: 'approved' });
+
+    await updateLogEntry(logId, { status: 'approved' });
     showToast('✓ Message approved and delivered', 'success');
     loadDashboard();
   }
@@ -1529,23 +1554,21 @@
   function dismissFlag(logId) { updateLogEntry(logId, { status: 'dismissed' }); showToast('Flag dismissed', ''); loadDashboard(); }
 
   // ── JOIN CHAT ────────────────────────────────────────────────
-  function joinChat(chatId) {
+  async function joinChat(chatId) {
     const slots = getJoinSlots(chatId);
     if (slots.admin) {
-      // Already joined as admin — just open the chat
       window.open(getJoinUrl(chatId), '_blank');
       return;
     }
-    slots.mod = { id: 'mod-6', name: 'Mod 6', ts: Date.now() };
-    saveJoinSlots(chatId, slots);
+    const newSlots = { ...slots, admin: { id: 'admin', name: 'Admin', ts: Date.now() } };
+    await saveJoinSlots(chatId, newSlots);
     showToast('🛡️ Joined chat as Admin', 'info');
     window.open(getJoinUrl(chatId), '_blank');
-    setTimeout(loadDashboard, 400);
   }
-  function leaveChat(chatId) {
-    const slots = getJoinSlots(chatId);
+  async function leaveChat(chatId) {
+    const slots = { ...getJoinSlots(chatId) };
     slots.admin = null;
-    saveJoinSlots(chatId, slots);
+    await saveJoinSlots(chatId, slots);
     showToast('Left chat', '');
     loadDashboard();
   }
