@@ -7,7 +7,7 @@
   'use strict';
 
   // ── CONFIG ────────────────────────────────────────────────
-  const CHATBOT_URL = 'https://chatbot-blalovfmaa-uc.a.run.app';
+  const CHATBOT_URL = 'https://us-central1-renterfinder.cloudfunctions.net/chatbot';
   const MODEL     = 'claude-haiku-4-5-20251001';
   const MAX_TOKENS = 600;
 

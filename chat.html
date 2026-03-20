@@ -596,14 +596,15 @@
   <img id="lightbox-img" src="" alt="">
 </div>
 
-<!-- Firebase SDK -->
+<!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="./firebase-config.js"></script>
 <script src="./firebase-db.js"></script>
 <script>
-  // Moderation endpoint — Cloud Function (key lives server-side, never exposed)
-  const MODERATE_URL = 'https://moderatemessage-blalovfmaa-uc.a.run.app';
+  // API key moved to Cloud Function — never exposed in frontend
+  const MODERATE_URL = 'https://us-central1-renterfinder.cloudfunctions.net/moderateMessage';
+  const MODEL   = 'claude-haiku-4-5-20251001';
 
   const params     = new URLSearchParams(location.search);
   const CHAT_ID    = params.get('chatId')    || 'demo-001';
@@ -629,231 +630,111 @@
   const SEND_COOLDOWN_MS = 2000;    // #9 rate limit
   const CHAT_EXPIRY_DAYS = 60;      // #11 chat expiry
 
-  // ── FIRESTORE-BACKED DATA LAYER ──────────────────────────────
-  // In-memory cache — populated by real-time Firestore listeners
-  let _messages   = [];
-  let _violations = { A: 0, B: 0 };
-  let _deal       = null;
-  let _meeting    = null;
-  let _joinSlots  = { admin: null, mod: null };
-  let _unsubMessages = null;
-  let _unsubMeta     = null;
+  const STORAGE_KEY     = `rf_chat_${CHAT_ID}`;
+  const VIOLATIONS_KEY  = `rf_violations_${CHAT_ID}`;
+  const MOD_LOG_KEY     = 'rf_modlog';
+  const CHATS_INDEX_KEY = 'rf_chats_index';
+  const MOD_JOINED_KEY  = `rf_mod_joined_${CHAT_ID}`;
+  const MOD_APPROVE_KEY = `rf_mod_approve_${CHAT_ID}`;
+  const READ_KEY        = `rf_read_${CHAT_ID}`;    // #6 read receipts
+  const TYPING_KEY      = `rf_typing_${CHAT_ID}`;  // #12 real typing indicator
+  const APPEALS_KEY     = 'rf_appeals';
+  const DEALS_KEY       = 'rf_deals';
+  const DEAL_KEY        = `rf_deal_${CHAT_ID}`;
 
-  // Keys kept for welcome popup (per-device is intentional)
-  const WELCOME_KEY = `rf_welcome_${CHAT_ID}`;
+  // ── FIREBASE FIRE-AND-FORGET WRAPPER ─────────────────────────
+  // Calls fn() asynchronously, never throws, never blocks UI
+  function _fb(fn) { try { Promise.resolve(fn()).catch(e => console.warn('[RF]', e)); } catch(e) { console.warn('[RF]', e); } }
 
-  // Messages — read from cache, write to Firestore
-  const loadMessages = () => _messages;
-  const saveMessages = async (msgs) => { /* no-op: individual writes via sendMsg */ };
 
-  // Violations
-  const loadViolations = () => _violations;
-  const saveViolations = async (v) => {
-    _violations = v;
-    try { localStorage.setItem(`rf_violations_${CHAT_ID}`, JSON.stringify(v)); } catch {}
-    if (_isLocal) return;
-    try { await RF.saveViolations(CHAT_ID, v); } catch(e) { console.error('saveViolations', e); }
+  const loadMessages   = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }    catch { return []; } };
+  const _saveMessagesLS = m => localStorage.setItem(STORAGE_KEY, JSON.stringify(m));
+  const saveMessages = (m) => {
+    _saveMessagesLS(m);
+    // Also write each new message to Firestore (messages push, not full replace)
+    // Called by sendMessage which pushes one msg then calls saveMessages
+    // We detect the last message and save it
+    if (m.length > 0) {
+      const last = m[m.length - 1];
+      _fb(() => RF.saveMessage(CHAT_ID, last));
+    }
   };
-
-  // Join slots
-  function getJoinSlots() { return _joinSlots; }
-  async function saveJoinSlots(slots) {
-    _joinSlots = slots;
-    try { localStorage.setItem(`rf_mod_joined_${CHAT_ID}`, JSON.stringify(slots)); } catch {}
-    if (_isLocal) return;
-    try { await RF.saveJoinSlots(CHAT_ID, slots); } catch(e) { console.error('saveJoinSlots', e); }
+  const loadViolations = () => { try { return JSON.parse(localStorage.getItem(VIOLATIONS_KEY)) || {}; } catch { return {}; } };
+  const saveViolations = (v) => {
+    localStorage.setItem(VIOLATIONS_KEY, JSON.stringify(v));
+    _fb(() => RF.saveViolations(CHAT_ID, v));
+  };
+  function getJoinSlots() {
+    try { return JSON.parse(localStorage.getItem(MOD_JOINED_KEY)) || { admin: null, mod: null }; }
+    catch { return { admin: null, mod: null }; }
   }
-  const isModJoined = () => !!((_joinSlots||{}).admin || (_joinSlots||{}).mod);
-  async function setModJoined() {
-    const slots = { ..._joinSlots };
+  function saveJoinSlots(slots) {
+    localStorage.setItem(MOD_JOINED_KEY, JSON.stringify(slots));
+    _fb(() => RF.saveJoinSlots(CHAT_ID, slots));
+  }
+  const isModJoined = () => { const s = getJoinSlots(); return !!(s.admin || s.mod); };
+  function setModJoined() {
+    const slots = getJoinSlots();
     if (URL_ROLE === 'mod' && URL_MOD_ID) {
       slots.mod = { id: URL_MOD_ID, name: URL_MOD_NAME, ts: Date.now() };
     } else {
       slots.admin = { id: 'admin', name: URL_MOD_NAME || 'Admin', ts: Date.now() };
     }
-    await saveJoinSlots(slots);
+    saveJoinSlots(slots);
+  }
+  const loadModLog     = () => { try { return JSON.parse(localStorage.getItem(MOD_LOG_KEY)) || []; } catch { return []; } };
+
+  function appendModLog(e) {
+    const log = loadModLog(); log.unshift(e);
+    if (log.length > 500) log.splice(500);
+    localStorage.setItem(MOD_LOG_KEY, JSON.stringify(log));
+    _fb(() => RF.appendModLog(e));
   }
 
-  // Mod log
-  async function appendModLog(e) {
-    try {
-      const log = JSON.parse(localStorage.getItem('rf_modlog')) || [];
-      log.unshift(e); if (log.length > 500) log.splice(500);
-      localStorage.setItem('rf_modlog', JSON.stringify(log));
-    } catch {}
-    if (_isLocal) return;
-    try { await RF.appendModLog(e); } catch(err) { console.error('appendModLog', err); }
-  }
-
-  // Deal
-  function loadDeal() { return _deal; }
-  async function saveDeal(d) {
-    _deal = d;
-    try { localStorage.setItem(`rf_deal_${CHAT_ID}`, JSON.stringify(d)); } catch {}
-    if (_isLocal) return;
-    try { await RF.saveDeal(CHAT_ID, d); } catch(e) { console.error('saveDeal', e); }
-  }
-  async function registerDealGlobally(deal) {
-    try { await RF.saveDeal(CHAT_ID, deal); } catch(e) { console.error('registerDealGlobally', e); }
-  }
-
-  // Meeting
-  const loadMeeting = () => _meeting;
-  async function saveMeeting(m) {
-    _meeting = m;
-    try { localStorage.setItem(`rf_meeting_${CHAT_ID}`, JSON.stringify(m)); } catch {}
-    if (_isLocal) return;
-    try { await RF.saveMeeting(CHAT_ID, m); } catch(e) { console.error('saveMeeting', e); }
-  }
-  async function syncMeetingToDeal(meeting) {
-    const deal = loadDeal(); if (!deal) return;
-    deal.meeting = meeting; await saveDeal(deal);
-  }
-
-  // Read receipts
-  const markRead = () => {
-    if (!_messages.length) return;
-    const last = _messages[_messages.length - 1];
-    try { RF.updateChatMeta(CHAT_ID, { [`lastRead_${currentIdentity}`]: last.id }); } catch {}
-  };
-
-  // Typing
-  function broadcastTyping(isTyping) {
-    try { RF.updateChatMeta(CHAT_ID, { [`typing_${currentIdentity}`]: isTyping ? Date.now() : 0 }); } catch {}
-  }
-
-  // ── REAL-TIME LISTENERS ───────────────────────────────────────
-  function startFirestoreListeners() {
-    if (_isLocal) {
-      // Local: poll localStorage every second for cross-tab updates
-      renderMessages();
-      setInterval(() => {
-        try {
-          const msgs = JSON.parse(localStorage.getItem(`rf_chat_${CHAT_ID}`)) || [];
-          if (msgs.length !== _messages.length) { _messages = msgs; renderMessages(); }
-          const vio = JSON.parse(localStorage.getItem(`rf_violations_${CHAT_ID}`));
-          if (vio) _violations = vio;
-          const deal = JSON.parse(localStorage.getItem(`rf_deal_${CHAT_ID}`));
-          if (JSON.stringify(deal) !== JSON.stringify(_deal)) { _deal = deal; updateDealBar(); updateCalendarBtn(); }
-          const mtg = JSON.parse(localStorage.getItem(`rf_meeting_${CHAT_ID}`));
-          if (JSON.stringify(mtg) !== JSON.stringify(_meeting)) { _meeting = mtg; updateCalendarBtn(); }
-          const slots = JSON.parse(localStorage.getItem(`rf_mod_joined_${CHAT_ID}`));
-          if (slots) _joinSlots = slots;
-        } catch {}
-      }, 1000);
-      return;
+  function registerChat() {
+    // Register chat in localStorage index
+    const idx = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
+    if (!idx.find(c => c.chatId === CHAT_ID)) {
+      idx.push({ chatId: CHAT_ID, userA: USERS.A.name, userB: USERS.B.name, listing: LISTING, started: Date.now() });
+      localStorage.setItem(CHATS_INDEX_KEY, JSON.stringify(idx));
     }
-
-    // Production: Firestore real-time listeners
-    _unsubMessages = RF.onMessages(CHAT_ID, (msgs) => {
-      _messages = msgs;
-      renderMessages();
-      markRead();
-    });
-
-    // Chat meta — violations, deal, meeting, joinSlots, typing, modApprove
-    _unsubMeta = RF.onChatMeta(CHAT_ID, (data) => {
-      if (data.violations)  _violations = data.violations;
-      if (data.deal !== undefined) {
-        _deal = data.deal;
-        console.log('[RF] onChatMeta deal update, stage_advance_payment:', _deal?.stage_advance_payment, 'confirmedA:', _deal?.confirmedA, 'confirmedB:', _deal?.confirmedB);
-        updateDealBar(); updateCalendarBtn();
-      }
-      if (data.meeting !== undefined) { _meeting = data.meeting; updateCalendarBtn(); }
-      if (data.joinSlots) {
-        _joinSlots = data.joinSlots;
-        const banner = document.getElementById('mod-joined-banner');
-        const nameEl = document.getElementById('mod-joined-name');
-        if ((_joinSlots.admin || _joinSlots.mod) && banner) {
-          banner.classList.add('show');
-          if (nameEl) nameEl.textContent = _joinSlots.mod?.name || _joinSlots.admin?.name || 'RenterFinder Moderator';
-        }
-      }
-      // Typing indicator from other party
-      const other = currentIdentity === 'A' ? 'B' : currentIdentity === 'B' ? 'A' : null;
-      if (other && data[`typing_${other}`]) {
-        const age = Date.now() - (data[`typing_${other}`] || 0);
-        showTypingIndicator(age < 4000);
-      }
-      // Mod approved message
-      if (data.modApprove && currentIdentity !== 'MOD') {
-        const p = data.modApprove;
-        if (!_messages.find(m => String(m.id) === String(p.originalId))) {
-          RF.saveMessage(CHAT_ID, { id: p.originalId, senderIdentity: p.senderIdentity, senderId: p.senderId, senderName: p.senderName, text: p.text, ts: Date.now(), moderatorApproved: true, chatId: CHAT_ID });
-        }
-      }
-    });
+    // Also register in Firestore
+    _fb(() => RF.registerChat(CHAT_ID, { userA: USERS.A.name, userB: USERS.B.name, listing: LISTING, violations:{A:0,B:0}, joinSlots:{admin:null,mod:null} }));
+    // Always try to assign
+    autoAssignChat(CHAT_ID);
   }
 
-  async function registerChat() {
-    // Always register in localStorage (works locally + as fallback)
-    try {
-      const idx = JSON.parse(localStorage.getItem('rf_chats_index')) || [];
-      if (!idx.find(c => c.chatId === CHAT_ID)) {
-        idx.push({ chatId: CHAT_ID, userA: USERS.A.name, userB: USERS.B.name, listing: LISTING, started: Date.now() });
-        localStorage.setItem('rf_chats_index', JSON.stringify(idx));
-      }
-    } catch {}
+  function autoAssignChat(chatId) {
+    // Initialise mod-1 and mod-2 as active by default
+    const stored = JSON.parse(localStorage.getItem('rf_mods_active')) || {};
+    if (stored['mod-1'] === undefined) stored['mod-1'] = true;
+    if (stored['mod-2'] === undefined) stored['mod-2'] = true;
+    localStorage.setItem('rf_mods_active', JSON.stringify(stored));
 
-    if (_isLocal) {
-      // Load state from localStorage
-      try { _messages   = JSON.parse(localStorage.getItem(`rf_chat_${CHAT_ID}`)) || []; } catch {}
-      try { _violations = JSON.parse(localStorage.getItem(`rf_violations_${CHAT_ID}`)) || { A:0, B:0 }; } catch {}
-      try { _deal       = JSON.parse(localStorage.getItem(`rf_deal_${CHAT_ID}`)); } catch {}
-      try { _meeting    = JSON.parse(localStorage.getItem(`rf_meeting_${CHAT_ID}`)); } catch {}
-      try { _joinSlots  = JSON.parse(localStorage.getItem(`rf_mod_joined_${CHAT_ID}`)) || { admin:null, mod:null }; } catch {}
-      autoAssignChatLocal(CHAT_ID);
-      return;
-    }
+    // Skip if already assigned (admin may have manually assigned)
+    const assignments = JSON.parse(localStorage.getItem('rf_chat_assignments')) || {};
+    if (assignments[chatId]) return;
 
-    try {
-      const meta = await RF.registerChat(CHAT_ID, {
-        userA: USERS.A.name, userB: USERS.B.name, listing: LISTING,
-        violations: { A: 0, B: 0 }, joinSlots: { admin: null, mod: null }
-      });
-      if (meta.violations) _violations = meta.violations;
-      if (meta.deal !== undefined) _deal = meta.deal;
-      if (meta.meeting !== undefined) _meeting = meta.meeting;
-      if (meta.joinSlots) _joinSlots = meta.joinSlots;
-    } catch(e) { console.error('registerChat', e); }
-    await autoAssignChat(CHAT_ID);
-  }
+    // Build active mod pool
+    const ALL_MODS = ['mod-1','mod-2','mod-3','mod-4','mod-5','mod-6','mod-7','mod-8','mod-9','mod-10'];
+    const pool = ALL_MODS.filter(id => stored[id]);
+    if (!pool.length) pool.push('mod-1');
 
-  function autoAssignChatLocal(chatId) {
-    try {
-      const assignments = JSON.parse(localStorage.getItem('rf_chat_assignments')) || {};
-      if (assignments[chatId]) return;
-      const active = JSON.parse(localStorage.getItem('rf_mods_active')) || { 'mod-1': true, 'mod-2': true };
-      const ALL_MODS = ['mod-1','mod-2','mod-3','mod-4','mod-5','mod-6','mod-7','mod-8','mod-9','mod-10'];
-      const pool = ALL_MODS.filter(id => active[id] !== false);
-      if (!pool.length) pool.push('mod-1');
-      let h = 0;
-      for (let i = 0; i < chatId.length; i++) { h = ((h << 5) - h) + chatId.charCodeAt(i); h |= 0; }
-      assignments[chatId] = pool[Math.abs(h) % pool.length];
-      localStorage.setItem('rf_chat_assignments', JSON.stringify(assignments));
-    } catch {}
-  }
-
-  async function autoAssignChat(chatId) {
-    try {
-      const existing = await RF.getAssignment(chatId);
-      if (existing) return;
-      // Get active mods
-      const modsSnap = await db.collection('modsActive').get();
-      const active = { 'mod-1': true, 'mod-2': true };
-      modsSnap.forEach(d => { active[d.id] = d.data().active; });
-      const ALL_MODS = ['mod-1','mod-2','mod-3','mod-4','mod-5','mod-6','mod-7','mod-8','mod-9','mod-10'];
-      const pool = ALL_MODS.filter(id => active[id]);
-      if (!pool.length) pool.push('mod-1');
-      let h = 0;
-      for (let i = 0; i < chatId.length; i++) { h = ((h << 5) - h) + chatId.charCodeAt(i); h |= 0; }
-      const modId = pool[Math.abs(h) % pool.length];
-      await RF.saveAssignment(chatId, modId);
-      console.log('[RF] Chat', chatId, '→', modId);
-    } catch(e) { console.error('autoAssignChat', e); }
+    // Deterministic hash — no counter, no race condition
+    let h = 0;
+    for (let i = 0; i < chatId.length; i++) { h = ((h << 5) - h) + chatId.charCodeAt(i); h |= 0; }
+    assignments[chatId] = pool[Math.abs(h) % pool.length];
+    localStorage.setItem('rf_chat_assignments', JSON.stringify(assignments));
+    console.log('[RF] Chat', chatId, '→ assigned to', assignments[chatId]);
+    _fb(() => RF.saveAssignment(chatId, assignments[chatId]));
   }
   function updateChatIndex(text) {
-    try { RF.updateChatMeta(CHAT_ID, { lastMessage: text.slice(0,60), lastTs: Date.now() }); } catch {}
+    try {
+      const idx = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
+      const chat = idx.find(c => c.chatId === CHAT_ID);
+      if (chat) { chat.lastMessage = text.slice(0,60); chat.lastTs = Date.now(); localStorage.setItem(CHATS_INDEX_KEY, JSON.stringify(idx)); }
+    } catch {}
+    _fb(() => RF.updateChatMeta(CHAT_ID, { lastMessage: text.slice(0,60), lastTs: Date.now() }));
   }
 
   function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -882,7 +763,16 @@
   }
 
   // ── #6 READ RECEIPTS ─────────────────────────────────────────
-  // markRead defined above in data layer
+  function markRead() {
+    try {
+      const msgs = loadMessages();
+      if (!msgs.length) return;
+      const last = msgs[msgs.length - 1];
+      const reads = JSON.parse(localStorage.getItem(READ_KEY)) || {};
+      reads[currentIdentity] = last.id;
+      localStorage.setItem(READ_KEY, JSON.stringify(reads));
+    } catch {}
+  }
 
   function getReadStatus() {
     try { return JSON.parse(localStorage.getItem(READ_KEY)) || {}; } catch { return {}; }
@@ -891,7 +781,17 @@
   // ── #12 TYPING INDICATOR ─────────────────────────────────────
   let typingTimeout = null;
 
-
+  function broadcastTyping(isTyping) {
+    try {
+      const state = JSON.parse(localStorage.getItem(TYPING_KEY)) || {};
+      if (isTyping) {
+        state[currentIdentity] = Date.now();
+      } else {
+        delete state[currentIdentity];
+      }
+      localStorage.setItem(TYPING_KEY, JSON.stringify(state));
+    } catch {}
+  }
 
   function getOtherTyping() {
     try {
@@ -1062,17 +962,40 @@
 
   // ── AI MODERATION ────────────────────────────────────────────
   async function moderateMessage(text, isImage) {
-    if (isImage) return { decision: 'ALLOW', reason: '', violationType: '' };
+    if (isImage) {
+      // For images: ask AI to describe and assess
+      const prompt = `A user sent an image in a property rental chat. Assume it has been scanned. For this demo, always ALLOW property-related images. Respond ONLY with valid JSON: {"decision":"ALLOW","reason":"","violationType":""}`;
+      return { decision: 'ALLOW', reason: '', violationType: '' };
+    }
 
-    // Regex pre-filter first (fast, no network call)
+    // #10: regex pre-filter first (saves API call for obvious violations)
     const preCheck = regexPreFilter(text);
     if (preCheck.blocked) return { decision: 'BLOCK', reason: preCheck.reason, violationType: preCheck.violationType };
 
-    // Skip AI call when running locally — regex only
-    if (_isLocal) return { decision: 'ALLOW', reason: '', violationType: '' };
+    const prompt = `You are a strict chat moderator for RenterFinder.com, India's rental platform.
 
-    // Call Cloud Function (Anthropic key is secure on server)
+BLOCK messages containing:
+- Phone numbers (any format or obfuscation: written-out digits, spaced numbers, etc.)
+- Email addresses (including obfuscated: "rahul at gmail")
+- WhatsApp/Telegram numbers or handles
+- Physical addresses or specific directions
+- Meeting place suggestions ("meet me at X", "come to Y mall")
+- Social media handles/links
+- Attempts to move conversation off-platform
+- Abusive/vulgar/hateful language in ANY language — English, Hindi, Tamil, Telugu, Bengali, Marathi, Kannada, Punjabi, Gujarati, Malayalam, Urdu, or any Indian language/dialect. Includes gaaliyan, slurs (caste/religion/gender/sexuality), and all spelling variations/abbreviations.
+
+ALLOW: property details, rent/BHK/furnishing, general area names, availability, lease dates, polite rental conversation.
+
+violationType: "contact_info" | "meeting" | "abuse"
+
+Respond ONLY valid JSON, no markdown:
+{"decision":"ALLOW","reason":"","violationType":""} or {"decision":"BLOCK","reason":"<short polite reason>","violationType":"..."}
+
+Message: ${JSON.stringify(text)}`;
+
     try {
+      // Skip AI moderation locally (CORS), use regex only
+      if (_isLocal) return { decision: 'ALLOW', reason: '', violationType: '' };
       const res = await fetch(MODERATE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1081,7 +1004,7 @@
       return await res.json();
     } catch(e) {
       console.error('Moderation error:', e);
-      return { decision: 'ALLOW', reason: '', violationType: '' };
+      return { decision:'ALLOW', reason:'', violationType:'' };
     }
   }
 
@@ -1128,15 +1051,14 @@
 
     // Moderator bypass
     if (currentIdentity === 'MOD') {
+      const msgs   = loadMessages();
       const newMsg = { id: Date.now(), senderIdentity:'MOD', senderId:USERS.MOD.id, senderName:USERS.MOD.name, text, ts:Date.now(), isMod:true };
-      if (_isLocal) {
-        _messages.push(newMsg);
-        try { localStorage.setItem(`rf_chat_${CHAT_ID}`, JSON.stringify(_messages)); } catch {}
-        renderMessages();
-      } else {
-        await RF.saveMessage(CHAT_ID, newMsg);
-      }
+      msgs.push(newMsg);
+      saveMessages(msgs);
       updateChatIndex(text || '[image]');
+      const container = document.getElementById('chat-messages');
+      renderSingleMessage(newMsg, container, false);
+      container.scrollTop = container.scrollHeight;
       isSending = false;
       sendBtn.disabled = false;
       return;
@@ -1194,6 +1116,7 @@
       container.scrollTop = container.scrollHeight;
       renderMessages();
     } else {
+      const msgs   = loadMessages();
       const newMsg = {
         id: Date.now(), senderIdentity: currentIdentity,
         senderId: USERS[currentIdentity].id,
@@ -1201,14 +1124,11 @@
         text, ts: Date.now(),
         ...(imageB64 ? { imageB64 } : {})
       };
-      if (_isLocal) {
-        _messages.push(newMsg);
-        try { localStorage.setItem(`rf_chat_${CHAT_ID}`, JSON.stringify(_messages)); } catch {}
-        renderMessages();
-      } else {
-        await RF.saveMessage(CHAT_ID, newMsg);
-      }
+      msgs.push(newMsg);
+      saveMessages(msgs);
       updateChatIndex(text || '[image]');
+      renderSingleMessage(newMsg, container, false);
+      container.scrollTop = container.scrollHeight;
     }
 
     isSending = false;
@@ -1217,7 +1137,11 @@
 
   // ── #13 FLAG FOR MONITORING ───────────────────────────────────
   function flagForMonitoring() {
-    try { RF.updateChatMeta(CHAT_ID, { needsMonitoring: true }); } catch {}
+    try {
+      const idx  = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
+      const chat = idx.find(c => c.chatId === CHAT_ID);
+      if (chat) { chat.needsMonitoring = true; localStorage.setItem(CHATS_INDEX_KEY, JSON.stringify(idx)); }
+    } catch {}
   }
 
   // ── #7 IMAGE HANDLING ─────────────────────────────────────────
@@ -1265,31 +1189,57 @@
     document.getElementById('appeal-counter').textContent = `${this.value.length} / 500`;
   });
 
-  async function submitAppeal() {
+  function submitAppeal() {
     const text = document.getElementById('appeal-text').value.trim();
     if (!text || text.length < 10) { document.getElementById('appeal-text').style.borderColor = '#ef4444'; return; }
-    const appeal = {
-      id: Date.now(), chatId: CHAT_ID, listing: LISTING,
-      userId: USERS[currentIdentity].id,
-      userName: USERS[currentIdentity].name,
-      userRole: USERS[currentIdentity].role,
-      text, ts: Date.now(), status: 'pending'
-    };
-    // Dual-write: localStorage + Firestore
     try {
       const appeals = JSON.parse(localStorage.getItem(APPEALS_KEY)) || [];
-      appeals.unshift(appeal);
+      appeals.unshift({
+        id: Date.now(), chatId: CHAT_ID, listing: LISTING,
+        userId: USERS[currentIdentity].id,
+        userName: USERS[currentIdentity].name,
+        userRole: USERS[currentIdentity].role,
+        text, ts: Date.now(), status: 'pending'
+      });
       localStorage.setItem(APPEALS_KEY, JSON.stringify(appeals));
+      _fb(() => RF.saveAppeal(appeals[0]));
     } catch {}
-    if (!_isLocal) {
-      try { await RF.saveAppeal(appeal); } catch(e) { console.error('saveAppeal', e); }
-    }
     document.getElementById('appeal-form-view').style.display = 'none';
     document.getElementById('appeal-success-view').style.display = 'block';
   }
 
   // ── CROSS-TAB EVENTS ─────────────────────────────────────────
-  // Real-time updates handled by Firestore listeners (startFirestoreListeners)
+  window.addEventListener('storage', function(e) {
+    if (e.key === MOD_APPROVE_KEY && e.newValue) {
+      try {
+        const approval = JSON.parse(e.newValue);
+        const msgs = loadMessages();
+        if (!msgs.find(m => m.id === approval.originalId)) {
+          msgs.push({ id: approval.originalId || Date.now(), senderIdentity: approval.senderIdentity, senderId: approval.senderId, senderName: approval.senderName, text: approval.text, ts: Date.now(), moderatorApproved: true });
+          saveMessages(msgs);
+        }
+        const container = document.getElementById('chat-messages');
+        renderMessages();
+        localStorage.removeItem(MOD_APPROVE_KEY);
+      } catch {}
+    }
+    if (e.key === MOD_JOINED_KEY && e.newValue) {
+      document.getElementById('mod-joined-banner').classList.add('show');
+      try {
+        const slots = JSON.parse(e.newValue) || {};
+        const joinerName = slots.mod?.name || slots.admin?.name || 'RenterFinder Moderator';
+        const nameEl = document.getElementById('mod-joined-name');
+        if (nameEl) nameEl.textContent = joinerName;
+      } catch {}
+      const container = document.getElementById('chat-messages');
+      const sys = document.createElement('div'); sys.className = 'sys-msg mod-sys';
+      sys.textContent = '🛡️ RenterFinder Moderator has joined this chat';
+      container.appendChild(sys); container.scrollTop = container.scrollHeight;
+    }
+    if (e.key === STORAGE_KEY) renderMessages();
+    if (e.key === READ_KEY) renderMessages(); // refresh read receipts
+    if (e.key === DEAL_KEY || e.key === MEETING_KEY) { updateDealBar(); updateCalendarBtn(); renderMessages(); }
+  });
 
   // ── IDENTITY SWITCH ──────────────────────────────────────────
   function switchIdentity(id) {
@@ -1376,7 +1326,11 @@
   }
 
   // ── DEAL SYSTEM ───────────────────────────────────────────────
-  // loadDeal / saveDeal defined above in Firestore data layer
+  function loadDeal()  { try { return JSON.parse(localStorage.getItem(DEAL_KEY)); } catch { return null; } }
+  function saveDeal(d) {
+    localStorage.setItem(DEAL_KEY, JSON.stringify(d));
+    _fb(() => RF.saveDeal(CHAT_ID, d));
+  }
 
   function updateDealBar() {
     const btn      = document.getElementById('deal-btn');
@@ -1431,7 +1385,7 @@
     document.getElementById('deal-modal').classList.remove('show');
   }
 
-  async function confirmDeal() {
+  function confirmDeal() {
     const deal = loadDeal() || {
       chatId:    CHAT_ID,
       listing:   LISTING,
@@ -1459,7 +1413,9 @@
       deal.completedTs = Date.now();
       registerDealGlobally(deal);
       // Post system message in chat
-      await RF.postSystemMsg(CHAT_ID, '🤝 Both parties have agreed to move forward with this deal. RenterFinder has been notified.');
+      const msgs   = loadMessages();
+      msgs.push({ id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System', text: '🤝 Both parties have agreed to move forward with this deal. RenterFinder has been notified.', ts: Date.now(), isSystem: true });
+      saveMessages(msgs);
       saveDeal(deal);
       document.getElementById('deal-form-view').style.display    = 'none';
       document.getElementById('deal-done-view').style.display    = 'flex';
@@ -1474,7 +1430,16 @@
     renderMessages();
   }
 
-  // registerDealGlobally defined above in data layer
+  function registerDealGlobally(deal) {
+    try {
+      const deals = JSON.parse(localStorage.getItem(DEALS_KEY)) || [];
+      const existing = deals.findIndex(d => d.chatId === deal.chatId);
+      if (existing !== -1) deals[existing] = deal;
+      else deals.unshift(deal);
+      localStorage.setItem(DEALS_KEY, JSON.stringify(deals));
+    } catch {}
+    _fb(() => RF.saveDeal(deal.chatId, deal));
+  }
 
   function checkDealOnLoad() {
     const deal = loadDeal();
@@ -1489,6 +1454,7 @@
   let calSelected  = {};           // { 'YYYY-MM-DD': { morning: bool, evening: bool } }
   let calPickedKey = null;         // Party 2's chosen key: 'YYYY-MM-DD|morning' etc.
 
+  const WELCOME_KEY = `rf_welcome_${CHAT_ID}`;
 
   function dismissWelcome() {
     localStorage.setItem(WELCOME_KEY, '1');
@@ -1511,7 +1477,20 @@
     }
     // else: overlay stays visible
   }
-  // loadMeeting / saveMeeting / syncMeetingToDeal defined above in Firestore data layer
+  const loadMeeting  = () => { try { return JSON.parse(localStorage.getItem(MEETING_KEY)); } catch { return null; } };
+  const saveMeeting = (m) => {
+    localStorage.setItem(MEETING_KEY, JSON.stringify(m));
+    _fb(() => RF.saveMeeting(CHAT_ID, m));
+  };
+
+  // Sync meeting into deal object so mod dashboard can see it
+  function syncMeetingToDeal(meeting) {
+    const deal = loadDeal();
+    if (!deal) return;
+    deal.meeting = meeting;
+    saveDeal(deal);
+    registerDealGlobally(deal);
+  }
 
   // Update the calendar button visibility for the current identity
   function updateCalendarBtn() {
@@ -1525,7 +1504,6 @@
 
     const advanceDone   = deal?.stage_advance_payment === true;
     const bothConfirmed = deal?.confirmedA && deal?.confirmedB;
-    console.log('[RF] updateCalendarBtn - advanceDone:', advanceDone, 'bothConfirmed:', bothConfirmed, 'identity:', currentIdentity);
     if (!bothConfirmed || !advanceDone) { btn.classList.remove('show'); return; }
 
     if (meeting?.status === 'confirmed') { btn.classList.remove('show'); return; }
@@ -1704,7 +1682,7 @@
     }).join('');
   }
 
-  async function submitProposedDates() {
+  function submitProposedDates() {
     const keys = Object.keys(calSelected).sort();
     if (keys.length === 0) return;
 
@@ -1714,7 +1692,13 @@
     syncMeetingToDeal(meeting);
 
     // Post system message in chat
-    await RF.postSystemMsg(CHAT_ID, `📅 ${USERS[currentIdentity].name} has proposed ${keys.length} meeting date${keys.length>1?'s':''}. The other party can now select a preferred slot.`, { meetingProposal: meeting });
+    const msgs = loadMessages();
+    msgs.push({
+      id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System',
+      text: `📅 ${USERS[currentIdentity].name} has proposed ${keys.length} meeting date${keys.length>1?'s':''}. The other party can now select a preferred slot.`,
+      ts: Date.now(), isSystem: true, meetingProposal: meeting
+    });
+    saveMessages(msgs);
 
     closeCalendarModal();
     updateCalendarBtn();
@@ -1752,7 +1736,7 @@
     document.getElementById('cal-pick-confirm').disabled = false;
   }
 
-  async function confirmPickedDate() {
+  function confirmPickedDate() {
     if (!calPickedKey) return;
     const deal = loadDeal();
 
@@ -1774,7 +1758,13 @@
     autoTickMeetingStage(meeting, deal);
 
     // Post system message
-    await RF.postSystemMsg(CHAT_ID, `✅ Meeting confirmed! ${dateLabel} — ${slotLabel}`, { meetingConfirmed: confirmedSlot });
+    const msgs = loadMessages();
+    msgs.push({
+      id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System',
+      text: `✅ Meeting confirmed! ${dateLabel} — ${slotLabel}`,
+      ts: Date.now(), isSystem: true, meetingConfirmed: confirmedSlot
+    });
+    saveMessages(msgs);
 
     document.getElementById('cal-done-sub').textContent = `Meeting confirmed: ${dateLabel}, ${slotLabel}`;
     document.getElementById('cal-pick-view').style.display = 'none';
@@ -1800,7 +1790,7 @@
     document.getElementById('cal-modal').classList.add('show');
   }
 
-  async function submitCounterDates() {
+  function submitCounterDates() {
     const keys = Object.keys(calSelected).sort();
     if (keys.length === 0) return;
     const proposals = keys.map(k => ({ date: k, ...calSelected[k] }));
@@ -1813,18 +1803,31 @@
     saveMeeting(meeting);
     syncMeetingToDeal(meeting);
 
-    await RF.postSystemMsg(CHAT_ID, `📅 ${USERS[currentIdentity].name} couldn't find a suitable slot and has proposed ${keys.length} alternative date${keys.length>1?'s':''}. The other party can now choose.`, { meetingProposal: meeting });
+    const msgs = loadMessages();
+    msgs.push({
+      id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System',
+      text: `📅 ${USERS[currentIdentity].name} couldn't find a suitable slot and has proposed ${keys.length} alternative date${keys.length>1?'s':''}. The other party can now choose.`,
+      ts: Date.now(), isSystem: true, meetingProposal: meeting
+    });
+    saveMessages(msgs);
 
     closeCalendarModal();
     updateCalendarBtn();
     renderMessages();
   }
 
-  async function autoTickMeetingStage(meeting, deal) {
+  function autoTickMeetingStage(meeting, deal) {
+    // Sync the confirmed meeting into the global deals array so mod sees it auto-ticked
     try {
-      const updatedDeal = { ...deal, stage_meeting: true, stage_meeting_ts: Date.now(), meeting };
-      await RF.saveDeal(CHAT_ID, updatedDeal);
-    } catch(e) { console.error('autoTickMeetingStage', e); }
+      const deals = JSON.parse(localStorage.getItem(DEALS_KEY)) || [];
+      const idx   = deals.findIndex(d => d.chatId === CHAT_ID);
+      if (idx !== -1) {
+        deals[idx].stage_meeting    = true;
+        deals[idx].stage_meeting_ts = Date.now();
+        deals[idx].meeting          = meeting;
+        localStorage.setItem(DEALS_KEY, JSON.stringify(deals));
+      }
+    } catch {}
   }
 
   function dateKey(date) {
@@ -1837,39 +1840,38 @@
   }
 
   // ── INIT ──────────────────────────────────────────────────────
-  async function init() {
+  function init() {
+    registerChat();
     document.getElementById('other-name').textContent   = OTHER_NAME;
     document.getElementById('other-avatar').textContent = OTHER_NAME.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     document.getElementById('chat-context').textContent = `Renter · ${LISTING}`;
-
+    if (isModJoined()) {
+      document.getElementById('mod-joined-banner').classList.add('show');
+      // Update banner name from slots
+      const slots = getJoinSlots();
+      const joinerName = slots.mod?.name || slots.admin?.name || 'RenterFinder Moderator';
+      const nameEl = document.getElementById('mod-joined-name');
+      if (nameEl) nameEl.textContent = joinerName;
+    }
     // Auto-switch to MOD if opened via join link
     if (URL_ROLE === 'admin' || URL_ROLE === 'mod') {
       USERS.MOD.name = URL_MOD_NAME || (URL_ROLE === 'admin' ? 'Admin' : 'RenterFinder Moderator');
       USERS.MOD.id   = URL_MOD_ID || 'rf-moderator';
+      setTimeout(() => switchIdentity('MOD'), 100);
     }
-
-    // Register chat in Firestore (creates doc if new, loads state if existing)
-    await registerChat();
-
-    // Start Firestore real-time listeners — these drive all UI updates
-    startFirestoreListeners();
-
-    // If joining as mod/admin, set join slot
-    if (URL_ROLE === 'admin' || URL_ROLE === 'mod') {
-      await setModJoined();
-      setTimeout(() => switchIdentity('MOD'), 200);
-    }
-
     checkExpiry();
+    checkArchivedState();
+    checkDealOnLoad();
     updateDealBar();
     updateCalendarBtn();
+    renderMessages();
+    markRead();
     checkWelcome();
-
-    // Remove loading screen after brief delay for Firestore to load first messages
     setTimeout(() => {
       const ls = document.getElementById('loading-screen');
-      if (ls) { ls.classList.add('fade'); setTimeout(() => ls.remove(), 400); }
-    }, 1200);
+      ls.classList.add('fade');
+      setTimeout(() => ls.remove(), 400);
+    }, 600);
   }
   init();
 </script>

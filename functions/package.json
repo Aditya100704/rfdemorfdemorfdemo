@@ -1,16 +1,7 @@
 {
   "name": "renterfinder-functions",
-  "description": "RenterFinder Cloud Functions",
-  "scripts": {
-    "serve": "firebase emulators:start --only functions",
-    "deploy": "firebase deploy --only functions"
-  },
-  "engines": {
-    "node": "22"
-  },
+  "engines": { "node": "22" },
   "main": "index.js",
-  "dependencies": {
-    "firebase-functions": "^6.0.0"
-  },
+  "dependencies": { "firebase-functions": "^6.0.0" },
   "private": true
 }

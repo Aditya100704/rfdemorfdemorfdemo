@@ -1,16 +1,4 @@
 {
-  "functions": {
-    "source": "functions",
-    "runtime": "nodejs22"
-  },
-  "hosting": {
-    "public": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**",
-      "functions/**"
-    ],
-    "rewrites": []
-  }
+  "functions": { "source": "functions", "runtime": "nodejs22" },
+  "hosting": { "public": ".", "ignore": ["firebase.json","**/.*","**/node_modules/**","functions/**"] }
 }

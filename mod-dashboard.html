@@ -588,7 +588,7 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Firebase SDK -->
+<!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="./firebase-config.js"></script>
@@ -600,40 +600,30 @@
 
   // ── MOD MANAGEMENT ───────────────────────────────────────────
   const MODS = Array.from({length:10},(_,i)=>({ id:`mod-${i+1}`, name:`Mod ${i+1}`, path:`mods/mod-${i+1}.html` }));
-  // getModeActive/getAssignments now read from in-memory cache (populated by Firestore)
-  // saveModeActive/saveAssignments write to Firestore via RF
-  const saveModeActive = async (v) => {
-    _modsActive = v;
-    try { localStorage.setItem('rf_mods_active', JSON.stringify(v)); } catch {}
-    if (_isLocal) return;
+  const getModeActive    = () => {
     try {
-      const batch = db.batch();
-      Object.entries(v).forEach(([id, active]) => batch.set(db.collection('modsActive').doc(id), { active, id }));
-      await batch.commit();
-    } catch(e) { console.error('saveModeActive', e); }
+      const stored = JSON.parse(localStorage.getItem('rf_mods_active')) || {};
+      // mod-1 and mod-2 are on by default unless explicitly turned off
+      if (stored['mod-1'] === undefined) stored['mod-1'] = true;
+      if (stored['mod-2'] === undefined) stored['mod-2'] = true;
+      localStorage.setItem('rf_mods_active', JSON.stringify(stored));
+      return stored;
+    } catch { return {'mod-1':true,'mod-2':true}; }
   };
-  const saveAssignments = async (v) => {
-    _assignments = v;
-    try { localStorage.setItem('rf_chat_assignments', JSON.stringify(v)); } catch {}
-    if (_isLocal) return;
-    try {
-      const batch = db.batch();
-      Object.entries(v).forEach(([chatId, modId]) => batch.set(db.collection('assignments').doc(chatId), { modId, chatId }));
-      await batch.commit();
-    } catch(e) { console.error('saveAssignments', e); }
-  };
+  const saveModeActive   = v  => localStorage.setItem('rf_mods_active', JSON.stringify(v));
+  const getAssignments   = () => { try { return JSON.parse(localStorage.getItem('rf_chat_assignments')) || {}; } catch { return {}; } };
+  const saveAssignments  = v  => localStorage.setItem('rf_chat_assignments', JSON.stringify(v));
+  const getAssignCounter = () => { try { return parseInt(localStorage.getItem('rf_mod_assign_counter')||'0'); } catch { return 0; } };
+  const saveAssignCounter= v  => localStorage.setItem('rf_mod_assign_counter', String(v));
 
-  async function reassignChat(chatId, modId) {
-    const assignments = { ...getAssignments() };
+  function reassignChat(chatId, modId) {
+    const assignments = getAssignments();
     if (modId) {
       assignments[chatId] = modId;
-      try { await RF.saveAssignment(chatId, modId); } catch(e) { console.error('reassignChat', e); }
     } else {
       delete assignments[chatId];
-      try { await RF.deleteAssignment(chatId); } catch(e) { console.error('deleteAssignment', e); }
     }
-    _assignments = assignments;
-    try { localStorage.setItem('rf_chat_assignments', JSON.stringify(assignments)); } catch {}
+    saveAssignments(assignments);
     const modName = modId ? (MODS.find(m => m.id === modId)?.name || modId) : 'nobody';
     showToast(`Chat reassigned to ${modName}`, 'success');
     loadDashboard();
@@ -649,29 +639,29 @@
     return Math.abs(h);
   }
 
-  async function assignNewChats() {
-    const active     = getModeActive();
-    const activeMods = MODS.filter(m => active[m.id]);
-    const pool       = activeMods.length ? activeMods : [MODS[0]];
-    const assignments= getAssignments();
-    const chats      = getChatsIndex();
-    const newAssigns = {};
+  function assignNewChats() {
+    const active      = getModeActive();
+    const activeMods  = MODS.filter(m => active[m.id]);
+    const pool        = activeMods.length ? activeMods : [MODS[0]];
+    const assignments = getAssignments();
+    const chats       = getChatsIndex();
+    let changed       = false;
     chats.forEach(c => {
       if (!assignments[c.chatId]) {
-        newAssigns[c.chatId] = pool[hashChatId(c.chatId) % pool.length].id;
+        // Deterministic: hash the chatId so same chat always gets same mod
+        assignments[c.chatId] = pool[hashChatId(c.chatId) % pool.length].id;
+        changed = true;
       }
     });
-    if (Object.keys(newAssigns).length) {
-      const merged = { ...assignments, ...newAssigns };
-      await saveAssignments(merged);
-    }
+    if (changed) saveAssignments(assignments);
   }
 
-  async function toggleMod(modId) {
-    const active = { ...getModeActive() };
+  function toggleMod(modId) {
+    const active = getModeActive();
     active[modId] = !active[modId];
-    await saveModeActive(active);
-    await assignNewChats();
+    saveModeActive(active);
+    // Newly activated mod: re-run assignment so future chats include them
+    assignNewChats();
     renderModPanel();
     loadDashboard();
   }
@@ -717,8 +707,8 @@
       sessionStorage.setItem(SESSION_KEY,'1');
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('dashboard').classList.add('show');
-      startFirestoreListeners();
       startAutoRefresh();
+      loadDashboard();
     } else {
       document.getElementById('login-error').classList.add('show');
       document.getElementById('pwd-input').value = '';
@@ -732,209 +722,52 @@
   let countdown    = AUTO_REFRESH_SECS;
 
   function startAutoRefresh() {
-    // Firestore real-time listeners handle all updates automatically
-    // Just update the countdown display to show "live"
-    const el = document.getElementById('refresh-countdown');
-    if (el) el.textContent = '(live)';
-    setInterval(() => {
+    clearInterval(refreshTimer);
+    countdown = AUTO_REFRESH_SECS;
+    refreshTimer = setInterval(() => {
+      countdown--;
       const el = document.getElementById('refresh-countdown');
-      if (el) el.textContent = '(live)';
-    }, 5000);
+      if (el) el.textContent = `(${countdown}s)`;
+      if (countdown <= 0) {
+        countdown = AUTO_REFRESH_SECS;
+        loadDashboard();
+      }
+    }, 1000);
   }
 
-  // ── IN-MEMORY CACHE (populated by Firestore real-time listeners) ───
-  let _chats      = [];   // array of chat meta docs
-  let _modlog     = [];   // array of modlog entries
-  let _deals      = {};   // keyed by chatId
-  let _appeals    = [];
-  let _assignments= {};   // chatId -> modId
-  let _modsActive = { 'mod-1': true, 'mod-2': true };
-  let _banned     = {};
-  let _msgCache   = {};   // chatId -> array of messages
-  let _unsubList  = [];   // store unsubs to clean up
-  let _listenersStarted = false;
-
-  // ── GETTERS (read from cache) ────────────────────────────────
-  const getChatsIndex = () => _chats;
-  const getModLog     = () => _modlog;
-  const getDeals      = () => Object.values(_deals);
-  const getAppeals    = () => _appeals;
-  const getAssignments= () => _assignments;
-  const getBanned     = () => _banned;
-  const getModeActive = () => {
-    if (_modsActive['mod-1'] === undefined) _modsActive['mod-1'] = true;
-    if (_modsActive['mod-2'] === undefined) _modsActive['mod-2'] = true;
-    return _modsActive;
-  };
-  const getChatMsgs = id => _msgCache[id] || [];
-  const getChatVio  = id => {
-    const c = _chats.find(c => c.chatId === id);
-    return (c && c.violations) ? c.violations : { A: 0, B: 0 };
-  };
-
-  // ── JOIN SLOTS (Firestore-backed) ────────────────────────────
+  // ── DATA HELPERS ─────────────────────────────────────────────
+  const getModLog     = () => { try { return JSON.parse(localStorage.getItem('rf_modlog')) || []; } catch { return []; } };
+  const getChatsIndex = () => { try { return JSON.parse(localStorage.getItem('rf_chats_index')) || []; } catch { return []; } };
+  const getChatMsgs   = id => { try { return JSON.parse(localStorage.getItem(`rf_chat_${id}`)) || []; } catch { return []; } };
+  const getChatVio    = id => { try { return JSON.parse(localStorage.getItem(`rf_violations_${id}`)) || {}; } catch { return {}; } };
+  const getBanned     = ()  => { try { return JSON.parse(localStorage.getItem('rf_banned_users')) || {}; } catch { return {}; } };
+  const saveBanned    = b   => localStorage.setItem('rf_banned_users', JSON.stringify(b));
+  // ── CHAT JOIN SLOT SYSTEM ────────────────────────────────────
   function getJoinSlots(chatId) {
-    const c = _chats.find(c => c.chatId === chatId);
-    return (c && c.joinSlots) ? c.joinSlots : { admin: null, mod: null };
+    try { return JSON.parse(localStorage.getItem(`rf_mod_joined_${chatId}`)) || { admin: null, mod: null }; }
+    catch { return { admin: null, mod: null }; }
   }
-  async function saveJoinSlots(chatId, slots) {
-    // Dual-write: localStorage + Firestore
-    try { localStorage.setItem(`rf_mod_joined_${chatId}`, JSON.stringify(slots)); } catch {}
-    try { await RF.updateChatMeta(chatId, { joinSlots: slots }); } catch(e) { console.error('saveJoinSlots', e); }
+  function saveJoinSlots(chatId, slots) {
+    localStorage.setItem(`rf_mod_joined_${chatId}`, JSON.stringify(slots));
   }
-  const isModJoined = id => { const s = getJoinSlots(id); return !!(s.admin || s.mod); };
+  const isModJoined = id => {
+    const s = getJoinSlots(id);
+    return !!(s.admin || s.mod);
+  };
   function isAdminJoined(chatId) { return !!getJoinSlots(chatId).admin; }
+  function isModSlotJoined(chatId) { return !!getJoinSlots(chatId).mod; }
   function getJoinUrl(chatId) {
-    const chat = _chats.find(c => c.chatId === chatId) || {};
-    return `./chat.html?chatId=${encodeURIComponent(chatId)}&userId=user-landlord-001&otherId=user-renter-001&otherName=${encodeURIComponent(chat.userB||'')}&listing=${encodeURIComponent(chat.listing||'')}&role=admin&modName=${encodeURIComponent('Admin')}`;
+    const chat = getChatsIndex().find(c => c.chatId === chatId);
+    const listing = chat ? chat.listing : '';
+    const userB   = chat ? chat.userB   : '';
+    return `./chat.html?chatId=${encodeURIComponent(chatId)}&userId=user-landlord-001&otherId=user-renter-001&otherName=${encodeURIComponent(userB)}&listing=${encodeURIComponent(listing)}&role=admin&modName=${encodeURIComponent('Admin')}`;
   }
-
-  // ── WRITERS (dual-write localStorage + Firestore) ────────────
-  const saveBanned = async (b) => {
-    _banned = b;
-    try { localStorage.setItem('rf_banned_users', JSON.stringify(b)); } catch {}
-    try {
-      const batch = db.batch();
-      Object.entries(b).forEach(([uid, data]) => batch.set(db.collection('banned').doc(uid), data));
-      await batch.commit();
-    } catch(e) { console.error('saveBanned', e); }
-  };
-
-  const saveDeals = async (arr) => {
-    arr.forEach(d => { _deals[d.chatId] = d; });
-    try { localStorage.setItem('rf_deals', JSON.stringify(arr)); } catch {}
-    if (_isLocal) return;
-    try {
-      const batch = db.batch();
-      arr.forEach(d => batch.set(db.collection('deals').doc(d.chatId), d));
-      await batch.commit();
-    } catch(e) { console.error('saveDeals', e); }
-  };
-
-  const saveAppeals = async (arr) => {
-    _appeals = arr;
-    try { localStorage.setItem('rf_appeals', JSON.stringify(arr)); } catch {}
-    if (_isLocal) return;
-    try {
-      const batch = db.batch();
-      arr.forEach(a => batch.set(db.collection('appeals').doc(String(a.id)), a));
-      await batch.commit();
-    } catch(e) { console.error('saveAppeals', e); }
-  };
-
-  function saveModLog(log) {
-    _modlog = log;
-    try { localStorage.setItem('rf_modlog', JSON.stringify(log)); } catch {}
-  }
-
-  async function updateLogEntry(id, patch) {
-    _modlog = _modlog.map(e => String(e.id) === String(id) ? {...e, ...patch} : e);
-    try { localStorage.setItem('rf_modlog', JSON.stringify(_modlog)); } catch {}
-    try { await db.collection('modlog').doc(String(id)).update(patch); } catch(e) { console.error('updateLogEntry', e); }
-  }
-
-  // ── FIRESTORE REAL-TIME LISTENERS ────────────────────────────
-  // _isLocal defined in firebase-config.js
-
-  function _loadFromLocalStorage() {
-    try { _chats       = JSON.parse(localStorage.getItem('rf_chats_index')) || []; } catch {}
-    try { _modlog      = JSON.parse(localStorage.getItem('rf_modlog')) || []; } catch {}
-    try {
-      const rawDeals = JSON.parse(localStorage.getItem('rf_deals')) || [];
-      rawDeals.forEach(d => { if (d.chatId) _deals[d.chatId] = d; });
-    } catch {}
-    try { _appeals     = JSON.parse(localStorage.getItem('rf_appeals')) || []; } catch {}
-    try { _assignments = JSON.parse(localStorage.getItem('rf_chat_assignments')) || {}; } catch {}
-    try { _banned      = JSON.parse(localStorage.getItem('rf_banned_users')) || {}; } catch {}
-    try {
-      const raw = JSON.parse(localStorage.getItem('rf_mods_active')) || {};
-      _modsActive = { 'mod-1': true, 'mod-2': true, ...raw };
-    } catch {}
-    _chats.forEach(c => {
-      try { _msgCache[c.chatId] = JSON.parse(localStorage.getItem(`rf_chat_${c.chatId}`)) || []; } catch {}
-    });
-    loadDashboard();
-  }
-
-  function startFirestoreListeners() {
-    if (_listenersStarted) return;
-    _listenersStarted = true;
-
-    if (_isLocal) {
-      // Local: load from localStorage and poll every 2s
-      _loadFromLocalStorage();
-      setInterval(_loadFromLocalStorage, 2000);
-      return;
-    }
-
-    // Track which collections have loaded at least once
-    const _loaded = { chats: false, modlog: false, deals: false, appeals: false, assignments: false };
-    function _checkAllLoaded() {
-      if (Object.values(_loaded).every(Boolean)) loadDashboard();
-    }
-
-    // All chats
-    _unsubList.push(RF.onAllChats(chats => {
-      _chats = chats;
-      chats.forEach(c => {
-        if (!_msgCache[c.chatId]) {
-          _msgCache[c.chatId] = [];
-          db.collection('chats').doc(c.chatId).collection('messages')
-            .orderBy('ts','asc').onSnapshot(snap => {
-              _msgCache[c.chatId] = snap.docs.map(d => d.data());
-            });
-        }
-      });
-      _loaded.chats = true;
-      _checkAllLoaded();
-    }));
-
-    // Modlog
-    _unsubList.push(RF.onModLog(log => {
-      _modlog = log;
-      try { localStorage.setItem('rf_modlog', JSON.stringify(log)); } catch {}
-      _loaded.modlog = true;
-      _checkAllLoaded();
-    }));
-
-    // Deals
-    _unsubList.push(RF.onDeals(deals => {
-      _deals = {};
-      deals.forEach(d => { _deals[d.chatId] = d; });
-      try { localStorage.setItem('rf_deals', JSON.stringify(deals)); } catch {}
-      _loaded.deals = true;
-      _checkAllLoaded();
-    }));
-
-    // Appeals
-    _unsubList.push(RF.onAppeals(appeals => {
-      _appeals = appeals;
-      try { localStorage.setItem('rf_appeals', JSON.stringify(appeals)); } catch {}
-      _loaded.appeals = true;
-      _checkAllLoaded();
-    }));
-
-    // Assignments — CRITICAL: must load before chats render
-    _unsubList.push(RF.onAssignments(map => {
-      _assignments = map;
-      try { localStorage.setItem('rf_chat_assignments', JSON.stringify(map)); } catch {}
-      _loaded.assignments = true;
-      _checkAllLoaded();
-    }));
-
-    // Mods active
-    _unsubList.push(RF.onModsActive(map => {
-      _modsActive = map;
-      try { localStorage.setItem('rf_mods_active', JSON.stringify(map)); } catch {}
-      renderModPanel();
-    }));
-
-    // Banned users
-    _unsubList.push(RF.onBanned(banned => {
-      _banned = banned;
-      try { localStorage.setItem('rf_banned_users', JSON.stringify(banned)); } catch {}
-    }));
-  }
+  const getDeals    = () => { try { return JSON.parse(localStorage.getItem('rf_deals')) || []; } catch { return []; } };
+  const saveDeals   = d  => localStorage.setItem('rf_deals', JSON.stringify(d));
+  const getAppeals    = ()  => { try { return JSON.parse(localStorage.getItem('rf_appeals')) || []; } catch { return []; } };
+  const saveAppeals   = a   => localStorage.setItem('rf_appeals', JSON.stringify(a));
+  function saveModLog(log)  { localStorage.setItem('rf_modlog', JSON.stringify(log)); }
+  function updateLogEntry(id, patch) { const log = getModLog(); const i = log.findIndex(e => e.id === id); if(i !== -1){ Object.assign(log[i], patch); saveModLog(log); } }
 
   function showToast(msg, type='') {
     const t = document.getElementById('toast');
@@ -1125,13 +958,7 @@
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:60px 20px;"><div class="empty-icon">🤝</div><h3>No deals yet</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Deals appear here once both parties confirm interest in a chat.</p></div>`;
       return;
     }
-    // Sort newest first using any available timestamp
-    const sorted = [...deals].sort((a,b) => {
-      const tsA = a.initiatedTs || a.completedTs || a.confirmedATs || a.confirmedBTs || 0;
-      const tsB = b.initiatedTs || b.completedTs || b.confirmedATs || b.confirmedBTs || 0;
-      return tsB - tsA;
-    });
-    const active = sorted.filter(d => d.stage !== 'Cancelled' && !d.stage_complete);
+    const active = deals.filter(d => d.stage !== 'Cancelled' && !d.stage_complete);
     container.innerHTML = '';
     if (!active.length) {
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:40px;"><div class="empty-icon">🎉</div><h3>No active deals</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">All deals are in the Archived tab.</p></div>`;
@@ -1170,7 +997,7 @@
       // Auto-tick meeting stage if parties have confirmed a date
       if (stage.key === 'meeting' && !d.stage_meeting) {
         try {
-          const meeting = d.meeting || null;
+          const meeting = JSON.parse(localStorage.getItem(`rf_meeting_${d.chatId}`));
           if (meeting?.status === 'confirmed') {
             d.stage_meeting    = true;
             d.stage_meeting_ts = meeting.confirmedTs || Date.now();
@@ -1256,19 +1083,19 @@
       </div>`;
   }
 
-  async function togglePayment(chatId, stageKey, party) {
+  function togglePayment(chatId, stageKey, party) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
     const field = `pay_${stageKey}_${party}`;
     deal[field] = !deal[field];
     deal[`${field}_ts`] = deal[field] ? Date.now() : null;
-    await saveDeals(deals);
-    await syncDealToChat(chatId, deal);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
     loadDashboard();
   }
 
-  async function proceedPaymentStage(chatId, stageKey) {
+  function proceedPaymentStage(chatId, stageKey) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1279,13 +1106,13 @@
     deal[`stage_${stageKey}_ts`] = Date.now();
     const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
-    await saveDeals(deals);
-    await syncDealToChat(chatId, deal);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
     showToast(`✓ ${label} stage completed`, 'success');
     loadDashboard();
   }
 
-  async function proceedActionStage(chatId, stageKey) {
+  function proceedActionStage(chatId, stageKey) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1293,13 +1120,13 @@
     deal[`stage_${stageKey}_ts`] = Date.now();
     const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
-    await saveDeals(deals);
-    await syncDealToChat(chatId, deal);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
     showToast(`✓ ${label} confirmed`, 'success');
     loadDashboard();
   }
 
-  async function completeAndArchive(chatId) {
+  function completeAndArchive(chatId) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1309,19 +1136,19 @@
     deal.completedTs       = Date.now();
     postDealSystemMsg(chatId, '🏆 Deal fully completed and archived by RenterFinder. Congratulations to both parties!');
     try {
-      const idx  = _chats;
+      const idx  = JSON.parse(localStorage.getItem('rf_chats_index')) || [];
       const chat = idx.find(c => c.chatId === chatId);
       if (chat) { chat.archived = true; chat.archivedTs = Date.now(); chat.dealComplete = true; localStorage.setItem('rf_chats_index', JSON.stringify(idx)); }
     } catch {}
-    await saveDeals(deals);
-    await syncDealToChat(chatId, deal);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
     showToast('🏆 Deal archived successfully', 'success');
     loadDashboard();
   }
 
   let pendingCancelChatId = null;
 
-  async function cancelDeal(chatId) {
+  function cancelDeal(chatId) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1336,7 +1163,7 @@
     pendingCancelChatId = null;
   }
 
-  async function executeCancelDeal() {
+  function executeCancelDeal() {
     if (!pendingCancelChatId) return;
     const chatId = pendingCancelChatId;
     const deals  = getDeals();
@@ -1344,14 +1171,14 @@
     if (!deal) { closeCancelDealConfirm(); return; }
     deal.stage = 'Cancelled'; deal.cancelledTs = Date.now();
     postDealSystemMsg(chatId, '❌ This deal has been cancelled by RenterFinder moderation.');
-    await saveDeals(deals);
-    await syncDealToChat(chatId, deal);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
     closeCancelDealConfirm();
     showToast('Deal cancelled', 'error');
     loadDashboard();
   }
 
-  async function reinstateDeal(chatId) {
+  function reinstateDeal(chatId) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1359,47 +1186,34 @@
     deal.cancelledTs = null;
     delete deal.stage_complete;
     postDealSystemMsg(chatId, '✅ This deal has been reinstated by RenterFinder moderation. Both parties may continue.');
-    await saveDeals(deals);
-    await syncDealToChat(chatId, deal);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
     showToast('✓ Deal reinstated', 'success');
     loadDashboard();
   }
 
-  async function saveDealNotes(chatId) {
+  function saveDealNotes(chatId) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
     const el = document.getElementById(`notes-${chatId}`);
     if (!el) return;
     deal.notes = el.value;
-    await saveDeals(deals);
-    await syncDealToChat(chatId, deal);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
     showToast('Notes saved ✓', 'success');
   }
 
-  async function syncDealToChat(chatId, deal) {
-    // Dual-write: localStorage + Firestore
+  function syncDealToChat(chatId, deal) {
     try { localStorage.setItem(`rf_deal_${chatId}`, JSON.stringify(deal)); } catch {}
-    if (!_isLocal) {
-      try {
-        console.log('[RF] syncDealToChat', chatId, 'stage_advance_payment:', deal.stage_advance_payment);
-        await RF.saveDeal(chatId, deal);
-        console.log('[RF] syncDealToChat done');
-      } catch(e) { console.error('syncDealToChat', e); }
-    }
   }
 
-  async function postDealSystemMsg(chatId, text) {
-    const msg = { id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true, chatId };
-    // Dual-write: localStorage + Firestore
+  function postDealSystemMsg(chatId, text) {
     try {
-      const msgs = _msgCache[chatId] ? [..._msgCache[chatId]] : [];
-      msgs.push(msg);
+      const msgs = JSON.parse(localStorage.getItem(`rf_chat_${chatId}`)) || [];
+      msgs.push({ id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true });
       localStorage.setItem(`rf_chat_${chatId}`, JSON.stringify(msgs));
     } catch {}
-    if (!_isLocal) {
-      try { await RF.saveMessage(chatId, msg); } catch(e) { console.error('postDealSystemMsg', e); }
-    }
   }
 
   function fmtTs(ts) {
@@ -1565,51 +1379,24 @@
   }
 
   // ── APPROVE MESSAGE ──────────────────────────────────────────
-  async function approveMessage(logId) {
+  function approveMessage(logId) {
     const log   = getModLog();
-    const entry = log.find(e => String(e.id) === String(logId));
+    const entry = log.find(e => e.id === logId);
     if (!entry) return;
-
-    const approvedMsg = {
-      id: entry.originalId || entry.id,
-      senderIdentity: entry.senderIdentity,
-      senderId: entry.senderId,
-      senderName: entry.senderName,
-      text: entry.text,
-      ts: entry.ts || Date.now(),
-      moderatorApproved: true,
-      chatId: entry.chatId
-    };
-
-    // Write approved message to Firestore (appears in chat in real-time)
-    if (!_isLocal) {
-      try { await RF.saveMessage(entry.chatId, approvedMsg); } catch(e) { console.error('approveMessage RF.saveMessage', e); }
-    } else {
-      // Local fallback — write to localStorage
-      try {
-        const msgs = JSON.parse(localStorage.getItem(`rf_chat_${entry.chatId}`)) || [];
-        if (!msgs.find(m => String(m.id) === String(approvedMsg.id))) {
-          msgs.push(approvedMsg);
-          localStorage.setItem(`rf_chat_${entry.chatId}`, JSON.stringify(msgs));
-        }
-      } catch {}
-    }
-
-    // Reduce violation count
+    const payload = { originalId: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text };
+    localStorage.setItem(`rf_mod_approve_${entry.chatId}`, JSON.stringify(payload));
     try {
-      const chatMeta = _chats.find(c => c.chatId === entry.chatId) || {};
-      const vio = { ...(chatMeta.violations || {}) };
-      if ((vio[entry.senderIdentity] || 0) > 0) {
-        vio[entry.senderIdentity]--;
-        if (!_isLocal) {
-          try { await RF.saveViolations(entry.chatId, vio); } catch(e) { console.error('saveViolations', e); }
-        } else {
-          try { localStorage.setItem(`rf_violations_${entry.chatId}`, JSON.stringify(vio)); } catch {}
-        }
+      const msgs = JSON.parse(localStorage.getItem(`rf_chat_${entry.chatId}`)) || [];
+      if (!msgs.find(m => m.id === logId)) {
+        msgs.push({ id: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text, ts: Date.now(), moderatorApproved: true });
+        localStorage.setItem(`rf_chat_${entry.chatId}`, JSON.stringify(msgs));
       }
     } catch {}
-
-    await updateLogEntry(logId, { status: 'approved' });
+    try {
+      const vio = JSON.parse(localStorage.getItem(`rf_violations_${entry.chatId}`)) || {};
+      if ((vio[entry.senderIdentity] || 0) > 0) { vio[entry.senderIdentity]--; localStorage.setItem(`rf_violations_${entry.chatId}`, JSON.stringify(vio)); }
+    } catch {}
+    updateLogEntry(logId, { status: 'approved' });
     showToast('✓ Message approved and delivered', 'success');
     loadDashboard();
   }
@@ -1617,21 +1404,23 @@
   function dismissFlag(logId) { updateLogEntry(logId, { status: 'dismissed' }); showToast('Flag dismissed', ''); loadDashboard(); }
 
   // ── JOIN CHAT ────────────────────────────────────────────────
-  async function joinChat(chatId) {
+  function joinChat(chatId) {
     const slots = getJoinSlots(chatId);
     if (slots.admin) {
+      // Already joined as admin — just open the chat
       window.open(getJoinUrl(chatId), '_blank');
       return;
     }
-    const newSlots = { ...slots, admin: { id: 'admin', name: 'Admin', ts: Date.now() } };
-    await saveJoinSlots(chatId, newSlots);
+    slots.admin = { id: 'admin', name: 'Admin', ts: Date.now() };
+    saveJoinSlots(chatId, slots);
     showToast('🛡️ Joined chat as Admin', 'info');
     window.open(getJoinUrl(chatId), '_blank');
+    setTimeout(loadDashboard, 400);
   }
-  async function leaveChat(chatId) {
-    const slots = { ...getJoinSlots(chatId) };
+  function leaveChat(chatId) {
+    const slots = getJoinSlots(chatId);
     slots.admin = null;
-    await saveJoinSlots(chatId, slots);
+    saveJoinSlots(chatId, slots);
     showToast('Left chat', '');
     loadDashboard();
   }
@@ -1659,25 +1448,14 @@
   let pendingBanId = null, pendingBanName = null;
   function confirmBan(userId, userName) { pendingBanId = userId; pendingBanName = userName; document.getElementById('confirm-msg').textContent = `Ban ${userName}? They will be unable to send further messages.`; document.getElementById('confirm-box').classList.add('show'); }
   function closeConfirm() { document.getElementById('confirm-box').classList.remove('show'); }
-  async function executeBan() {
+  function executeBan() {
     if (!pendingBanId) return;
-    const banned = { ...getBanned() };
-    banned[pendingBanId] = { name: pendingBanName, ts: Date.now() };
-    await saveBanned(banned);
-    closeConfirm();
-    showToast(`🚫 ${pendingBanName} has been banned`, 'error');
-    loadDashboard();
+    const banned = getBanned(); banned[pendingBanId] = { name: pendingBanName, ts: Date.now() }; saveBanned(banned);
+    closeConfirm(); showToast(`🚫 ${pendingBanName} has been banned`, 'error'); loadDashboard();
   }
-  async function toggleBan(uid, name) {
-    const banned = { ...getBanned() };
-    if (banned[uid]) {
-      delete banned[uid];
-      await saveBanned(banned);
-      try { await db.collection('banned').doc(uid).delete(); } catch {}
-      showToast(`${name} unbanned`, '');
-    } else {
-      confirmBan(uid, name);
-    }
+  function toggleBan(uid, name) {
+    const banned = getBanned();
+    if (banned[uid]) { delete banned[uid]; saveBanned(banned); showToast(`${name} unbanned`, ''); } else { confirmBan(uid, name); }
     loadDashboard();
   }
 
@@ -2019,13 +1797,181 @@
     });
   }
 
-// ── INIT ─────────────────────────────────────────────────────
+  // ── INIT ─────────────────────────────────────────────────────
   if (sessionStorage.getItem(SESSION_KEY) === '1') {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('dashboard').classList.add('show');
-    startFirestoreListeners();
     startAutoRefresh();
+    loadDashboard();
+    // Start Firestore listeners if on hosted (not local file://)
+    if (!_isLocal) startFirestoreSync();
   }
+
+  // ── FIRESTORE SYNC (additive — localStorage is still source of truth) ──
+  // These listeners write incoming Firestore data INTO localStorage,
+  // then call loadDashboard() so the existing v38 render functions pick it up.
+  // Nothing in v38 mod-dashboard code is changed.
+
+  let _fsLoaded = { chats:false, assignments:false, modlog:false, deals:false, appeals:false };
+
+  function _fsCheck() {
+    if (Object.values(_fsLoaded).every(Boolean)) loadDashboard();
+  }
+
+  function startFirestoreSync() {
+    // All chats → write to rf_chats_index localStorage
+    RF.onAllChats(chats => {
+      // Merge: keep localStorage data for fields Firestore doesn't have
+      const existing = {};
+      try { (JSON.parse(localStorage.getItem('rf_chats_index'))||[]).forEach(c => { existing[c.chatId] = c; }); } catch {}
+      const merged = chats.map(c => ({ ...existing[c.chatId], ...c }));
+      localStorage.setItem('rf_chats_index', JSON.stringify(merged));
+      // Also write per-chat violations back
+      chats.forEach(c => {
+        if (c.violations) localStorage.setItem(`rf_violations_${c.chatId}`, JSON.stringify(c.violations));
+        if (c.deal)       localStorage.setItem(`rf_deal_${c.chatId}`, JSON.stringify(c.deal));
+        if (c.meeting)    localStorage.setItem(`rf_meeting_${c.chatId}`, JSON.stringify(c.meeting));
+        if (c.joinSlots)  localStorage.setItem(`rf_mod_joined_${c.chatId}`, JSON.stringify(c.joinSlots));
+        // Subscribe to messages for this chat
+        db.collection('chats').doc(c.chatId).collection('messages')
+          .orderBy('ts','asc').onSnapshot(snap => {
+            const msgs = snap.docs.map(d => d.data());
+            localStorage.setItem(`rf_chat_${c.chatId}`, JSON.stringify(msgs));
+          });
+      });
+      _fsLoaded.chats = true;
+      _fsCheck();
+    });
+
+    // Assignments → write to rf_chat_assignments localStorage
+    RF.onAssignments(map => {
+      localStorage.setItem('rf_chat_assignments', JSON.stringify(map));
+      _fsLoaded.assignments = true;
+      _fsCheck();
+    });
+
+    // Modlog → write to rf_modlog localStorage
+    RF.onModLog(log => {
+      localStorage.setItem('rf_modlog', JSON.stringify(log));
+      _fsLoaded.modlog = true;
+      _fsCheck();
+    });
+
+    // Deals → write to rf_deals localStorage + per-chat rf_deal_*
+    RF.onDeals(deals => {
+      const sorted = [...deals].sort((a,b) => (b.initiatedTs||0)-(a.initiatedTs||0));
+      localStorage.setItem('rf_deals', JSON.stringify(sorted));
+      deals.forEach(d => { if (d.chatId) localStorage.setItem(`rf_deal_${d.chatId}`, JSON.stringify(d)); });
+      _fsLoaded.deals = true;
+      _fsCheck();
+    });
+
+    // Appeals → write to rf_appeals localStorage
+    RF.onAppeals(appeals => {
+      localStorage.setItem('rf_appeals', JSON.stringify(appeals));
+      _fsLoaded.appeals = true;
+      _fsCheck();
+    });
+
+    // Banned → write to rf_banned_users localStorage
+    RF.onBanned(banned => {
+      localStorage.setItem('rf_banned_users', JSON.stringify(banned));
+    });
+
+    // ModsActive → write to rf_mods_active localStorage
+    RF.onModsActive(map => {
+      localStorage.setItem('rf_mods_active', JSON.stringify(map));
+      renderModPanel();
+    });
+  }
+
+  // ── FIRESTORE WRITE-THROUGHS (v38 functions that need to also write to Firestore) ──
+  // We override the existing v38 write functions to also fire Firestore writes.
+  // The v38 localStorage logic runs first, then Firestore is updated asynchronously.
+
+  const _origSyncDealToChat = syncDealToChat;
+  syncDealToChat = function(chatId, deal) {
+    _origSyncDealToChat(chatId, deal);  // v38: writes to rf_deal_${chatId}
+    if (!_isLocal) RF.saveDeal(chatId, deal).catch(e => console.warn('[RF] syncDealToChat', e));
+  };
+
+  const _origPostDealSystemMsg = postDealSystemMsg;
+  postDealSystemMsg = function(chatId, text) {
+    _origPostDealSystemMsg(chatId, text);  // v38: writes to rf_chat_${chatId}
+    if (!_isLocal) {
+      const msg = { id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true, chatId };
+      RF.saveMessage(chatId, msg).catch(e => console.warn('[RF] postDealSystemMsg', e));
+    }
+  };
+
+  const _origSaveDeals = saveDeals;
+  saveDeals = function(d) {
+    _origSaveDeals(d);  // v38: writes to rf_deals
+    if (!_isLocal) {
+      const arr = Array.isArray(d) ? d : [d];
+      arr.forEach(deal => { if (deal.chatId) RF.saveDeal(deal.chatId, deal).catch(e => console.warn('[RF] saveDeals', e)); });
+    }
+  };
+
+  const _origSaveAppeals = saveAppeals;
+  saveAppeals = function(a) {
+    _origSaveAppeals(a);  // v38: writes to rf_appeals
+    if (!_isLocal) {
+      const arr = Array.isArray(a) ? a : [a];
+      arr.forEach(appeal => RF.saveAppeal(appeal).catch(e => console.warn('[RF] saveAppeals', e)));
+    }
+  };
+
+  const _origSaveBanned = saveBanned;
+  saveBanned = function(b) {
+    _origSaveBanned(b);  // v38: writes to rf_banned_users
+    if (!_isLocal) {
+      Object.entries(b).forEach(([uid, data]) => RF.banUser(uid, data).catch(e => console.warn('[RF] banUser', e)));
+    }
+  };
+
+  const _origUpdateLogEntry = updateLogEntry;
+  updateLogEntry = function(id, patch) {
+    _origUpdateLogEntry(id, patch);  // v38: writes to rf_modlog
+    if (!_isLocal) RF.updateModLogEntry(id, patch).catch(e => console.warn('[RF] updateLogEntry', e));
+  };
+
+  const _origSaveAssignments = saveAssignments;
+  saveAssignments = function(v) {
+    _origSaveAssignments(v);  // v38: writes to rf_chat_assignments
+    if (!_isLocal) {
+      Object.entries(v).forEach(([chatId, modId]) => RF.saveAssignment(chatId, modId).catch(e => console.warn('[RF] saveAssignment', e)));
+    }
+  };
+
+  const _origSaveModeActive = saveModeActive;
+  saveModeActive = function(v) {
+    _origSaveModeActive(v);  // v38: writes to rf_mods_active
+    if (!_isLocal) {
+      Object.entries(v).forEach(([modId, active]) => RF.setModActive(modId, active).catch(e => console.warn('[RF] setModActive', e)));
+    }
+  };
+
+  const _origSaveJoinSlots = saveJoinSlots;
+  saveJoinSlots = function(chatId, slots) {
+    _origSaveJoinSlots(chatId, slots);  // v38: writes to rf_mod_joined_${chatId}
+    if (!_isLocal) RF.saveJoinSlots(chatId, slots).catch(e => console.warn('[RF] saveJoinSlots', e));
+  };
+
+  const _origApproveMsg = approveMessage;
+  approveMessage = function(logId) {
+    _origApproveMsg(logId);  // v38: writes approved msg to rf_chat_${chatId}
+    // Also write to Firestore so chat.html sees it via real-time listener
+    if (!_isLocal) {
+      const log = getModLog();
+      const entry = log.find(e => e.id === logId);
+      if (entry) {
+        const msg = { id: entry.originalId || entry.id, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text, ts: entry.ts || Date.now(), moderatorApproved: true, chatId: entry.chatId };
+        RF.saveMessage(entry.chatId, msg).catch(e => console.warn('[RF] approveMessage', e));
+        RF.saveViolations(entry.chatId, getChatVio(entry.chatId)).catch(e => console.warn('[RF] saveViolations', e));
+      }
+    }
+  };
 </script>
 </body>
 </html>
