@@ -226,6 +226,8 @@
   .deal-stage-btn{padding:6px 14px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:rgba(16,185,129,0.12);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);transition:all 0.2s;}
   .deal-stage-btn:hover{background:rgba(16,185,129,0.25);}
   .deal-cancel-deal-btn{padding:6px 14px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:rgba(239,68,68,0.1);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);transition:all 0.2s;}
+  .deal-defaulter-btn{padding:6px 14px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:rgba(239,68,68,0.07);color:#fca5a5;border:1px solid rgba(239,68,68,0.25);transition:all 0.2s;}
+  .deal-defaulter-btn:hover{background:rgba(239,68,68,0.18);}
   .deal-cancel-deal-btn:hover{background:rgba(239,68,68,0.2);}
   .deal-save-notes-btn{padding:6px 14px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:rgba(212,160,23,0.12);color:#fcd34d;border:1px solid rgba(212,160,23,0.3);transition:all 0.2s;}
   .deal-save-notes-btn:hover{background:rgba(212,160,23,0.2);}
@@ -520,6 +522,7 @@
     <div class="dash-tab" data-tab="users" onclick="switchTab('users')">👥 Users</div>
     <div class="dash-tab" data-tab="archived" onclick="switchTab('archived')">📁 Archived <span class="tab-count" id="tab-archived-count" style="background:rgba(255,255,255,0.06);color:var(--muted);">0</span></div>
     <div class="dash-tab" data-tab="history" onclick="switchTab('history')">🕓 History <span class="tab-count" id="tab-history-count" style="background:rgba(255,255,255,0.06);color:var(--muted);">0</span></div>
+    <div class="dash-tab" data-tab="defaulters" onclick="switchTab('defaulters')">🚫 Defaulters <span class="tab-count" id="tab-defaulters-count" style="background:rgba(239,68,68,0.15);color:#fca5a5;border-color:rgba(239,68,68,0.3);">0</span></div>
   </div>
 
   <div class="dash-content">
@@ -644,6 +647,16 @@
       <div id="history-list"></div>
     </div>
 
+    <!-- DEFAULTERS -->
+    <div class="tab-panel" id="panel-defaulters">
+      <div class="section-header"><div class="section-title">Defaulters</div><div class="section-sub">Users who defaulted on a confirmed deal</div></div>
+      <div class="tab-search-bar">
+        <div class="tab-search-wrap"><span class="search-icon">🔍</span><input class="tab-search-input" id="search-defaulters" type="text" placeholder="Search by name, listing or chat ID…" oninput="filterDefaulters()"></div>
+        <span class="tab-search-count" id="search-defaulters-count"></span>
+      </div>
+      <div id="defaulters-list"></div>
+    </div>
+
   </div>
 </div>
 
@@ -694,7 +707,11 @@
   <div class="confirm-inner">
     <h3>❌ Cancel This Deal?</h3>
     <p id="cancel-deal-msg">This will permanently cancel the deal and notify both parties.</p>
-    <div class="confirm-btns">
+    <div style="margin-top:10px;">
+      <div style="font-size:11px;font-weight:700;color:#f87171;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">REASON (optional)</div>
+      <textarea id="cancel-deal-notes" placeholder="Add a reason for cancellation…" maxlength="400" style="width:100%;background:rgba(255,255,255,0.04);border:1.5px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 12px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);resize:vertical;min-height:70px;outline:none;box-sizing:border-box;"></textarea>
+    </div>
+    <div class="confirm-btns" style="margin-top:12px;">
       <button class="confirm-yes" style="background:linear-gradient(135deg,#991b1b,#ef4444);" onclick="executeCancelDeal()">Yes, Cancel Deal</button>
       <button class="confirm-no" onclick="closeCancelDealConfirm()">Go Back</button>
     </div>
@@ -702,6 +719,37 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- DEFAULTER MODAL -->
+<div class="modal-overlay" id="defaulter-modal-overlay" onclick="if(event.target===this)closeDefaulterModal()" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:800;display:none;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#1a1a2e;border:1px solid rgba(239,68,68,0.35);border-radius:18px;padding:28px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:18px;box-shadow:0 24px 60px rgba(0,0,0,0.4);">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#f87171;">⚠️ Mark as Defaulter</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.5;">Select who defaulted on this deal. Both parties can be selected. This will also cancel the deal.</div>
+    <div id="defaulter-deal-info" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:12px 14px;font-size:13px;font-weight:600;color:#fca5a5;"></div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#f87171;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;">WHO DEFAULTED?</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text);">
+          <input type="checkbox" id="defaulter-chk-a" style="width:16px;height:16px;accent-color:#ef4444;cursor:pointer;">
+          <span id="defaulter-label-a">Party A (Landlord)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:var(--text);">
+          <input type="checkbox" id="defaulter-chk-b" style="width:16px;height:16px;accent-color:#ef4444;cursor:pointer;">
+          <span id="defaulter-label-b">Party B (Renter)</span>
+        </label>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#f87171;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">REASON / NOTES <span style="color:#f87171;">*</span></div>
+      <textarea id="defaulter-notes-input" placeholder="Describe why this deal defaulted…" maxlength="600" style="width:100%;background:rgba(255,255,255,0.04);border:1.5px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);resize:vertical;min-height:90px;outline:none;box-sizing:border-box;" oninput="document.getElementById('defaulter-notes-counter').textContent=this.value.length+' / 600'"></textarea>
+      <div style="font-size:11px;color:var(--muted);text-align:right;margin-top:4px;" id="defaulter-notes-counter">0 / 600</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeDefaulterModal()" style="padding:9px 20px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;">Cancel</button>
+      <button onclick="confirmDefaulter()" style="padding:9px 22px;border:none;border-radius:8px;background:linear-gradient(135deg,#991b1b,#ef4444);color:#fff;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">⚠️ Confirm Defaulter</button>
+    </div>
+  </div>
+</div>
 
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -857,6 +905,7 @@
   let _assignments     = {};
   let _modLog          = [];
   let _deals           = [];
+  let _defaulters      = [];
   let _appeals         = [];
   let _banned          = {};
   let _modsActive      = { 'mod-1': true, 'mod-2': true };
@@ -868,6 +917,7 @@
   const getChatVio     = id => _vioByChat[id]        || {};
   const getBanned      = () => _banned;
   const getDeals       = () => _deals;
+  const getDefaulters  = () => _defaulters;
   const getAppeals     = () => _appeals;
   const getModeActive  = () => _modsActive;
   const getAssignments = () => _assignments;
@@ -886,6 +936,7 @@
   const saveBanned = b => { _banned = b; Object.entries(b).forEach(([uid, data]) => RF.banUser(uid, data).catch(e => console.warn('[RF]', e))); };
   const saveDeals  = d => { _deals = Array.isArray(d) ? d : [d]; _deals.forEach(deal => { if (deal.chatId) RF.saveDeal(deal.chatId, deal).catch(e => console.warn('[RF]', e)); }); };
   const saveAppeals = a => { _appeals = Array.isArray(a) ? a : [a]; _appeals.forEach(appeal => RF.saveAppeal(appeal).catch(e => console.warn('[RF]', e))); };
+  const saveDefaulter = entry => { _defaulters = [..._defaulters.filter(d => d.id !== entry.id), entry]; RF.saveDefaulter(entry).catch(e => console.warn('[RF]', e)); };
   const saveModeActive = v => { _modsActive = v; Object.entries(v).forEach(([modId, active]) => RF.setModActive(modId, active).catch(e => console.warn('[RF]', e))); };
   const saveAssignments = v => { _assignments = v; Object.entries(v).forEach(([chatId, modId]) => RF.saveAssignment(chatId, modId).catch(e => console.warn('[RF]', e))); };
 
@@ -946,6 +997,10 @@
     document.getElementById('tab-appeals-count').textContent = openAppeals;
     document.getElementById('tab-deals-count').textContent  = activeDeals;
 
+    // Defaulters tab count
+    const _dtc = document.getElementById('tab-defaulters-count');
+    if (_dtc) _dtc.textContent = getDefaulters().length;
+
 
     renderFlaggedList(modLog.filter(e => e.status === 'pending'), document.getElementById('pending-flagged-list'));
     renderChatsList(chats, document.getElementById('all-chats-list'));
@@ -956,6 +1011,8 @@
     renderUsersTable(chats, modLog, getBanned());
     renderArchivedList(document.getElementById('archived-list'));
     renderHistoryList(document.getElementById('history-list'));
+    const _dl = document.getElementById('defaulters-list'); if (_dl) renderDefaultersList(_dl);
+    checkDealAutoArchive();
   }
 
   // ── CHATS LIST ───────────────────────────────────────────────
@@ -1120,6 +1177,7 @@
         <div class="deal-card-meta">
           <div class="deal-card-title">${escH(d.listing)}</div>
           <div class="deal-card-sub">${escH(d.userA)} ↔ ${escH(d.userB)}</div>
+          <div id="archive-warn-${escH(d.chatId)}" style="display:none;font-size:11px;color:#fcd34d;margin-top:4px;"></div>
         </div>
         <span class="badge badge-active">● Active</span>
       </div>
@@ -1195,6 +1253,7 @@
       </div>
       <div class="deal-card-actions">
         <button class="deal-save-notes-btn" onclick="saveDealNotes('${d.chatId}')">💾 Save Notes</button>
+        <button class="deal-defaulter-btn" onclick="openDefaulterModal('${d.chatId}')">⚠️ Mark as Defaulter</button>
         <button class="deal-cancel-deal-btn" onclick="cancelDeal('${d.chatId}')">✕ Cancel Deal</button>
       </div>`;
     card.appendChild(footer);
@@ -1242,6 +1301,7 @@
     }
     deal[`stage_${stageKey}`]    = true;
     deal[`stage_${stageKey}_ts`] = Date.now();
+    deal.lastActionTs            = Date.now();
     const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
     saveDeals(deals);
@@ -1256,6 +1316,7 @@
     if (!deal) return;
     deal[`stage_${stageKey}`]    = true;
     deal[`stage_${stageKey}_ts`] = Date.now();
+    deal.lastActionTs            = Date.now();
     const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
     saveDeals(deals);
@@ -1299,6 +1360,8 @@
 
   function closeCancelDealConfirm() {
     document.getElementById('cancel-deal-confirm-box').classList.remove('show');
+    const notesEl = document.getElementById('cancel-deal-notes');
+    if (notesEl) notesEl.value = '';
     pendingCancelChatId = null;
   }
 
@@ -1308,8 +1371,15 @@
     const deals  = getDeals();
     const deal   = deals.find(d => d.chatId === chatId);
     if (!deal) { closeCancelDealConfirm(); return; }
-    deal.stage = 'Cancelled'; deal.cancelledTs = Date.now();
-    postDealSystemMsg(chatId, '❌ This deal has been cancelled by RenterFinder moderation.');
+    const notesEl = document.getElementById('cancel-deal-notes');
+    const cancelNotes = notesEl ? notesEl.value.trim() : '';
+    deal.stage       = 'Cancelled';
+    deal.cancelledTs = Date.now();
+    deal.cancelNotes = cancelNotes;
+    const sysMsg = cancelNotes
+      ? `❌ This deal has been cancelled by RenterFinder moderation. Reason: ${cancelNotes}`
+      : '❌ This deal has been cancelled by RenterFinder moderation.';
+    postDealSystemMsg(chatId, sysMsg);
     saveDeals(deals);
     syncDealToChat(chatId, deal);
     closeCancelDealConfirm();
@@ -1923,11 +1993,172 @@
     document.querySelectorAll('.dash-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tab}`));
     // Clear search on tab switch
-    ['chats','flagged','deals','appeals','users','archived','history'].forEach(id => {
+    ['chats','flagged','deals','appeals','users','archived','history','defaulters'].forEach(id => {
       const el = document.getElementById(`search-${id}`);
       const ct = document.getElementById(`search-${id}-count`);
       if (el) el.value = '';
       if (ct) ct.textContent = '';
+    });
+  }
+
+  // ── DEFAULTER MODAL ──────────────────────────────────────────
+  let pendingDefaulterChatId = null;
+
+  function openDefaulterModal(chatId) {
+    const deals = getDeals();
+    const deal  = deals.find(d => d.chatId === chatId);
+    if (!deal) return;
+    pendingDefaulterChatId = chatId;
+    document.getElementById('defaulter-deal-info').textContent = `${deal.listing} — ${deal.userA} ↔ ${deal.userB}`;
+    document.getElementById('defaulter-label-a').textContent   = `${deal.userA} (Landlord)`;
+    document.getElementById('defaulter-label-b').textContent   = `${deal.userB} (Renter)`;
+    document.getElementById('defaulter-chk-a').checked         = false;
+    document.getElementById('defaulter-chk-b').checked         = false;
+    document.getElementById('defaulter-notes-input').value     = '';
+    document.getElementById('defaulter-notes-counter').textContent = '0 / 600';
+    const overlay = document.getElementById('defaulter-modal-overlay');
+    overlay.style.display = 'flex';
+  }
+
+  function closeDefaulterModal() {
+    document.getElementById('defaulter-modal-overlay').style.display = 'none';
+    pendingDefaulterChatId = null;
+  }
+
+  function confirmDefaulter() {
+    const chatId  = pendingDefaulterChatId;
+    if (!chatId) return;
+    const chkA    = document.getElementById('defaulter-chk-a').checked;
+    const chkB    = document.getElementById('defaulter-chk-b').checked;
+    const notes   = document.getElementById('defaulter-notes-input').value.trim();
+    if (!chkA && !chkB) { showToast('Select at least one party who defaulted.', 'error'); return; }
+    if (!notes)          { showToast('Please add a reason / notes.', 'error'); return; }
+
+    const deals = getDeals();
+    const deal  = deals.find(d => d.chatId === chatId);
+    if (!deal) { closeDefaulterModal(); return; }
+
+    // Build defaulter parties label
+    let parties = [];
+    if (chkA) parties.push(deal.userA + ' (Landlord)');
+    if (chkB) parties.push(deal.userB + ' (Renter)');
+    const partiesLabel = parties.join(' & ');
+
+    // Save defaulter record
+    const entry = {
+      id:           Date.now(),
+      chatId,
+      listing:      deal.listing,
+      userA:        deal.userA,
+      userB:        deal.userB,
+      defaultedA:   chkA,
+      defaultedB:   chkB,
+      partiesLabel,
+      notes,
+      ts:           Date.now()
+    };
+    saveDefaulter(entry);
+
+    // Auto-cancel the deal
+    deal.stage       = 'Cancelled';
+    deal.cancelledTs = Date.now();
+    deal.cancelNotes = `Defaulter: ${notes}`;
+    postDealSystemMsg(chatId, `⚠️ This deal has been marked as defaulted by RenterFinder. Defaulting party: ${partiesLabel}. Reason: ${notes}`);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
+
+    closeDefaulterModal();
+    showToast('⚠️ Defaulter recorded & deal cancelled', 'error');
+    loadDashboard();
+  }
+
+  // ── RENDER DEFAULTERS LIST ───────────────────────────────────
+  function renderDefaultersList(container) {
+    const list = [...getDefaulters()].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    if (!list.length) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><h3>No defaulters</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Deals marked as defaulted will appear here.</p></div>`;
+      return;
+    }
+    container.innerHTML = '';
+    list.forEach(d => {
+      const time = new Date(d.ts).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      const card = document.createElement('div');
+      card.className = 'defaulter-card';
+      card.dataset.search = `${d.listing||''} ${d.userA||''} ${d.userB||''} ${d.chatId||''} ${d.notes||''}`.toLowerCase();
+      card.innerHTML = `
+        <div class="defaulter-header">
+          <div class="defaulter-icon">⚠️</div>
+          <div class="defaulter-meta">
+            <div class="defaulter-title">${escH(d.listing)}</div>
+            <div class="defaulter-sub">${escH(d.userA)} ↔ ${escH(d.userB)} · ${time}</div>
+          </div>
+          <span class="defaulter-party-badge">🚫 ${escH(d.partiesLabel)}</span>
+        </div>
+        <div class="defaulter-notes-box">
+          <div class="defaulter-notes-label">Reason</div>
+          ${escH(d.notes)}
+        </div>
+        <div style="font-size:11px;color:var(--muted);">Chat ID: ${escH(d.chatId)}</div>`;
+      container.appendChild(card);
+    });
+  }
+
+  function filterDefaulters() {
+    const q    = (document.getElementById('search-defaulters')?.value || '').trim().toLowerCase();
+    const rows = document.querySelectorAll('#defaulters-list .defaulter-card');
+    let shown  = 0;
+    rows.forEach(row => {
+      const match = !q || (row.dataset.search || '').includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) shown++;
+    });
+    const ct = document.getElementById('search-defaulters-count');
+    if (ct) ct.textContent = q ? `${shown} result${shown !== 1 ? 's' : ''}` : '';
+  }
+
+  // ── DEAL AUTO-ARCHIVE (30 days after last stage advance) ─────
+  const DEAL_ARCHIVE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+  const DEAL_WARN_MS    =  7 * 24 * 60 * 60 * 1000; // 7-day warning
+
+  function checkDealAutoArchive() {
+    const now   = Date.now();
+    const deals = getDeals();
+    let changed = false;
+
+    deals.forEach(deal => {
+      if (deal.stage === 'Cancelled' || deal.stage === 'AutoArchived' || deal.stage_complete) return;
+      // Clock starts from last stage advance; falls back to deal creation
+      const anchor = deal.lastActionTs || deal.initiatedTs || deal.ts || now;
+      const idle   = now - anchor;
+      if (idle >= DEAL_ARCHIVE_MS) {
+        deal.stage          = 'AutoArchived';
+        deal.autoArchivedTs = now;
+        postDealSystemMsg(deal.chatId, '📁 This deal has been automatically archived due to 30 days of inactivity. Please contact RenterFinder support if you wish to reopen it.');
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      saveDeals(deals);
+      loadDashboard();
+    }
+
+    // Badge warning on deal cards for deals approaching 30 days
+    deals.forEach(deal => {
+      if (deal.stage === 'Cancelled' || deal.stage === 'AutoArchived' || deal.stage_complete) return;
+      const anchor  = deal.lastActionTs || deal.initiatedTs || deal.ts;
+      if (!anchor) return;
+      const idle    = now - anchor;
+      const daysLeft = Math.ceil((DEAL_ARCHIVE_MS - idle) / 86400000);
+      const badge   = document.getElementById(`archive-warn-${deal.chatId}`);
+      if (badge) {
+        if (daysLeft <= 7 && daysLeft > 0) {
+          badge.textContent = `⏳ Auto-archives in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`;
+          badge.style.display = 'block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
     });
   }
 
@@ -1988,6 +2219,15 @@
     // Appeals → write to rf_appeals localStorage
     RF.onAppeals(appeals => {
       _appeals = appeals;
+    });
+
+    // Defaulters
+    RF.onDefaulters(list => {
+      _defaulters = list;
+      const _dtc = document.getElementById('tab-defaulters-count');
+      if (_dtc) _dtc.textContent = list.length;
+      const _dl = document.getElementById('defaulters-list');
+      if (_dl && document.getElementById('panel-defaulters')?.classList.contains('active')) renderDefaultersList(_dl);
     });
 
     // Banned → write to rf_banned_users localStorage

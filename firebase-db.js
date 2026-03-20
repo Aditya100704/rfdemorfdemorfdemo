@@ -90,8 +90,24 @@ const RF = (function() {
     );
   }
 
-  // ── APPEALS ──────────────────────────────────────────────────
-  async function saveAppeal(appeal) {
+  // ── DEFAULTERS ───────────────────────────────────────────────
+  async function saveDefaulter(entry) {
+    try { await db.collection('defaulters').doc(String(entry.id)).set(entry); }
+    catch(e) { console.error('[RF] saveDefaulter', e); }
+  }
+
+  function onDefaulters(cb) {
+    return db.collection('defaulters').onSnapshot(
+      snap => {
+        const data = snap.docs.map(d => d.data());
+        data.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        cb(data);
+      },
+      e => console.error('[RF] onDefaulters', e)
+    );
+  }
+
+  // ── APPEALS ──────────────────────────────────────────────────  async function saveAppeal(appeal) {
     try { await db.collection('appeals').doc(String(appeal.id)).set(appeal); }
     catch(e) { console.error('[RF] saveAppeal', e); }
   }
@@ -222,6 +238,7 @@ const RF = (function() {
     saveViolations, saveDeal, saveMeeting, saveJoinSlots,
     appendModLog, updateModLogEntry, onModLog,
     saveAppeal, updateAppeal, onAppeals,
+    saveDefaulter, onDefaulters,
     saveAssignment, deleteAssignment, getAssignment, onAssignments,
     setModActive, onModsActive,
     banUser, unbanUser, onBanned,
