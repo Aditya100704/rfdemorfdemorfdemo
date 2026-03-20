@@ -7,10 +7,9 @@
   'use strict';
 
   // ── CONFIG ────────────────────────────────────────────────
-  const API_KEY   = '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';
+  const CHATBOT_URL = 'https://us-central1-renterfinder.cloudfunctions.net/chatbot';
   const MODEL     = 'claude-haiku-4-5-20251001';
   const MAX_TOKENS = 600;
-  const PROXY_URL = 'https://api.anthropic.com/v1/messages';
 
   // ── KNOWLEDGE BASE ────────────────────────────────────────
   const SITE_KNOWLEDGE = `
@@ -131,7 +130,7 @@ You are the helpful AI assistant for RenterFinder.com — India's first and only
 - No post-match services
 - Role ends at introduction between landlord and renter
 
-Always be helpful, accurate, and friendly. If unsure, direct users to contact RenterFinder at renterfinder1@gmail.com or WhatsApp +91 73031 04550. Keep answers concise and easy to read. Respond in the same language as the user (English or Hindi).
+Always be helpful, accurate, and friendly. If unsure, direct users to contact RenterFinder at renterfinder1@gmail.com or WhatsApp +91 73031 04550. Keep answers short and to the point — avoid unnecessary elaboration. Use bullet points only when listing multiple items. Respond in the same language as the user (English or Hindi).
 `;
 
   // ── STATE ─────────────────────────────────────────────────
@@ -436,19 +435,12 @@ Always be helpful, accurate, and friendly. If unsure, direct users to contact Re
     showTyping();
 
     try {
-      const response = await fetch(PROXY_URL, {
+      const response = await fetch(CHATBOT_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: MODEL,
-          max_tokens: MAX_TOKENS,
-          system: SITE_KNOWLEDGE,
-          messages: conversationHistory
+          messages: conversationHistory,
+          system: [{ type: 'text', text: SITE_KNOWLEDGE, cache_control: { type: 'ephemeral' } }]
         })
       });
 

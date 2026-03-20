@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RenterFinder Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold:#d4a017;--gold-lt:#e8c060;--gold-dk:#b8860b;
+    --dark:#040429;--dark2:#0d0d50;
+    --bg:#0a0a2e;--white:#ffffff;
+
+  /* Welcome modal */
+  .welcome-overlay{position:fixed;inset:0;background:rgba(4,4,41,0.88);z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+  .welcome-card{background:linear-gradient(160deg,var(--dark2),#0a0a3a);border:1.5px solid rgba(212,160,23,0.4);border-radius:20px;padding:24px 24px 20px;max-width:400px;width:100%;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 60px rgba(0,0,0,0.5);}
+  .welcome-icon{font-size:32px;text-align:center;}
+  .welcome-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--gold);text-align:center;line-height:1.2;}
+  .welcome-body{font-size:13px;color:rgba(255,255,255,0.72);line-height:1.7;text-align:center;}
+  .welcome-body strong{color:var(--gold-lt);font-weight:700;}
+  .welcome-rules{display:flex;flex-direction:column;gap:8px;background:rgba(212,160,23,0.06);border:1px solid rgba(212,160,23,0.18);border-radius:12px;padding:14px 16px;}
+  .welcome-rule{display:flex;align-items:flex-start;gap:9px;font-size:12px;color:rgba(255,255,255,0.65);line-height:1.5;}
+  .welcome-rule-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+  .welcome-agree-btn{padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:var(--dark);font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.2s;letter-spacing:0.3px;}
+  .welcome-agree-btn:hover{opacity:0.9;}
+    --mid:#6b7280;--border:#e5e7eb;
+    --danger:#ef4444;--warn:#f59e0b;--success:#10b981;
+    --mod-color:#7c3aed;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Outfit',sans-serif;background:var(--bg);height:100vh;height:100dvh;overflow:hidden;}
+  #chat-wrap{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;}
+
+  /* TOP BAR */
+  .chat-topbar{background:linear-gradient(135deg,var(--dark),var(--dark2));border-bottom:1.5px solid var(--gold-dk);padding:0 20px;height:64px;display:flex;align-items:center;gap:14px;flex-shrink:0;box-shadow:0 2px 20px rgba(4,4,41,0.3);}
+  .topbar-back{width:36px;height:36px;border-radius:50%;border:1px solid rgba(212,160,23,0.3);background:transparent;color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background 0.2s;text-decoration:none;}
+  .topbar-back:hover{background:rgba(212,160,23,0.1);}
+  .topbar-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dk),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);font-size:16px;flex-shrink:0;border:2px solid rgba(212,160,23,0.4);}
+  .topbar-info{flex:1;min-width:0;}
+  .topbar-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .topbar-sub{font-size:11px;color:rgba(212,160,23,0.75);letter-spacing:0.3px;}
+  .topbar-shield{background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.3);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:600;color:var(--gold-lt);letter-spacing:0.5px;display:flex;align-items:center;gap:5px;}
+
+  /* IDENTITY BAR */
+  .identity-bar{background:var(--dark);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid rgba(212,160,23,0.15);flex-shrink:0;}
+  .identity-bar>span{font-size:12px;color:rgba(255,255,255,0.5);}
+  .identity-switch{display:flex;gap:6px;flex-wrap:wrap;}
+  .identity-btn{padding:4px 12px;border-radius:20px;border:1px solid rgba(212,160,23,0.3);background:transparent;color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Outfit',sans-serif;}
+  .identity-btn.active{background:var(--gold);color:var(--dark);border-color:var(--gold);}
+  .identity-btn.mod-btn{border-color:rgba(124,58,237,0.5);color:rgba(167,139,250,0.8);}
+  .identity-btn.mod-btn.active{background:var(--mod-color);color:#fff;border-color:var(--mod-color);}
+
+  /* BANNERS */
+  .mod-joined-banner{background:rgba(124,58,237,0.1);border-bottom:1px solid rgba(124,58,237,0.3);padding:6px 20px;font-size:11px;color:#a78bfa;display:none;align-items:center;gap:8px;flex-shrink:0;}
+  .mod-joined-banner.show{display:flex;}
+  .expiry-banner{background:#fff7ed;border-bottom:1px solid #fed7aa;padding:6px 20px;font-size:11px;color:#9a3412;display:none;align-items:center;gap:8px;flex-shrink:0;}
+  .expiry-banner.show{display:flex;}
+
+  /* MESSAGES */
+  .chat-messages{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;background:linear-gradient(180deg,#06062a 0%,#080830 100%);}
+  .chat-messages::-webkit-scrollbar{width:4px;}
+  .chat-messages::-webkit-scrollbar-thumb{background:rgba(212,160,23,0.25);border-radius:4px;}
+
+  .msg-row{display:flex;gap:8px;align-items:flex-end;animation:msgIn 0.2s ease;}
+  @keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .msg-row.me{flex-direction:row-reverse;}
+  .msg-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dk),var(--gold));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--dark);flex-shrink:0;}
+  .msg-avatar.other{background:linear-gradient(135deg,#374151,#4b5563);color:#fff;}
+  .msg-avatar.mod-av{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;font-size:13px;}
+  .msg-content{max-width:72%;display:flex;flex-direction:column;gap:3px;}
+  .msg-row.me .msg-content{align-items:flex-end;}
+  .msg-sender{font-size:10px;font-weight:600;color:rgba(255,255,255,0.45);letter-spacing:0.3px;padding:0 4px;}
+  .msg-sender.mod-sender{color:#a78bfa;}
+  .msg-time{font-size:10px;color:rgba(255,255,255,0.35);padding:0 4px;}
+  .bubble{padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5;word-break:break-word;}
+  .msg-row.me .bubble{background:linear-gradient(135deg,#b8860b,#d4a017);color:#fff;border-bottom-right-radius:4px;}
+  .msg-row:not(.me) .bubble{background:linear-gradient(135deg,var(--dark2),#131360);color:#e8e8ff;border-bottom-left-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,0.35);border:1px solid rgba(212,160,23,0.12);}
+  .bubble.mod-bubble{background:linear-gradient(135deg,#5b21b6,#7c3aed)!important;color:#fff!important;border-radius:18px!important;border:none!important;}
+  .sys-msg{text-align:center;font-size:11px;color:rgba(212,160,23,0.75);background:rgba(212,160,23,0.07);border:1px solid rgba(212,160,23,0.15);border-radius:20px;padding:5px 14px;align-self:center;}
+  .sys-msg.mod-sys{background:rgba(124,58,237,0.12);color:#c4b5fd;border:1px solid rgba(124,58,237,0.25);}
+  .date-divider{text-align:center;font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:0.5px;margin:6px 0;position:relative;}
+  .date-divider::before,.date-divider::after{content:'';position:absolute;top:50%;width:calc(50% - 50px);height:1px;background:rgba(255,255,255,0.1);}
+  .date-divider::before{left:0;}
+  .date-divider::after{right:0;}
+
+  /* Image bubble */
+  .bubble img{max-width:220px;max-height:200px;border-radius:10px;display:block;cursor:pointer;margin-top:4px;}
+  .bubble img:first-child{margin-top:0;}
+
+  .approved-tag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;letter-spacing:0.4px;color:#059669;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:1px 7px;margin-top:2px;align-self:flex-start;}
+  .msg-row.me .approved-tag{align-self:flex-end;}
+
+  /* Read receipt */
+  .read-receipt{font-size:9px;color:rgba(255,255,255,0.35);padding:0 4px;display:flex;align-items:center;gap:3px;}
+  .read-receipt.seen{color:#60a5fa;}
+
+  .blocked-row{display:flex;justify-content:center;animation:msgIn 0.2s ease;}
+  .blocked-bubble{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px 16px;max-width:82%;display:flex;align-items:flex-start;gap:10px;}
+  .blocked-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+  .blocked-text{font-size:12px;color:#991b1b;line-height:1.5;}
+  .blocked-text strong{display:block;font-size:13px;margin-bottom:2px;}
+
+  .violation-banner{margin:0 16px 8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:10px 14px;font-size:12px;color:#92400e;display:none;gap:8px;align-items:center;}
+  .violation-banner.show{display:flex;}
+  .blocked-overlay{margin:0 16px 8px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px 16px;font-size:13px;color:#7f1d1d;display:none;text-align:center;flex-direction:column;gap:6px;}
+  .blocked-overlay.show{display:flex;}
+  .blocked-overlay strong{font-size:15px;}
+
+  /* Appeal button */
+  .appeal-btn{margin-top:8px;padding:8px 20px;background:transparent;border:1px solid #fca5a5;border-radius:8px;color:#fca5a5;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+  .appeal-btn:hover{background:rgba(239,68,68,0.1);}
+
+  /* Deal confirm modal */
+  .deal-modal-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--dark);text-align:center;}
+  .deal-modal-sub{font-size:13px;color:var(--mid);line-height:1.6;text-align:center;}
+  .deal-modal-listing{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:600;color:#166534;text-align:center;}
+  .deal-modal-btns{display:flex;gap:10px;justify-content:center;}
+  .deal-confirm-btn{padding:11px 28px;border:none;border-radius:10px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+  .deal-confirm-btn:hover{opacity:0.9;transform:translateY(-1px);}
+  .deal-cancel-btn{padding:11px 24px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--mid);font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
+  .modal-overlay.show{display:flex;}
+  .modal-card{background:var(--white);border-radius:18px;padding:24px;width:100%;max-width:380px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 60px rgba(0,0,0,0.2);}
+  .modal-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--dark);}
+  .modal-sub{font-size:13px;color:var(--mid);line-height:1.5;}
+  .modal-textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:12px;font-family:'Outfit',sans-serif;font-size:13px;color:#1f2937;resize:vertical;min-height:90px;outline:none;}
+  .modal-textarea:focus{border-color:var(--gold);}
+  .modal-btns{display:flex;gap:10px;justify-content:flex-end;}
+  .modal-cancel{padding:9px 20px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--mid);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;}
+  .modal-submit{padding:9px 20px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:var(--dark);font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+  .modal-success{text-align:center;padding:10px 0;}
+  .modal-success .check{font-size:40px;margin-bottom:10px;}
+  .modal-success p{font-size:14px;color:var(--mid);line-height:1.6;}
+
+  /* Image lightbox */
+  .lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;display:none;align-items:center;justify-content:center;cursor:zoom-out;}
+  .lightbox.show{display:flex;}
+  .lightbox img{max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+
+  /* Typing */
+  .typing-row{display:flex;gap:8px;align-items:flex-end;}
+  .typing-bubble{background:var(--white);border-radius:18px;border-bottom-left-radius:4px;padding:12px 16px;box-shadow:0 1px 4px rgba(0,0,0,0.08);display:flex;gap:4px;align-items:center;}
+  .typing-dot{width:6px;height:6px;border-radius:50%;background:#9ca3af;animation:typingPulse 1.2s infinite;}
+  .typing-dot:nth-child(2){animation-delay:0.2s;}
+  .typing-dot:nth-child(3){animation-delay:0.4s;}
+  @keyframes typingPulse{0%,60%,100%{transform:translateY(0);opacity:0.4;}30%{transform:translateY(-4px);opacity:1;}}
+
+  /* INPUT BAR */
+  .chat-inputbar{background:linear-gradient(135deg,var(--dark),var(--dark2));border-top:1px solid rgba(212,160,23,0.2);padding:10px 16px;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;box-shadow:0 -2px 16px rgba(0,0,0,0.4);}
+  .attach-btn{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(212,160,23,0.3);background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;color:rgba(255,255,255,0.6);font-size:17px;}
+  .attach-btn:hover{background:rgba(212,160,23,0.12);border-color:rgba(212,160,23,0.5);}
+  .attach-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .attach-btn:disabled{opacity:0.35;cursor:not-allowed;}
+  #img-file-input{display:none;}
+  .chat-textarea{flex:1;resize:none;border:1.5px solid rgba(212,160,23,0.25);border-radius:22px;padding:10px 16px;font-family:'Outfit',sans-serif;font-size:14px;line-height:1.5;outline:none;max-height:100px;overflow-y:auto;transition:border-color 0.2s;color:#e8e8ff;background:rgba(255,255,255,0.07);}
+  .chat-textarea::placeholder{color:rgba(255,255,255,0.3);}
+  .chat-textarea:focus{border-color:rgba(212,160,23,0.55);}
+  .chat-textarea:focus{border-color:var(--gold);}
+  .chat-textarea.mod-input:focus{border-color:var(--mod-color);}
+  .chat-textarea:disabled{background:#f9fafb;cursor:not-allowed;}
+  .send-btn{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dk),var(--gold));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 2px 10px rgba(184,134,11,0.35);}
+  .send-btn:hover:not(:disabled){transform:scale(1.07);}
+  .send-btn:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
+  .send-btn.mod-send{background:linear-gradient(135deg,#5b21b6,#7c3aed);box-shadow:0 2px 10px rgba(124,58,237,0.35);}
+  .send-btn svg{width:18px;height:18px;fill:white;}
+
+  /* Image preview */
+  .img-preview-bar{background:var(--white);border-top:1px solid var(--border);padding:8px 16px;display:none;align-items:center;gap:10px;flex-shrink:0;}
+  .img-preview-bar.show{display:flex;}
+  .img-preview-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;border:1.5px solid var(--border);}
+  .img-preview-name{font-size:12px;color:var(--mid);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .img-preview-remove{width:24px;height:24px;border-radius:50%;border:none;background:var(--danger);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+  /* Calendar button */
+  .topbar-calendar-btn{padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border:none;color:#fff;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;white-space:nowrap;box-shadow:0 2px 8px rgba(59,130,246,0.35);display:none;}
+  .topbar-calendar-btn:hover{transform:scale(1.05);box-shadow:0 3px 12px rgba(59,130,246,0.5);}
+  .topbar-calendar-btn.show{display:block;}
+
+  /* Calendar Modal */
+  .cal-modal-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--dark);text-align:center;}
+  .cal-modal-sub{font-size:12px;color:var(--mid);line-height:1.5;text-align:center;}
+  .cal-month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .cal-month-label{font-size:14px;font-weight:700;color:var(--dark);}
+  .cal-nav-btn{border:none;background:none;font-size:18px;cursor:pointer;color:var(--mid);padding:2px 6px;border-radius:6px;transition:background 0.15s;}
+  .cal-nav-btn:hover{background:var(--border);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;}
+  .cal-dow{font-size:10px;font-weight:700;color:var(--mid);padding:4px 0;}
+  .cal-day{font-size:12px;padding:7px 4px;border-radius:8px;cursor:pointer;transition:all 0.15s;border:1.5px solid transparent;position:relative;}
+  .cal-day:hover:not(.cal-disabled){background:rgba(59,130,246,0.1);}
+  .cal-day.cal-selected{background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border-color:transparent;}
+  .cal-day.cal-disabled{color:#d1d5db;cursor:default;pointer-events:none;}
+  .cal-day.cal-today{border-color:var(--gold);}
+  .cal-slot-row{display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap;}
+  .cal-slot-label{font-size:11px;color:var(--mid);min-width:80px;}
+  .cal-slot-btn{padding:5px 12px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+  .cal-slot-btn.on{background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border-color:transparent;}
+  .cal-slot-btn:hover:not(.on){border-color:#3b82f6;color:#1d4ed8;}
+  .cal-selected-list{display:flex;flex-direction:column;gap:6px;margin-top:4px;max-height:160px;overflow-y:auto;}
+  .cal-sel-item{display:flex;align-items:center;justify-content:space-between;background:#f0f7ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 10px;font-size:12px;}
+  .cal-sel-date{font-weight:700;color:#1e40af;}
+  .cal-sel-slots{color:#3b82f6;font-size:11px;}
+  .cal-sel-remove{background:none;border:none;color:#93c5fd;cursor:pointer;font-size:14px;padding:0 2px;}
+  .cal-count-hint{font-size:11px;color:var(--mid);text-align:center;margin-top:4px;}
+
+  /* Meeting card in chat */
+  .meeting-card{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #93c5fd;border-radius:14px;padding:14px 16px;margin:4px 0;max-width:340px;}
+  .meeting-card-title{font-size:13px;font-weight:700;color:#1e40af;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+  .meeting-card-sub{font-size:11px;color:#3b82f6;margin-bottom:10px;line-height:1.4;}
+  .meeting-option{border:1.5px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin-bottom:6px;cursor:pointer;transition:all 0.15s;background:#fff;}
+  .meeting-option:hover{border-color:#3b82f6;background:#eff6ff;}
+  .meeting-option.chosen{border-color:#1d4ed8;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;}
+  .meeting-opt-date{font-size:12px;font-weight:700;}
+  .meeting-opt-slots{font-size:10px;opacity:0.8;margin-top:2px;}
+  .meeting-card-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .meeting-card-confirm{padding:7px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--dark),var(--dark2));color:#fff;font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid rgba(212,160,23,0.4);}
+  .meeting-card-more{padding:7px 14px;border-radius:8px;background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:var(--dark);font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:none;}
+  .meeting-confirmed-card{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1.5px solid #6ee7b7;border-radius:14px;padding:14px 16px;max-width:340px;}
+  .meeting-confirmed-card .mc-title{font-size:13px;font-weight:700;color:#065f46;margin-bottom:4px;}
+  .meeting-confirmed-card .mc-date{font-size:15px;font-weight:700;color:#047857;margin-bottom:2px;}
+  .meeting-confirmed-card .mc-slot{font-size:12px;color:#10b981;}
+
+  /* Deal button — lives in topbar */
+  .topbar-deal-wrap{position:relative;display:flex;align-items:center;gap:5px;}
+  .topbar-deal-btn{padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,#059669,#10b981);border:none;color:#fff;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;white-space:nowrap;box-shadow:0 2px 8px rgba(16,185,129,0.3);}
+  .topbar-deal-btn:hover:not(:disabled){transform:scale(1.05);box-shadow:0 3px 12px rgba(16,185,129,0.45);}
+  .topbar-deal-btn:disabled{opacity:0.6;cursor:default;transform:none;}
+  .topbar-deal-btn.deal-live{background:linear-gradient(135deg,#047857,#059669);box-shadow:0 0 0 2px rgba(16,185,129,0.4);}
+
+  /* Info icon + tooltip */
+  .deal-info-icon{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-size:11px;font-style:normal;display:flex;align-items:center;justify-content:center;cursor:default;flex-shrink:0;position:relative;transition:background 0.2s;user-select:none;}
+  .deal-info-icon:hover{background:rgba(255,255,255,0.25);}
+  .deal-tooltip{
+    display:none;position:absolute;top:calc(100% + 10px);right:0;
+    background:#1a1a2e;border:1px solid rgba(16,185,129,0.35);
+    border-radius:12px;padding:14px 16px;width:240px;
+    font-size:12px;color:#e2e8f0;line-height:1.6;
+    box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:200;
+    pointer-events:none;
+  }
+  .deal-tooltip::before{content:'';position:absolute;top:-6px;right:6px;width:10px;height:10px;background:#1a1a2e;border-top:1px solid rgba(16,185,129,0.35);border-left:1px solid rgba(16,185,129,0.35);transform:rotate(45deg);}
+  .deal-tooltip strong{display:block;color:#a7f3d0;font-size:13px;margin-bottom:5px;}
+  .deal-info-icon:hover .deal-tooltip{display:block;}
+  .deal-tooltip-tags{display:flex;flex-direction:column;gap:4px;margin-top:10px;}
+  .deal-confirmed-tag{font-size:10px;font-weight:700;color:#6ee7b7;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:2px 8px;display:inline-block;width:fit-content;}
+
+  /* Deal in-progress badge next to name */
+  .deal-topbar-badge{display:none;align-items:center;gap:4px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;color:#6ee7b7;letter-spacing:0.3px;white-space:nowrap;margin-top:3px;}
+  .deal-topbar-badge.show{display:inline-flex;}
+  @media(max-width:768px){.deal-topbar-badge{font-size:9px;padding:1px 6px;}}
+
+  /* Cooldown indicator */
+  .cooldown-bar{height:2px;background:rgba(212,160,23,0.2);position:relative;overflow:hidden;flex-shrink:0;}
+  .cooldown-bar.active::after{content:'';position:absolute;left:0;top:0;height:100%;background:var(--gold);animation:cooldownShrink 2s linear forwards;}
+  @keyframes cooldownShrink{from{width:100%;}to{width:0%;}}
+
+  .mod-status{text-align:center;font-size:11px;color:var(--mid);padding:4px 0 0;min-height:18px;flex-shrink:0;}
+  .chat-disclaimer{background:rgba(212,160,23,0.06);border-top:1px solid rgba(212,160,23,0.15);padding:7px 16px;font-size:10.5px;color:rgba(212,160,23,0.65);text-align:center;flex-shrink:0;line-height:1.4;}
+
+  /* LOADING */
+  #loading-screen{position:fixed;inset:0;background:var(--dark);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:999;transition:opacity 0.4s;}
+  #loading-screen.fade{opacity:0;pointer-events:none;}
+  .loading-logo{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--gold);}
+  .loading-spinner{width:36px;height:36px;border:3px solid rgba(212,160,23,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-text{font-size:13px;color:rgba(255,255,255,0.4);}
+
+  /* ── RESPONSIVE ─────────────────────────────────────────────── */
+
+  /* Tablet: 601px – 998px */
+  @media(max-width:998px){
+    .chat-topbar{padding:0 14px;gap:10px;height:58px;}
+    .topbar-avatar{width:36px;height:36px;font-size:14px;}
+    .topbar-name{font-size:16px;}
+    .topbar-shield{display:none;}
+    .topbar-deal-btn{font-size:10px;padding:4px 10px;}
+    .topbar-calendar-btn{font-size:10px;padding:4px 10px;}
+    .msg-content{max-width:80%;}
+    .bubble{font-size:13px;}
+    .bubble img{max-width:180px;max-height:170px;}
+    .modal-card{padding:20px;}
+    .cal-grid{gap:2px;}
+    .cal-day{font-size:11px;padding:6px 3px;}
+    .meeting-card{max-width:100%;}
+  }
+
+  /* Mobile: ≤768px */
+  @media(max-width:768px){
+    .chat-topbar{padding:0 12px;gap:8px;height:54px;}
+    .topbar-back{width:32px;height:32px;font-size:16px;}
+    .topbar-avatar{width:34px;height:34px;font-size:13px;}
+    .topbar-name{font-size:15px;}
+    .topbar-sub{font-size:10px;}
+    .topbar-shield{display:none;}
+    .topbar-deal-wrap{gap:4px;}
+    .topbar-deal-btn{font-size:10px;padding:4px 9px;letter-spacing:0;}
+    .topbar-calendar-btn{font-size:10px;padding:4px 9px;}
+    .deal-tooltip{width:220px;font-size:11px;}
+
+    .identity-bar{padding:6px 12px;gap:6px;}
+    .identity-bar>span{font-size:11px;}
+    .identity-btn{font-size:10px;padding:3px 9px;}
+
+    .mod-joined-banner,.expiry-banner{padding:5px 12px;font-size:10px;}
+    .deal-progress-text{font-size:11px;}
+
+    .chat-messages{padding:14px 10px;gap:8px;}
+    .msg-content{max-width:85%;}
+    .msg-avatar{width:26px;height:26px;font-size:10px;}
+    .bubble{font-size:13px;padding:9px 12px;border-radius:16px;}
+    .bubble img{max-width:160px;max-height:150px;}
+    .sys-msg{font-size:10px;padding:4px 12px;}
+    .date-divider{font-size:10px;}
+
+    .chat-inputbar{padding:8px 10px;gap:6px;}
+    .attach-btn{width:34px;height:34px;font-size:15px;}
+    .chat-textarea{font-size:13px;padding:9px 13px;border-radius:20px;}
+    .send-btn{width:36px;height:36px;}
+    .chat-disclaimer{font-size:9.5px;padding:5px 12px;}
+
+    .img-preview-bar{padding:6px 12px;}
+    .img-preview-thumb{width:40px;height:40px;}
+    .img-preview-name{font-size:11px;}
+
+    .violation-banner{margin:0 10px 6px;font-size:11px;padding:8px 12px;}
+    .blocked-overlay{margin:0 10px 6px;font-size:12px;padding:12px;}
+
+    /* Modals */
+    .modal-overlay{padding:12px;}
+    .modal-card{padding:18px;border-radius:14px;max-width:100%;}
+    .deal-modal-title,.cal-modal-title,.modal-title{font-size:19px;}
+    .deal-modal-sub,.cal-modal-sub,.modal-sub{font-size:12px;}
+    .deal-confirm-btn,.deal-cancel-btn{padding:10px 18px;font-size:13px;}
+    .modal-submit,.modal-cancel{font-size:12px;padding:8px 16px;}
+
+    /* Calendar */
+    .cal-day{font-size:11px;padding:6px 2px;border-radius:6px;}
+    .cal-dow{font-size:9px;}
+    .cal-slot-btn{font-size:10px;padding:4px 9px;}
+    .cal-sel-item{font-size:11px;}
+    .cal-sel-date{font-size:11px;}
+    .cal-month-label{font-size:13px;}
+
+    /* Meeting card */
+    .meeting-card,.meeting-confirmed-card{max-width:100%;padding:12px 13px;}
+    .meeting-card-title{font-size:12px;}
+    .meeting-opt-date{font-size:11px;}
+    .meeting-opt-slots{font-size:9px;}
+    .meeting-card-confirm,.meeting-card-more{font-size:11px;padding:6px 12px;}
+  }
+
+  /* Small phones: ≤420px */
+  @media(max-width:420px){
+    .chat-topbar{height:50px;padding:0 10px;gap:6px;}
+    .topbar-back{width:30px;height:30px;font-size:14px;}
+    .topbar-avatar{width:30px;height:30px;font-size:12px;}
+    .topbar-name{font-size:14px;}
+    .topbar-deal-btn{font-size:9px;padding:3px 8px;}
+    .topbar-calendar-btn{font-size:9px;padding:3px 8px;}
+    .deal-info-icon{width:15px;height:15px;font-size:9px;}
+
+    .bubble{font-size:12px;padding:8px 11px;}
+    .bubble img{max-width:140px;max-height:130px;}
+    .msg-content{max-width:88%;}
+
+    .modal-card{padding:14px;}
+    .deal-modal-title,.cal-modal-title{font-size:17px;}
+    .deal-confirm-btn,.deal-cancel-btn{padding:9px 14px;font-size:12px;}
+    .cal-day{font-size:10px;padding:5px 1px;}
+    .deal-modal-btns{flex-direction:column;gap:8px;}
+    .deal-modal-btns .deal-confirm-btn,.deal-modal-btns .deal-cancel-btn{width:100%;text-align:center;}
+  }
+
+  /* Large screens — zoom ladder matching all other site pages */
+  @media(min-width:1441px){
+    #chat-wrap { zoom: 1.2; height: calc(100vh / 1.2); height: calc(100dvh / 1.2); }
+  }
+  @media(min-width:1800px){
+    #chat-wrap { zoom: 1.35; height: calc(100vh / 1.35); height: calc(100dvh / 1.35); }
+  }
+  @media(min-width:2100px){
+    #chat-wrap { zoom: 1.55; height: calc(100vh / 1.55); height: calc(100dvh / 1.55); }
+  }
+  @media(min-width:2560px){
+    #chat-wrap { zoom: 1.85; height: calc(100vh / 1.85); height: calc(100dvh / 1.85); }
+  }
+  @media(min-width:3200px){
+    #chat-wrap { zoom: 2.2; height: calc(100vh / 2.2); height: calc(100dvh / 2.2); }
+  }
+</style>
+</head>
+<body>
+<div id="chat-wrap">
+
+<div id="loading-screen">
+  <div class="loading-logo">RenterFinder</div>
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading chat…</div>
+</div>
+
+<div class="chat-topbar">
+  <a href="./dashboard.html" class="topbar-back">←</a>
+  <div class="topbar-avatar" id="other-avatar">R</div>
+  <div class="topbar-info">
+    <div class="topbar-name" id="other-name">Loading…</div>
+    <div class="topbar-sub" id="chat-context">RenterFinder Chat</div>
+    <div class="deal-topbar-badge" id="deal-topbar-badge">🤝 Deal In Progress</div>
+  </div>
+  <!-- Deal button lives in topbar — no extra bar needed -->
+  <div class="topbar-deal-wrap" id="topbar-deal-wrap">
+    <button class="topbar-deal-btn" id="deal-btn" onclick="openDealConfirm()">🤝 Deal</button>
+    <div class="deal-info-icon" id="deal-info-icon">ℹ
+      <div class="deal-tooltip" id="deal-tooltip">
+        <strong>Move Forward with Deal</strong>
+        Click to express interest in proceeding with this rental. Both parties must confirm independently before a deal is officially recorded.
+        <div class="deal-tooltip-tags">
+          <span class="deal-confirmed-tag" id="deal-tag-a" style="display:none;">✓ Landlord confirmed</span>
+          <span class="deal-confirmed-tag" id="deal-tag-b" style="display:none;">✓ Renter confirmed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="topbar-calendar-btn" id="calendar-btn" onclick="openCalendarModal()">📅 Schedule</button>
+  <div class="topbar-shield">🛡️ AI Moderated</div>
+</div>
+
+<div class="identity-bar">
+  <span>Demo — viewing as:</span>
+  <div class="identity-switch">
+    <button class="identity-btn active" id="btn-user-a" onclick="switchIdentity('A')">👤 You (Landlord)</button>
+    <button class="identity-btn" id="btn-user-b" onclick="switchIdentity('B')">👤 Renter</button>
+    <button class="identity-btn mod-btn" id="btn-mod" onclick="switchIdentity('MOD')">🛡️ Moderator</button>
+  </div>
+</div>
+
+<div class="mod-joined-banner" id="mod-joined-banner">🛡️ <strong style="margin-right:4px;" id="mod-joined-name">RenterFinder Moderator</strong> has joined this chat.</div>
+<div class="expiry-banner" id="expiry-banner">⏳ <span id="expiry-text"></span></div>
+<div class="chat-messages" id="chat-messages"></div>
+
+<div class="violation-banner" id="violation-banner"><span>⚠️</span><span id="violation-text"></span></div>
+<div class="blocked-overlay" id="blocked-overlay">
+  <strong>🚫 This chat has been suspended</strong>
+  <span>You have exceeded the maximum number of policy violations.</span>
+  <button class="appeal-btn" onclick="openAppeal()">📝 Submit an Appeal</button>
+</div>
+
+<div class="mod-status" id="mod-status"></div>
+<div class="cooldown-bar" id="cooldown-bar"></div>
+
+<!-- Image preview -->
+<div class="img-preview-bar" id="img-preview-bar">
+  <img class="img-preview-thumb" id="img-preview-thumb" src="" alt="preview">
+  <span class="img-preview-name" id="img-preview-name"></span>
+  <button class="img-preview-remove" onclick="clearImagePreview()">×</button>
+</div>
+
+<div class="chat-inputbar">
+  <button class="attach-btn" id="attach-btn" title="Send image" onclick="document.getElementById('img-file-input').click()">📎</button>
+  <input type="file" id="img-file-input" accept="image/*">
+  <textarea class="chat-textarea" id="msg-input" rows="1" placeholder="Type a message…" maxlength="1000"></textarea>
+  <button class="send-btn" id="send-btn" disabled>
+    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+  </button>
+</div>
+<div class="chat-disclaimer">🛡️ AI-moderated · No phone numbers, emails, addresses or meeting details allowed · Images are scanned before delivery</div>
+
+<!-- Calendar Modal (Party 1: Propose dates) -->
+<div class="modal-overlay" id="cal-modal" onclick="if(event.target===this)closeCalendarModal()">
+  <div class="modal-card" style="max-width:380px;width:95%;">
+    <div id="cal-propose-view" style="display:flex;flex-direction:column;gap:14px;">
+      <div class="cal-modal-title">📅 Propose Meeting Dates</div>
+      <div class="cal-modal-sub">Select up to 3 dates and choose morning, evening, or both for each. The other party will pick from your options.</div>
+      <div>
+        <div class="cal-month-nav">
+          <button class="cal-nav-btn" onclick="calPrevMonth()">‹</button>
+          <div class="cal-month-label" id="cal-month-label"></div>
+          <button class="cal-nav-btn" onclick="calNextMonth()">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <div id="cal-selected-list" class="cal-selected-list" style="display:none;"></div>
+      <div class="cal-count-hint" id="cal-count-hint">Select up to 3 dates from the calendar above.</div>
+      <div class="deal-modal-btns">
+        <button class="deal-cancel-btn" onclick="closeCalendarModal()">Cancel</button>
+        <button class="deal-confirm-btn" id="cal-submit-btn" onclick="submitProposedDates()" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);" disabled>Send Dates →</button>
+      </div>
+    </div>
+    <!-- Party 2: Pick a date -->
+    <div id="cal-pick-view" style="display:none;flex-direction:column;gap:14px;">
+      <div class="cal-modal-title">📅 Choose a Meeting Date</div>
+      <div class="cal-modal-sub" id="cal-pick-sub">The other party has proposed the following dates. Choose one that works for you.</div>
+      <div id="cal-pick-options"></div>
+      <div class="deal-modal-btns" style="flex-direction:column;">
+        <button class="deal-confirm-btn" id="cal-pick-confirm" onclick="confirmPickedDate()" style="background:linear-gradient(135deg,var(--dark),var(--dark2));border:1.5px solid rgba(212,160,23,0.4);" disabled>Confirm Date ✓</button>
+        <button class="deal-confirm-btn" onclick="requestMoreDates()" style="background:linear-gradient(135deg,var(--gold-dk),var(--gold));color:var(--dark);">None work — Propose my own dates</button>
+      </div>
+    </div>
+    <!-- Counter-propose: Party 2 picks their own dates -->
+    <div id="cal-counter-view" style="display:none;flex-direction:column;gap:14px;">
+      <div class="cal-modal-title">📅 Propose Your Dates</div>
+      <div class="cal-modal-sub">Select up to 3 dates that work for you. The other party will choose from your options.</div>
+      <div>
+        <div class="cal-month-nav">
+          <button class="cal-nav-btn" onclick="calPrevMonth()">‹</button>
+          <div class="cal-month-label" id="cal-month-label-c"></div>
+          <button class="cal-nav-btn" onclick="calNextMonth()">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid-c"></div>
+      </div>
+      <div id="cal-selected-list-c" class="cal-selected-list" style="display:none;"></div>
+      <div class="cal-count-hint" id="cal-count-hint-c">Select up to 3 dates from the calendar above.</div>
+      <div class="deal-modal-btns">
+        <button class="deal-cancel-btn" onclick="closeCalendarModal()">Cancel</button>
+        <button class="deal-confirm-btn" id="cal-counter-submit-btn" onclick="submitCounterDates()" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);" disabled>Send My Dates →</button>
+      </div>
+    </div>
+    <!-- Done view -->
+    <div id="cal-done-view" style="display:none;flex-direction:column;gap:14px;text-align:center;">
+      <div class="cal-modal-title">✅ Meeting Scheduled!</div>
+      <div class="cal-modal-sub" id="cal-done-sub">The meeting date has been confirmed.</div>
+      <div class="deal-modal-btns"><button class="deal-confirm-btn" onclick="closeCalendarModal()" style="background:linear-gradient(135deg,#059669,#10b981);">Great!</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Welcome / Safety Popup -->
+<div class="welcome-overlay" id="welcome-overlay">
+  <div class="welcome-card">
+    <div class="welcome-icon">🛡️</div>
+    <div class="welcome-title">This Chat is AI Moderated</div>
+    <div class="welcome-body">
+      Welcome to your <strong>RenterFinder</strong> chat. To keep this space safe for everyone, please read the following before continuing.
+    </div>
+    <div class="welcome-rules">
+      <div class="welcome-rule"><span class="welcome-rule-icon">🚫</span><span>Do <strong>not</strong> share phone numbers, email addresses, or any personal contact details</span></div>
+      <div class="welcome-rule"><span class="welcome-rule-icon">📍</span><span>Do <strong>not</strong> share exact property addresses or arrange to meet outside this platform</span></div>
+      <div class="welcome-rule"><span class="welcome-rule-icon">💳</span><span>Do <strong>not</strong> make or request payments outside of RenterFinder's managed process</span></div>
+      <div class="welcome-rule"><span class="welcome-rule-icon">🤬</span><span>Abusive, threatening, or discriminatory language will result in immediate suspension</span></div>
+      <div class="welcome-rule"><span class="welcome-rule-icon">👁️</span><span>All messages are monitored by AI and reviewed by our moderation team</span></div>
+    </div>
+    <button class="welcome-agree-btn" onclick="dismissWelcome()">I Understand — Continue to Chat</button>
+  </div>
+</div>
+
+<!-- Deal Confirm Modal -->
+<div class="modal-overlay" id="deal-modal" onclick="if(event.target===this)closeDealConfirm()">
+  <div class="modal-card">
+    <div id="deal-form-view" style="display:flex;flex-direction:column;gap:14px;">
+      <div class="deal-modal-title">🤝 Move Forward with Deal?</div>
+      <div class="deal-modal-sub">By confirming, you're expressing genuine interest in proceeding with this rental. The other party must also confirm independently before the deal is recorded.</div>
+      <div class="deal-modal-listing" id="deal-modal-listing">Loading…</div>
+      <div class="deal-modal-btns">
+        <button class="deal-cancel-btn" onclick="closeDealConfirm()">Cancel</button>
+        <button class="deal-confirm-btn" onclick="confirmDeal()">Yes, I want to proceed</button>
+      </div>
+    </div>
+    <div id="deal-waiting-view" style="display:none;flex-direction:column;gap:14px;text-align:center;">
+      <div class="deal-modal-title">⏳ Confirmation Recorded</div>
+      <div class="deal-modal-sub">Your confirmation has been saved. The deal will be officially initiated once the other party also confirms. You can close this and continue chatting.</div>
+      <div class="deal-modal-btns"><button class="deal-confirm-btn" onclick="closeDealConfirm()">Got it</button></div>
+    </div>
+    <div id="deal-done-view" style="display:none;flex-direction:column;gap:14px;text-align:center;">
+      <div class="deal-modal-title">🎉 Deal Initiated!</div>
+      <div class="deal-modal-sub">Both parties have confirmed. RenterFinder has been notified and will facilitate the next steps. Continue chatting to arrange the meeting.</div>
+      <div class="deal-modal-btns"><button class="deal-confirm-btn" onclick="closeDealConfirm()">Continue</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Appeal Modal -->
+<div class="modal-overlay" id="appeal-modal" onclick="if(event.target===this)closeAppeal()">
+  <div class="modal-card">
+    <div id="appeal-form-view">
+      <div class="modal-title">📝 Submit an Appeal</div>
+      <div class="modal-sub">Explain why you believe your chat should be reinstated. Our moderation team will review within 24 hours.</div>
+      <textarea class="modal-textarea" id="appeal-text" placeholder="Describe your situation and why you believe the suspension was incorrect…" maxlength="500"></textarea>
+      <div style="font-size:11px;color:var(--mid);text-align:right;margin-top:-8px;" id="appeal-counter">0 / 500</div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeAppeal()">Cancel</button>
+        <button class="modal-submit" onclick="submitAppeal()">Submit Appeal</button>
+      </div>
+    </div>
+    <div id="appeal-success-view" style="display:none;">
+      <div class="modal-success">
+        <div class="check">✅</div>
+        <div class="modal-title" style="margin-bottom:8px;">Appeal Submitted</div>
+        <p>Your appeal has been logged and will be reviewed by the RenterFinder moderation team within 24 hours. You'll be notified at your registered mobile number.</p>
+      </div>
+      <div class="modal-btns"><button class="modal-submit" onclick="closeAppeal()">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script>
+  // Moderation endpoint — Cloud Function (key lives server-side, never exposed)
+  const MODERATE_URL = 'https://us-central1-renterfinder.cloudfunctions.net/moderateMessage';
+
+  const params     = new URLSearchParams(location.search);
+  const CHAT_ID    = params.get('chatId')    || 'demo-001';
+  const MY_ID      = params.get('userId')    || 'user-landlord-001';
+  const OTHER_ID   = params.get('otherId')   || 'user-renter-001';
+  const OTHER_NAME = params.get('otherName') || 'Rahul Sharma';
+  const LISTING    = params.get('listing')   || '2BHK in Koramangala';
+  const URL_ROLE   = params.get('role')      || '';   // 'admin' | 'mod'
+  const URL_MOD_ID = params.get('modId')     || '';
+  const URL_MOD_NAME = params.get('modName') || 'RenterFinder Moderator';
+
+  const USERS = {
+    A:   { id: MY_ID,    name: 'You (Anita Singh)', initials: 'AS', role: 'Landlord' },
+    B:   { id: OTHER_ID, name: OTHER_NAME, initials: OTHER_NAME.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(), role: 'Renter' },
+    MOD: { id: 'rf-moderator', name: 'RenterFinder Moderator', initials: '🛡', role: 'Moderator' }
+  };
+
+  let currentIdentity = 'A';
+  let pendingImageB64 = null;
+  let pendingImageName = '';
+  let isSending = false;
+  let lastSendTime = 0;
+  const SEND_COOLDOWN_MS = 2000;    // #9 rate limit
+  const CHAT_EXPIRY_DAYS = 60;      // #11 chat expiry
+
+  const STORAGE_KEY     = `rf_chat_${CHAT_ID}`;
+  const VIOLATIONS_KEY  = `rf_violations_${CHAT_ID}`;
+  const MOD_LOG_KEY     = 'rf_modlog';
+  const CHATS_INDEX_KEY = 'rf_chats_index';
+  const MOD_JOINED_KEY  = `rf_mod_joined_${CHAT_ID}`;
+  const MOD_APPROVE_KEY = `rf_mod_approve_${CHAT_ID}`;
+  const READ_KEY        = `rf_read_${CHAT_ID}`;    // #6 read receipts
+  const TYPING_KEY      = `rf_typing_${CHAT_ID}`;  // #12 real typing indicator
+  const APPEALS_KEY     = 'rf_appeals';
+  const DEALS_KEY       = 'rf_deals';
+  const DEAL_KEY        = `rf_deal_${CHAT_ID}`;
+
+  const loadMessages   = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }    catch { return []; } };
+  const saveMessages   = m  => localStorage.setItem(STORAGE_KEY, JSON.stringify(m));
+  const loadViolations = () => { try { return JSON.parse(localStorage.getItem(VIOLATIONS_KEY)) || {}; } catch { return {}; } };
+  const saveViolations = v  => localStorage.setItem(VIOLATIONS_KEY, JSON.stringify(v));
+  function getJoinSlots() {
+    try { return JSON.parse(localStorage.getItem(MOD_JOINED_KEY)) || { admin: null, mod: null }; }
+    catch { return { admin: null, mod: null }; }
+  }
+  function saveJoinSlots(slots) { localStorage.setItem(MOD_JOINED_KEY, JSON.stringify(slots)); }
+  const isModJoined = () => { const s = getJoinSlots(); return !!(s.admin || s.mod); };
+  function setModJoined() {
+    const slots = getJoinSlots();
+    if (URL_ROLE === 'mod' && URL_MOD_ID) {
+      slots.mod = { id: URL_MOD_ID, name: URL_MOD_NAME, ts: Date.now() };
+    } else {
+      slots.admin = { id: 'admin', name: URL_MOD_NAME || 'Admin', ts: Date.now() };
+    }
+    saveJoinSlots(slots);
+  }
+  const loadModLog     = () => { try { return JSON.parse(localStorage.getItem(MOD_LOG_KEY)) || []; } catch { return []; } };
+
+  function appendModLog(e) {
+    const log = loadModLog(); log.unshift(e);
+    if (log.length > 500) log.splice(500);
+    localStorage.setItem(MOD_LOG_KEY, JSON.stringify(log));
+  }
+
+  function registerChat() {
+    // Register chat in index
+    const idx = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
+    if (!idx.find(c => c.chatId === CHAT_ID)) {
+      idx.push({ chatId: CHAT_ID, userA: USERS.A.name, userB: USERS.B.name, listing: LISTING, started: Date.now() });
+      localStorage.setItem(CHATS_INDEX_KEY, JSON.stringify(idx));
+    }
+    // Always try to assign — harmless if already assigned
+    autoAssignChat(CHAT_ID);
+  }
+
+  function autoAssignChat(chatId) {
+    // Initialise mod-1 and mod-2 as active by default
+    const stored = JSON.parse(localStorage.getItem('rf_mods_active')) || {};
+    if (stored['mod-1'] === undefined) stored['mod-1'] = true;
+    if (stored['mod-2'] === undefined) stored['mod-2'] = true;
+    localStorage.setItem('rf_mods_active', JSON.stringify(stored));
+
+    // Skip if already assigned (admin may have manually assigned)
+    const assignments = JSON.parse(localStorage.getItem('rf_chat_assignments')) || {};
+    if (assignments[chatId]) return;
+
+    // Build active mod pool
+    const ALL_MODS = ['mod-1','mod-2','mod-3','mod-4','mod-5','mod-6','mod-7','mod-8','mod-9','mod-10'];
+    const pool = ALL_MODS.filter(id => stored[id]);
+    if (!pool.length) pool.push('mod-1');
+
+    // Deterministic hash — no counter, no race condition
+    let h = 0;
+    for (let i = 0; i < chatId.length; i++) { h = ((h << 5) - h) + chatId.charCodeAt(i); h |= 0; }
+    assignments[chatId] = pool[Math.abs(h) % pool.length];
+    localStorage.setItem('rf_chat_assignments', JSON.stringify(assignments));
+    console.log('[RF] Chat', chatId, '→ assigned to', assignments[chatId]);
+  }
+  function updateChatIndex(text) {
+    try {
+      const idx = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
+      const chat = idx.find(c => c.chatId === CHAT_ID);
+      if (chat) { chat.lastMessage = text.slice(0,60); chat.lastTs = Date.now(); localStorage.setItem(CHATS_INDEX_KEY, JSON.stringify(idx)); }
+    } catch {}
+  }
+
+  function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // ── #11 CHAT EXPIRY CHECK ─────────────────────────────────────
+  function checkExpiry() {
+    try {
+      const idx  = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
+      const chat = idx.find(c => c.chatId === CHAT_ID);
+      if (!chat) return;
+      const lastActivity = chat.lastTs || chat.started;
+      const daysIdle = (Date.now() - lastActivity) / (1000 * 60 * 60 * 24);
+      const daysLeft = Math.max(0, Math.ceil(CHAT_EXPIRY_DAYS - daysIdle));
+      const banner = document.getElementById('expiry-banner');
+      if (daysLeft <= 7 && daysLeft > 0) {
+        document.getElementById('expiry-text').textContent = `This chat will auto-expire in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} due to inactivity.`;
+        banner.classList.add('show');
+      } else if (daysLeft === 0) {
+        document.getElementById('expiry-text').textContent = 'This chat has expired due to 60 days of inactivity.';
+        banner.classList.add('show');
+        document.getElementById('msg-input').disabled = true;
+        document.getElementById('send-btn').disabled = true;
+        document.getElementById('attach-btn').disabled = true;
+      }
+    } catch {}
+  }
+
+  // ── #6 READ RECEIPTS ─────────────────────────────────────────
+  function markRead() {
+    try {
+      const msgs = loadMessages();
+      if (!msgs.length) return;
+      const last = msgs[msgs.length - 1];
+      const reads = JSON.parse(localStorage.getItem(READ_KEY)) || {};
+      reads[currentIdentity] = last.id;
+      localStorage.setItem(READ_KEY, JSON.stringify(reads));
+    } catch {}
+  }
+
+  function getReadStatus() {
+    try { return JSON.parse(localStorage.getItem(READ_KEY)) || {}; } catch { return {}; }
+  }
+
+  // ── #12 TYPING INDICATOR ─────────────────────────────────────
+  let typingTimeout = null;
+
+  function broadcastTyping(isTyping) {
+    try {
+      const state = JSON.parse(localStorage.getItem(TYPING_KEY)) || {};
+      if (isTyping) {
+        state[currentIdentity] = Date.now();
+      } else {
+        delete state[currentIdentity];
+      }
+      localStorage.setItem(TYPING_KEY, JSON.stringify(state));
+    } catch {}
+  }
+
+  function getOtherTyping() {
+    try {
+      const state  = JSON.parse(localStorage.getItem(TYPING_KEY)) || {};
+      const otherSide = currentIdentity === 'A' ? 'B' : 'A';
+      const ts = state[otherSide];
+      if (!ts) return false;
+      return (Date.now() - ts) < 4000; // stale after 4s
+    } catch { return false; }
+  }
+
+  function updateTypingUI() {
+    const container = document.getElementById('chat-messages');
+    let typingEl = document.getElementById('live-typing-ind');
+    const otherTyping = getOtherTyping();
+    if (otherTyping && currentIdentity !== 'MOD') {
+      if (!typingEl) {
+        typingEl = document.createElement('div');
+        typingEl.className = 'typing-row';
+        typingEl.id = 'live-typing-ind';
+        typingEl.innerHTML = `
+          <div class="msg-avatar other">${escH(USERS[currentIdentity === 'A' ? 'B' : 'A'].initials)}</div>
+          <div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+        container.appendChild(typingEl);
+        container.scrollTop = container.scrollHeight;
+      }
+    } else {
+      if (typingEl) typingEl.remove();
+    }
+  }
+
+  // Poll typing state every 500ms
+  setInterval(updateTypingUI, 500);
+
+  // ── RENDER ───────────────────────────────────────────────────
+  function renderMessages() {
+    const container = document.getElementById('chat-messages');
+    const msgs      = loadMessages();
+    const reads     = getReadStatus();
+    container.innerHTML = '';
+
+    const sysEl = document.createElement('div');
+    sysEl.className = 'sys-msg';
+    sysEl.textContent = `Chat opened for: ${LISTING}`;
+    container.appendChild(sysEl);
+
+    const dateSep = document.createElement('div');
+    dateSep.className = 'date-divider';
+    dateSep.textContent = 'Today';
+    container.appendChild(dateSep);
+
+    if (isModJoined()) {
+      const modJoinEl = document.createElement('div');
+      modJoinEl.className = 'sys-msg mod-sys';
+      modJoinEl.textContent = '🛡️ RenterFinder Moderator has joined this chat';
+      container.appendChild(modJoinEl);
+      document.getElementById('mod-joined-banner').classList.add('show');
+    }
+
+    msgs.forEach((m, idx) => {
+      // #6: determine read receipt for this message
+      const otherSide = m.senderIdentity === 'A' ? 'B' : 'A';
+      const otherReadId = reads[otherSide];
+      const isSeen = otherReadId && msgs.findIndex(x => x.id === otherReadId) >= idx;
+      renderSingleMessage(m, container, isSeen);
+    });
+
+    if (currentIdentity !== 'MOD') {
+      const myV = loadViolations()[currentIdentity] || 0;
+      if (myV >= 1 && myV < 3) {
+        document.getElementById('violation-banner').classList.add('show');
+        document.getElementById('violation-text').textContent =
+          `Warning ${myV}/2: A message was blocked. Your chat will be suspended after ${3 - myV} more violation(s).`;
+      } else {
+        document.getElementById('violation-banner').classList.remove('show');
+      }
+    }
+
+    checkBlocked();
+    markRead();
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function renderSingleMessage(m, container, isSeen) {
+    // System messages (deal confirmation, etc.)
+    if (m.isSystem) {
+      const sysEl = document.createElement('div');
+      sysEl.className = 'sys-msg mod-sys';
+      sysEl.style.cssText = 'background:rgba(16,185,129,0.1);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25);';
+      sysEl.textContent = m.text;
+      container.appendChild(sysEl);
+      return;
+    }
+    const isMod = m.senderIdentity === 'MOD';
+    const isMe  = m.senderIdentity === currentIdentity;
+    const user  = USERS[m.senderIdentity] || USERS.A;
+
+    const row = document.createElement('div');
+    row.className = `msg-row${isMe ? ' me' : ''}`;
+    row.dataset.msgId = m.id;
+    const time = new Date(m.ts).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+
+    const avatarClass = isMod ? 'mod-av' : (isMe ? '' : 'other');
+    const bubbleClass = isMod ? 'bubble mod-bubble' : 'bubble';
+    const senderClass = isMod ? 'msg-sender mod-sender' : 'msg-sender';
+    const approvedHtml = m.moderatorApproved ? `<div class="approved-tag">✓ Moderator Approved</div>` : '';
+
+    // Build bubble content — text or image
+    let bubbleContent = '';
+    if (m.imageB64) {
+      bubbleContent = `<img src="${m.imageB64}" alt="image" onclick="openLightbox(this.src)">`;
+      if (m.text) bubbleContent += `<div style="margin-top:6px;">${escH(m.text)}</div>`;
+    } else {
+      bubbleContent = escH(m.text);
+    }
+
+    // #6 Read receipt — only show on your own last message
+    const receiptHtml = isMe && !isMod
+      ? `<div class="read-receipt${isSeen ? ' seen' : ''}">${isSeen ? '✓✓ Seen' : '✓ Sent'}</div>`
+      : '';
+
+    row.innerHTML = `
+      <div class="msg-avatar ${avatarClass}">${isMod ? '🛡️' : escH(user.initials)}</div>
+      <div class="msg-content">
+        <div class="${senderClass}">${isMe && !isMod ? 'You' : escH(user.name)}</div>
+        <div class="${bubbleClass}">${bubbleContent}</div>
+        ${approvedHtml}
+        <div style="display:flex;gap:6px;align-items:center;">
+          <div class="msg-time">${time}</div>
+          ${receiptHtml}
+        </div>
+      </div>`;
+    container.appendChild(row);
+  }
+
+  function checkBlocked() {
+    if (currentIdentity === 'MOD') {
+      document.getElementById('blocked-overlay').classList.remove('show');
+      document.getElementById('msg-input').disabled = false;
+      return;
+    }
+    const myV = loadViolations()[currentIdentity] || 0;
+    if (myV >= 3) {
+      document.getElementById('blocked-overlay').classList.add('show');
+      document.getElementById('msg-input').disabled = true;
+      document.getElementById('send-btn').disabled = true;
+      document.getElementById('attach-btn').disabled = true;
+    } else {
+      document.getElementById('blocked-overlay').classList.remove('show');
+      document.getElementById('msg-input').disabled = false;
+    }
+  }
+
+  // ── #10 REGEX PRE-FILTER ─────────────────────────────────────
+  function regexPreFilter(text) {
+    const patterns = [
+      { re: /(\+?91[\s\-]?)?[6-9]\d{9}/,           reason: 'Phone numbers are not allowed on this platform.' },
+      { re: /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/, reason: 'Email addresses are not allowed on this platform.' },
+      { re: /wa\.me\/|whatsapp\.com\/|t\.me\//i,   reason: 'Sharing WhatsApp or Telegram links is not allowed.' },
+      { re: /(instagram|facebook|twitter|linkedin|snapchat|youtube)\.com\//i, reason: 'Social media links are not allowed.' },
+      { re: /@[a-zA-Z0-9_]{3,}/,                   reason: 'Social media handles are not allowed.' },
+    ];
+    for (const p of patterns) {
+      if (p.re.test(text)) return { blocked: true, reason: p.reason, violationType: 'contact_info' };
+    }
+    return { blocked: false };
+  }
+
+  // ── AI MODERATION ────────────────────────────────────────────
+  async function moderateMessage(text, isImage) {
+    if (isImage) return { decision: 'ALLOW', reason: '', violationType: '' };
+
+    // Regex pre-filter first (fast, no network call)
+    const preCheck = regexPreFilter(text);
+    if (preCheck.blocked) return { decision: 'BLOCK', reason: preCheck.reason, violationType: preCheck.violationType };
+
+    // Call Cloud Function (Anthropic key is secure on server)
+    try {
+      const res = await fetch(MODERATE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      return await res.json();
+    } catch(e) {
+      console.error('Moderation error:', e);
+      return { decision: 'ALLOW', reason: '', violationType: '' };
+    }
+  }
+
+  // ── SEND ─────────────────────────────────────────────────────
+  async function sendMessage() {
+    const input   = document.getElementById('msg-input');
+    const sendBtn = document.getElementById('send-btn');
+    const text    = input.value.trim();
+    const hasImg  = !!pendingImageB64;
+
+    if (!text && !hasImg) return;
+    if (isSending) return;
+
+    // #9 Rate limiting
+    const now = Date.now();
+    const msSinceLast = now - lastSendTime;
+    if (msSinceLast < SEND_COOLDOWN_MS && currentIdentity !== 'MOD') {
+      document.getElementById('mod-status').textContent = `⏳ Please wait ${Math.ceil((SEND_COOLDOWN_MS - msSinceLast) / 1000)}s before sending again.`;
+      setTimeout(() => { document.getElementById('mod-status').textContent = ''; }, SEND_COOLDOWN_MS - msSinceLast);
+      return;
+    }
+
+    if (currentIdentity !== 'MOD') {
+      if ((loadViolations()[currentIdentity] || 0) >= 3) return;
+    }
+
+    isSending = true;
+    lastSendTime = Date.now();
+    input.value = '';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+    broadcastTyping(false);
+
+    // Trigger cooldown bar
+    const cooldownBar = document.getElementById('cooldown-bar');
+    if (currentIdentity !== 'MOD') {
+      cooldownBar.classList.remove('active');
+      void cooldownBar.offsetWidth; // reflow
+      cooldownBar.classList.add('active');
+    }
+
+    const imageB64 = pendingImageB64;
+    clearImagePreview();
+
+    // Moderator bypass
+    if (currentIdentity === 'MOD') {
+      const msgs   = loadMessages();
+      const newMsg = { id: Date.now(), senderIdentity:'MOD', senderId:USERS.MOD.id, senderName:USERS.MOD.name, text, ts:Date.now(), isMod:true };
+      msgs.push(newMsg);
+      saveMessages(msgs);
+      updateChatIndex(text || '[image]');
+      const container = document.getElementById('chat-messages');
+      renderSingleMessage(newMsg, container, false);
+      container.scrollTop = container.scrollHeight;
+      isSending = false;
+      sendBtn.disabled = false;
+      return;
+    }
+
+    document.getElementById('mod-status').textContent = '🛡️ Checking message…';
+
+    const container = document.getElementById('chat-messages');
+    const typingEl  = document.createElement('div');
+    typingEl.className = 'typing-row'; typingEl.id = 'typing-ind';
+    typingEl.innerHTML = `
+      <div class="msg-avatar other">${escH(USERS[currentIdentity === 'A' ? 'B' : 'A'].initials)}</div>
+      <div class="typing-bubble"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+    container.appendChild(typingEl);
+    container.scrollTop = container.scrollHeight;
+
+    const result = await moderateMessage(text, !!imageB64);
+    typingEl.remove();
+    document.getElementById('mod-status').textContent = '';
+
+    if (result.decision === 'BLOCK') {
+      const violations = loadViolations();
+      violations[currentIdentity] = (violations[currentIdentity] || 0) + 1;
+      saveViolations(violations);
+
+      appendModLog({
+        id: Date.now(), chatId: CHAT_ID, listing: LISTING,
+        senderIdentity: currentIdentity,
+        senderName: USERS[currentIdentity].name,
+        senderRole: USERS[currentIdentity].role,
+        senderId: USERS[currentIdentity].id,
+        text: text || '[Image]', reason: result.reason,
+        violationType: result.violationType || 'contact_info',
+        ts: Date.now(), violationCount: violations[currentIdentity], status: 'pending'
+      });
+
+      // #13 Flag chat for proactive monitoring if 2+ violations
+      if (violations[currentIdentity] >= 2) flagForMonitoring();
+
+      const icon = result.violationType === 'abuse' ? '🤬' : '🚫';
+      const blockedEl = document.createElement('div');
+      blockedEl.className = 'blocked-row';
+      blockedEl.innerHTML = `
+        <div class="blocked-bubble">
+          <div class="blocked-icon">${icon}</div>
+          <div class="blocked-text">
+            <strong>Message blocked by RenterFinder policy</strong>
+            ${escH(result.reason || 'This message violates platform policy.')}
+            ${violations[currentIdentity] < 3
+              ? `<br><br><em>Warning ${violations[currentIdentity]}/2. Chat suspends after ${3 - violations[currentIdentity]} more violation(s).</em>`
+              : '<br><br><em>This chat has been suspended due to repeated violations.</em>'}
+          </div>
+        </div>`;
+      container.appendChild(blockedEl);
+      container.scrollTop = container.scrollHeight;
+      renderMessages();
+    } else {
+      const msgs   = loadMessages();
+      const newMsg = {
+        id: Date.now(), senderIdentity: currentIdentity,
+        senderId: USERS[currentIdentity].id,
+        senderName: USERS[currentIdentity].name,
+        text, ts: Date.now(),
+        ...(imageB64 ? { imageB64 } : {})
+      };
+      msgs.push(newMsg);
+      saveMessages(msgs);
+      updateChatIndex(text || '[image]');
+      renderSingleMessage(newMsg, container, false);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    isSending = false;
+    sendBtn.disabled = input.value.trim() === '' && !pendingImageB64;
+  }
+
+  // ── #13 FLAG FOR MONITORING ───────────────────────────────────
+  function flagForMonitoring() {
+    try {
+      const idx  = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
+      const chat = idx.find(c => c.chatId === CHAT_ID);
+      if (chat) { chat.needsMonitoring = true; localStorage.setItem(CHATS_INDEX_KEY, JSON.stringify(idx)); }
+    } catch {}
+  }
+
+  // ── #7 IMAGE HANDLING ─────────────────────────────────────────
+  document.getElementById('img-file-input').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5MB.'); this.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      pendingImageB64 = e.target.result;
+      pendingImageName = file.name;
+      document.getElementById('img-preview-thumb').src = pendingImageB64;
+      document.getElementById('img-preview-name').textContent = file.name;
+      document.getElementById('img-preview-bar').classList.add('show');
+      document.getElementById('send-btn').disabled = false;
+    };
+    reader.readAsDataURL(file);
+    this.value = '';
+  });
+
+  function clearImagePreview() {
+    pendingImageB64 = null; pendingImageName = '';
+    document.getElementById('img-preview-bar').classList.remove('show');
+    document.getElementById('img-preview-thumb').src = '';
+    document.getElementById('img-preview-name').textContent = '';
+    const input = document.getElementById('msg-input');
+    document.getElementById('send-btn').disabled = input.value.trim() === '';
+  }
+
+  // ── LIGHTBOX ──────────────────────────────────────────────────
+  function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('show'); }
+  function closeLightbox()   { document.getElementById('lightbox').classList.remove('show'); }
+
+  // ── #14 APPEAL ────────────────────────────────────────────────
+  function openAppeal() {
+    document.getElementById('appeal-form-view').style.display = 'block';
+    document.getElementById('appeal-success-view').style.display = 'none';
+    document.getElementById('appeal-text').value = '';
+    document.getElementById('appeal-counter').textContent = '0 / 500';
+    document.getElementById('appeal-modal').classList.add('show');
+  }
+  function closeAppeal() { document.getElementById('appeal-modal').classList.remove('show'); }
+
+  document.getElementById('appeal-text').addEventListener('input', function() {
+    document.getElementById('appeal-counter').textContent = `${this.value.length} / 500`;
+  });
+
+  function submitAppeal() {
+    const text = document.getElementById('appeal-text').value.trim();
+    if (!text || text.length < 10) { document.getElementById('appeal-text').style.borderColor = '#ef4444'; return; }
+    try {
+      const appeals = JSON.parse(localStorage.getItem(APPEALS_KEY)) || [];
+      appeals.unshift({
+        id: Date.now(), chatId: CHAT_ID, listing: LISTING,
+        userId: USERS[currentIdentity].id,
+        userName: USERS[currentIdentity].name,
+        userRole: USERS[currentIdentity].role,
+        text, ts: Date.now(), status: 'pending'
+      });
+      localStorage.setItem(APPEALS_KEY, JSON.stringify(appeals));
+    } catch {}
+    document.getElementById('appeal-form-view').style.display = 'none';
+    document.getElementById('appeal-success-view').style.display = 'block';
+  }
+
+  // ── CROSS-TAB EVENTS ─────────────────────────────────────────
+  window.addEventListener('storage', function(e) {
+    if (e.key === MOD_APPROVE_KEY && e.newValue) {
+      try {
+        const approval = JSON.parse(e.newValue);
+        const msgs = loadMessages();
+        if (!msgs.find(m => m.id === approval.originalId)) {
+          msgs.push({ id: approval.originalId || Date.now(), senderIdentity: approval.senderIdentity, senderId: approval.senderId, senderName: approval.senderName, text: approval.text, ts: Date.now(), moderatorApproved: true });
+          saveMessages(msgs);
+        }
+        const container = document.getElementById('chat-messages');
+        renderMessages();
+        localStorage.removeItem(MOD_APPROVE_KEY);
+      } catch {}
+    }
+    if (e.key === MOD_JOINED_KEY && e.newValue) {
+      document.getElementById('mod-joined-banner').classList.add('show');
+      try {
+        const slots = JSON.parse(e.newValue) || {};
+        const joinerName = slots.mod?.name || slots.admin?.name || 'RenterFinder Moderator';
+        const nameEl = document.getElementById('mod-joined-name');
+        if (nameEl) nameEl.textContent = joinerName;
+      } catch {}
+      const container = document.getElementById('chat-messages');
+      const sys = document.createElement('div'); sys.className = 'sys-msg mod-sys';
+      sys.textContent = '🛡️ RenterFinder Moderator has joined this chat';
+      container.appendChild(sys); container.scrollTop = container.scrollHeight;
+    }
+    if (e.key === STORAGE_KEY) renderMessages();
+    if (e.key === READ_KEY) renderMessages(); // refresh read receipts
+    if (e.key === DEAL_KEY || e.key === MEETING_KEY) { updateDealBar(); updateCalendarBtn(); renderMessages(); }
+  });
+
+  // ── IDENTITY SWITCH ──────────────────────────────────────────
+  function switchIdentity(id) {
+    broadcastTyping(false);
+    currentIdentity = id;
+    document.getElementById('btn-user-a').classList.toggle('active', id === 'A');
+    document.getElementById('btn-user-b').classList.toggle('active', id === 'B');
+    document.getElementById('btn-mod').classList.toggle('active',   id === 'MOD');
+
+    const isMod = id === 'MOD';
+    const textarea = document.getElementById('msg-input');
+    const sendBtn  = document.getElementById('send-btn');
+    textarea.placeholder = isMod ? 'Send a message as RenterFinder Moderator…' : 'Type a message…';
+    textarea.className   = isMod ? 'chat-textarea mod-input' : 'chat-textarea';
+    sendBtn.className    = isMod ? 'send-btn mod-send' : 'send-btn';
+
+    if (isMod && !isModJoined()) {
+      setModJoined();
+      document.getElementById('mod-joined-banner').classList.add('show');
+      const container = document.getElementById('chat-messages');
+      const sys = document.createElement('div'); sys.className = 'sys-msg mod-sys';
+      sys.textContent = '🛡️ RenterFinder Moderator has joined this chat';
+      container.appendChild(sys); container.scrollTop = container.scrollHeight;
+    }
+
+    if (isMod) {
+      document.getElementById('other-name').textContent   = `${USERS.A.name} & ${USERS.B.name}`;
+      document.getElementById('other-avatar').textContent = '🛡';
+      document.getElementById('chat-context').textContent = `Monitoring · ${LISTING}`;
+    } else {
+      const other = USERS[id === 'A' ? 'B' : 'A'];
+      document.getElementById('other-name').textContent   = other.name;
+      document.getElementById('other-avatar').textContent = other.initials;
+      document.getElementById('chat-context').textContent = `${other.role} · ${LISTING}`;
+    }
+    markRead();
+    updateDealBar();
+    updateCalendarBtn();
+    checkWelcome();
+    renderMessages();
+  }
+
+  // ── INPUT EVENTS ──────────────────────────────────────────────
+  document.getElementById('msg-input').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    document.getElementById('send-btn').disabled = this.value.trim() === '' && !pendingImageB64;
+
+    // #12 broadcast typing
+    if (currentIdentity !== 'MOD') {
+      broadcastTyping(true);
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => broadcastTyping(false), 3000);
+    }
+  });
+
+  document.getElementById('msg-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  document.getElementById('msg-input').addEventListener('blur', () => broadcastTyping(false));
+  document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+  // ── ARCHIVED STATE CHECK ─────────────────────────────────────
+  function checkArchivedState() {
+    try {
+      // Check if this chat has been ended/archived by the user
+      var allUserChatKeys = Object.keys(localStorage).filter(function(k){ return k.indexOf('rf_user_chats_') === 0; });
+      for (var i = 0; i < allUserChatKeys.length; i++) {
+        var userChats = JSON.parse(localStorage.getItem(allUserChatKeys[i])) || [];
+        var slot = userChats.find(function(c){ return c.chatId === CHAT_ID; });
+        if (slot && slot.status === 'archived') {
+          // Lock input, show archived banner
+          document.getElementById('msg-input').disabled = true;
+          document.getElementById('send-btn').disabled  = true;
+          document.getElementById('attach-btn').disabled = true;
+          document.getElementById('deal-btn').disabled   = true;
+          var banner = document.getElementById('expiry-banner');
+          document.getElementById('expiry-text').textContent = 'This chat has been ended and archived. You can read the history but cannot send new messages.';
+          banner.classList.add('show');
+          break;
+        }
+      }
+    } catch(e) {}
+  }
+
+  // ── DEAL SYSTEM ───────────────────────────────────────────────
+  function loadDeal()  { try { return JSON.parse(localStorage.getItem(DEAL_KEY)); } catch { return null; } }
+  function saveDeal(d) { localStorage.setItem(DEAL_KEY, JSON.stringify(d)); }
+
+  function updateDealBar() {
+    const btn      = document.getElementById('deal-btn');
+    const wrap     = document.getElementById('topbar-deal-wrap');
+    const tagA     = document.getElementById('deal-tag-a');
+    const tagB     = document.getElementById('deal-tag-b');
+    const dealBadge = document.getElementById('deal-topbar-badge');
+
+    if (!btn) return;
+
+    // Hide deal button entirely for moderator
+    if (currentIdentity === 'MOD') {
+      wrap.style.display = 'none';
+      if (dealBadge) dealBadge.classList.remove('show');
+      return;
+    }
+    wrap.style.display = 'flex';
+
+    const deal = loadDeal();
+    tagA.style.display = deal?.confirmedA ? 'inline-block' : 'none';
+    tagB.style.display = deal?.confirmedB ? 'inline-block' : 'none';
+
+    const myConfirmed = deal?.[`confirmed${currentIdentity}`];
+
+    if (deal?.confirmedA && deal?.confirmedB) {
+      btn.textContent = '🤝 Deal Active';
+      btn.disabled    = true;
+      btn.classList.add('deal-live');
+      if (dealBadge) dealBadge.classList.add('show');
+    } else if (myConfirmed) {
+      btn.textContent = '⏳ Awaiting…';
+      btn.disabled    = true;
+      btn.classList.remove('deal-live');
+      if (dealBadge) dealBadge.classList.remove('show');
+    } else {
+      btn.textContent = '🤝 Deal';
+      btn.disabled    = false;
+      btn.classList.remove('deal-live');
+      if (dealBadge) dealBadge.classList.remove('show');
+    }
+  }
+
+  function openDealConfirm() {
+    document.getElementById('deal-modal-listing').textContent = LISTING;
+    document.getElementById('deal-form-view').style.display    = 'flex';
+    document.getElementById('deal-waiting-view').style.display = 'none';
+    document.getElementById('deal-done-view').style.display    = 'none';
+    document.getElementById('deal-modal').classList.add('show');
+  }
+
+  function closeDealConfirm() {
+    document.getElementById('deal-modal').classList.remove('show');
+  }
+
+  function confirmDeal() {
+    const deal = loadDeal() || {
+      chatId:    CHAT_ID,
+      listing:   LISTING,
+      userA:     USERS.A.name,
+      userB:     USERS.B.name,
+      confirmedA: false,
+      confirmedB: false,
+      initiatedBy: null,
+      initiatedTs: null,
+      completedTs: null,
+      stage:     'Interested',
+    };
+
+    deal[`confirmed${currentIdentity}`]    = true;
+    deal[`confirmed${currentIdentity}Ts`]  = Date.now();
+
+    if (!deal.initiatedBy) {
+      deal.initiatedBy = currentIdentity;
+      deal.initiatedTs = Date.now();
+    }
+
+    // Both confirmed → deal is live
+    if (deal.confirmedA && deal.confirmedB) {
+      deal.stage       = 'Initiated';
+      deal.completedTs = Date.now();
+      registerDealGlobally(deal);
+      // Post system message in chat
+      const msgs   = loadMessages();
+      msgs.push({ id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System', text: '🤝 Both parties have agreed to move forward with this deal. RenterFinder has been notified.', ts: Date.now(), isSystem: true });
+      saveMessages(msgs);
+      saveDeal(deal);
+      document.getElementById('deal-form-view').style.display    = 'none';
+      document.getElementById('deal-done-view').style.display    = 'flex';
+    } else {
+      saveDeal(deal);
+      document.getElementById('deal-form-view').style.display    = 'none';
+      document.getElementById('deal-waiting-view').style.display = 'flex';
+    }
+
+    updateDealBar();
+    updateCalendarBtn();
+    renderMessages();
+  }
+
+  function registerDealGlobally(deal) {
+    try {
+      const deals = JSON.parse(localStorage.getItem(DEALS_KEY)) || [];
+      const existing = deals.findIndex(d => d.chatId === deal.chatId);
+      if (existing !== -1) deals[existing] = deal;
+      else deals.unshift(deal);
+      localStorage.setItem(DEALS_KEY, JSON.stringify(deals));
+    } catch {}
+  }
+
+  function checkDealOnLoad() {
+    const deal = loadDeal();
+    if (!deal) return;
+    if (deal.confirmedA && deal.confirmedB) registerDealGlobally(deal);
+  }
+
+  // ── MEETING CALENDAR SYSTEM ────────────────────────────────────
+
+  // State for the calendar UI
+  let calViewDate  = new Date();   // which month we're showing
+  let calSelected  = {};           // { 'YYYY-MM-DD': { morning: bool, evening: bool } }
+  let calPickedKey = null;         // Party 2's chosen key: 'YYYY-MM-DD|morning' etc.
+
+  const WELCOME_KEY = `rf_welcome_${CHAT_ID}`;
+
+  function dismissWelcome() {
+    localStorage.setItem(WELCOME_KEY, '1');
+    const el = document.getElementById('welcome-overlay');
+    el.style.opacity = '0';
+    el.style.transition = 'opacity 0.3s';
+    setTimeout(() => el.remove(), 320);
+  }
+
+  function checkWelcome() {
+    // Never show to mod, never show if already seen
+    if (currentIdentity === 'MOD') {
+      const el = document.getElementById('welcome-overlay');
+      if (el) el.remove();
+      return;
+    }
+    if (localStorage.getItem(WELCOME_KEY) === '1') {
+      const el = document.getElementById('welcome-overlay');
+      if (el) el.remove();
+    }
+    // else: overlay stays visible
+  }
+  const loadMeeting  = () => { try { return JSON.parse(localStorage.getItem(MEETING_KEY)); } catch { return null; } };
+  const saveMeeting  = m  => { localStorage.setItem(MEETING_KEY, JSON.stringify(m)); };
+
+  // Sync meeting into deal object so mod dashboard can see it
+  function syncMeetingToDeal(meeting) {
+    const deal = loadDeal();
+    if (!deal) return;
+    deal.meeting = meeting;
+    saveDeal(deal);
+    registerDealGlobally(deal);
+  }
+
+  // Update the calendar button visibility for the current identity
+  function updateCalendarBtn() {
+    const btn  = document.getElementById('calendar-btn');
+    if (!btn) return;
+
+    const deal    = loadDeal();
+    const meeting = loadMeeting();
+
+    if (currentIdentity === 'MOD') { btn.classList.remove('show'); return; }
+
+    const advanceDone   = deal?.stage_advance_payment === true;
+    const bothConfirmed = deal?.confirmedA && deal?.confirmedB;
+    if (!bothConfirmed || !advanceDone) { btn.classList.remove('show'); return; }
+
+    if (meeting?.status === 'confirmed') { btn.classList.remove('show'); return; }
+
+    const originalProposer = deal.initiatedBy;   // Party 1 always starts
+    const isOriginalProposer = currentIdentity === originalProposer;
+
+    if (!meeting || meeting.status === undefined) {
+      // No meeting yet — only original Party 1 can start
+      if (isOriginalProposer) {
+        btn.classList.add('show');
+        btn.textContent = '📅 Schedule Meeting';
+      } else {
+        btn.classList.remove('show');
+      }
+    } else if (meeting.status === 'proposed') {
+      // Whoever proposed last — the OTHER party picks
+      const lastProposer = meeting.proposedBy;
+      if (currentIdentity !== lastProposer) {
+        btn.classList.add('show');
+        btn.textContent = '📅 Pick a Date';
+      } else {
+        btn.classList.remove('show');
+      }
+    } else {
+      btn.classList.remove('show');
+    }
+  }
+
+  function openCalendarModal() {
+    const deal    = loadDeal();
+    const meeting = loadMeeting();
+    const isMyTurnToPropose = !meeting || meeting.status === undefined;
+    const isMyTurnToPick    = meeting?.status === 'proposed' && meeting?.proposedBy !== currentIdentity;
+
+    // Reset all views
+    document.getElementById('cal-propose-view').style.display  = 'none';
+    document.getElementById('cal-pick-view').style.display     = 'none';
+    document.getElementById('cal-done-view').style.display     = 'none';
+    document.getElementById('cal-counter-view').style.display  = 'none';
+
+    if (meeting?.status === 'confirmed') {
+      document.getElementById('cal-done-sub').textContent = `Meeting confirmed: ${formatMeetingSlot(meeting.confirmedSlot)}`;
+      document.getElementById('cal-done-view').style.display = 'flex';
+    } else if (isMyTurnToPropose) {
+      calSelected = {};
+      calViewDate = new Date();
+      renderCalGrid();
+      document.getElementById('cal-selected-list').style.display = 'none';
+      document.getElementById('cal-count-hint').textContent = 'Select up to 3 dates from the calendar above.';
+      document.getElementById('cal-submit-btn').disabled = true;
+      document.getElementById('cal-propose-view').style.display = 'flex';
+    } else if (isMyTurnToPick) {
+      renderPickOptions(meeting);
+      document.getElementById('cal-pick-view').style.display = 'flex';
+    }
+    document.getElementById('cal-modal').classList.add('show');
+  }
+
+  function closeCalendarModal() {
+    document.getElementById('cal-modal').classList.remove('show');
+  }
+
+  // ── Calendar grid renderer ──
+  function renderCalGrid() { renderCalGridFor('propose'); }
+
+  function renderCalGridFor(mode) {
+    const isCounter = mode === 'counter';
+    const labelId = isCounter ? 'cal-month-label-c' : 'cal-month-label';
+    const gridId  = isCounter ? 'cal-grid-c' : 'cal-grid';
+    const label = document.getElementById(labelId);
+    const grid  = document.getElementById(gridId);
+    if (!label || !grid) return;
+    const now   = new Date();
+    const minDate = new Date(now); minDate.setHours(0,0,0,0);
+    const maxDate = new Date(now); maxDate.setMonth(now.getMonth() + 3); maxDate.setHours(23,59,59,999);
+
+    label.textContent = calViewDate.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+
+    const dows = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    let html = dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+    const y = calViewDate.getFullYear(), m = calViewDate.getMonth();
+    const firstDay = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) html += '<div></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(y, m, d);
+      date.setHours(0,0,0,0);
+      const key = dateKey(date);
+      const isSel = !!calSelected[key];
+      const isToday = date.toDateString() === now.toDateString();
+      const isPast  = date < minDate;
+      const isFutur = date > maxDate;
+      const disabled = isPast || isFutur;
+      html += `<div class="cal-day${isSel?' cal-selected':''}${disabled?' cal-disabled':''}${isToday?' cal-today':''}" onclick="calToggleDay('${key}','${mode}')">${d}</div>`;
+    }
+    grid.innerHTML = html;
+  }
+
+  function calPrevMonth() {
+    calViewDate.setMonth(calViewDate.getMonth() - 1);
+    const isCounter = document.getElementById('cal-counter-view').style.display !== 'none';
+    renderCalGridFor(isCounter ? 'counter' : 'propose');
+  }
+  function calNextMonth() {
+    const max = new Date(); max.setMonth(max.getMonth() + 3);
+    const next = new Date(calViewDate); next.setMonth(next.getMonth() + 1);
+    if (next <= max) {
+      calViewDate.setMonth(calViewDate.getMonth() + 1);
+      const isCounter = document.getElementById('cal-counter-view').style.display !== 'none';
+      renderCalGridFor(isCounter ? 'counter' : 'propose');
+    }
+  }
+
+  function calToggleDay(key, mode) {
+    mode = mode || 'propose';
+    if (calSelected[key]) {
+      delete calSelected[key];
+    } else {
+      if (Object.keys(calSelected).length >= 3) return;
+      calSelected[key] = { morning: true, evening: false };
+    }
+    renderCalGridFor(mode);
+    renderSelectedListFor(mode);
+  }
+
+  function calToggleSlot(key, slot, mode) {
+    mode = mode || 'propose';
+    if (!calSelected[key]) return;
+    calSelected[key][slot] = !calSelected[key][slot];
+    if (!calSelected[key].morning && !calSelected[key].evening) {
+      calSelected[key][slot] = true;
+    }
+    renderSelectedListFor(mode);
+  }
+
+  function renderSelectedList() { renderSelectedListFor('propose'); }
+
+  function renderSelectedListFor(mode) {
+    const isCounter = mode === 'counter';
+    const listId  = isCounter ? 'cal-selected-list-c' : 'cal-selected-list';
+    const hintId  = isCounter ? 'cal-count-hint-c'    : 'cal-count-hint';
+    const btnId   = isCounter ? 'cal-counter-submit-btn' : 'cal-submit-btn';
+    const keys = Object.keys(calSelected).sort();
+    const list = document.getElementById(listId);
+    const hint = document.getElementById(hintId);
+    const btn  = document.getElementById(btnId);
+
+    if (keys.length === 0) {
+      list.style.display = 'none';
+      hint.textContent = 'Select up to 3 dates from the calendar above.';
+      btn.disabled = true;
+      return;
+    }
+
+    list.style.display = 'flex';
+    hint.textContent = `${keys.length}/3 date${keys.length>1?'s':''} selected. Toggle morning/evening for each.`;
+    btn.disabled = false;
+
+    list.innerHTML = keys.map(k => {
+      const s = calSelected[k];
+      const d = new Date(k + 'T00:00:00');
+      const label = d.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short' });
+      return `<div class="cal-sel-item">
+        <div>
+          <div class="cal-sel-date">${label}</div>
+          <div class="cal-slot-row" style="margin-top:4px;">
+            <button class="cal-slot-btn${s.morning?' on':''}" onclick="calToggleSlot('${k}','morning','${mode}')">🌅 Morning</button>
+            <button class="cal-slot-btn${s.evening?' on':''}" onclick="calToggleSlot('${k}','evening','${mode}')">🌆 Evening</button>
+          </div>
+        </div>
+        <button class="cal-sel-remove" onclick="calToggleDay('${k}','${mode}')">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  function submitProposedDates() {
+    const keys = Object.keys(calSelected).sort();
+    if (keys.length === 0) return;
+
+    const proposals = keys.map(k => ({ date: k, ...calSelected[k] }));
+    const meeting = { status: 'proposed', proposals, proposedTs: Date.now(), proposedBy: currentIdentity };
+    saveMeeting(meeting);
+    syncMeetingToDeal(meeting);
+
+    // Post system message in chat
+    const msgs = loadMessages();
+    msgs.push({
+      id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System',
+      text: `📅 ${USERS[currentIdentity].name} has proposed ${keys.length} meeting date${keys.length>1?'s':''}. The other party can now select a preferred slot.`,
+      ts: Date.now(), isSystem: true, meetingProposal: meeting
+    });
+    saveMessages(msgs);
+
+    closeCalendarModal();
+    updateCalendarBtn();
+    renderMessages();
+  }
+
+  // ── Party 2: Pick a date ──
+  function renderPickOptions(meeting) {
+    const sub  = document.getElementById('cal-pick-sub');
+    const wrap = document.getElementById('cal-pick-options');
+    calPickedKey = null;
+    document.getElementById('cal-pick-confirm').disabled = true;
+
+    sub.textContent = 'The other party has proposed these dates. Choose one that works for you.';
+    wrap.innerHTML = meeting.proposals.map(p => {
+      const d = new Date(p.date + 'T00:00:00');
+      const dateLabel = d.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' });
+      const slots = [p.morning && 'Morning', p.evening && 'Evening'].filter(Boolean);
+
+      return slots.map(slot => {
+        const slotKey = `${p.date}|${slot.toLowerCase()}`;
+        return `<div class="meeting-option" id="opt-${slotKey}" onclick="pickSlot('${slotKey}')">
+          <div class="meeting-opt-date">${dateLabel}</div>
+          <div class="meeting-opt-slots">${slot === 'Morning' ? '🌅' : '🌆'} ${slot}</div>
+        </div>`;
+      }).join('');
+    }).join('');
+  }
+
+  function pickSlot(key) {
+    calPickedKey = key;
+    document.querySelectorAll('.meeting-option').forEach(el => el.classList.remove('chosen'));
+    const el = document.getElementById('opt-' + key);
+    if (el) el.classList.add('chosen');
+    document.getElementById('cal-pick-confirm').disabled = false;
+  }
+
+  function confirmPickedDate() {
+    if (!calPickedKey) return;
+    const deal = loadDeal();
+
+    const [datePart, slotPart] = calPickedKey.split('|');
+    const d = new Date(datePart + 'T00:00:00');
+    const dateLabel = d.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const slotLabel = slotPart === 'morning' ? '🌅 Morning' : '🌆 Evening';
+
+    const confirmedSlot = { date: datePart, slot: slotPart, dateLabel, slotLabel };
+    const meeting = loadMeeting() || {};
+    meeting.status        = 'confirmed';
+    meeting.confirmedSlot = confirmedSlot;
+    meeting.confirmedTs   = Date.now();
+    meeting.confirmedBy   = currentIdentity;
+    saveMeeting(meeting);
+    syncMeetingToDeal(meeting);
+
+    // Auto-tick meeting stage in deals registry
+    autoTickMeetingStage(meeting, deal);
+
+    // Post system message
+    const msgs = loadMessages();
+    msgs.push({
+      id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System',
+      text: `✅ Meeting confirmed! ${dateLabel} — ${slotLabel}`,
+      ts: Date.now(), isSystem: true, meetingConfirmed: confirmedSlot
+    });
+    saveMessages(msgs);
+
+    document.getElementById('cal-done-sub').textContent = `Meeting confirmed: ${dateLabel}, ${slotLabel}`;
+    document.getElementById('cal-pick-view').style.display = 'none';
+    document.getElementById('cal-done-view').style.display = 'flex';
+    updateCalendarBtn();
+    renderMessages();
+  }
+
+  function requestMoreDates() {
+    // Party 2 proposes their own dates instead of asking Party 1 to re-propose
+    closeCalendarModal();
+    // Open counter-propose view
+    calSelected = {};
+    calViewDate = new Date();
+    document.getElementById('cal-propose-view').style.display  = 'none';
+    document.getElementById('cal-pick-view').style.display     = 'none';
+    document.getElementById('cal-done-view').style.display     = 'none';
+    document.getElementById('cal-counter-view').style.display  = 'flex';
+    renderCalGridFor('counter');
+    document.getElementById('cal-selected-list-c').style.display = 'none';
+    document.getElementById('cal-count-hint-c').textContent = 'Select up to 3 dates from the calendar above.';
+    document.getElementById('cal-counter-submit-btn').disabled = true;
+    document.getElementById('cal-modal').classList.add('show');
+  }
+
+  function submitCounterDates() {
+    const keys = Object.keys(calSelected).sort();
+    if (keys.length === 0) return;
+    const proposals = keys.map(k => ({ date: k, ...calSelected[k] }));
+    const meeting = loadMeeting() || {};
+    meeting.status         = 'proposed';           // flip back to proposed — now Party 1 picks
+    meeting.proposals      = proposals;
+    meeting.proposedTs     = Date.now();
+    meeting.proposedBy     = currentIdentity;      // Party 2 is now the proposer
+    meeting.counterRound   = (meeting.counterRound || 0) + 1;
+    saveMeeting(meeting);
+    syncMeetingToDeal(meeting);
+
+    const msgs = loadMessages();
+    msgs.push({
+      id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System',
+      text: `📅 ${USERS[currentIdentity].name} couldn't find a suitable slot and has proposed ${keys.length} alternative date${keys.length>1?'s':''}. The other party can now choose.`,
+      ts: Date.now(), isSystem: true, meetingProposal: meeting
+    });
+    saveMessages(msgs);
+
+    closeCalendarModal();
+    updateCalendarBtn();
+    renderMessages();
+  }
+
+  function autoTickMeetingStage(meeting, deal) {
+    // Sync the confirmed meeting into the global deals array so mod sees it auto-ticked
+    try {
+      const deals = JSON.parse(localStorage.getItem(DEALS_KEY)) || [];
+      const idx   = deals.findIndex(d => d.chatId === CHAT_ID);
+      if (idx !== -1) {
+        deals[idx].stage_meeting    = true;
+        deals[idx].stage_meeting_ts = Date.now();
+        deals[idx].meeting          = meeting;
+        localStorage.setItem(DEALS_KEY, JSON.stringify(deals));
+      }
+    } catch {}
+  }
+
+  function dateKey(date) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  }
+
+  function formatMeetingSlot(slot) {
+    if (!slot) return '';
+    return `${slot.dateLabel}, ${slot.slotLabel}`;
+  }
+
+  // ── INIT ──────────────────────────────────────────────────────
+  function init() {
+    registerChat();
+    document.getElementById('other-name').textContent   = OTHER_NAME;
+    document.getElementById('other-avatar').textContent = OTHER_NAME.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('chat-context').textContent = `Renter · ${LISTING}`;
+    if (isModJoined()) {
+      document.getElementById('mod-joined-banner').classList.add('show');
+      // Update banner name from slots
+      const slots = getJoinSlots();
+      const joinerName = slots.mod?.name || slots.admin?.name || 'RenterFinder Moderator';
+      const nameEl = document.getElementById('mod-joined-name');
+      if (nameEl) nameEl.textContent = joinerName;
+    }
+    // Auto-switch to MOD if opened via join link
+    if (URL_ROLE === 'admin' || URL_ROLE === 'mod') {
+      USERS.MOD.name = URL_MOD_NAME || (URL_ROLE === 'admin' ? 'Admin' : 'RenterFinder Moderator');
+      USERS.MOD.id   = URL_MOD_ID || 'rf-moderator';
+      setTimeout(() => switchIdentity('MOD'), 100);
+    }
+    checkExpiry();
+    checkArchivedState();
+    checkDealOnLoad();
+    updateDealBar();
+    updateCalendarBtn();
+    renderMessages();
+    markRead();
+    checkWelcome();
+    setTimeout(() => {
+      const ls = document.getElementById('loading-screen');
+      ls.classList.add('fade');
+      setTimeout(() => ls.remove(), 400);
+    }, 600);
+  }
+  init();
+</script>
+</div><!-- #chat-wrap -->
+</body>
+</html>

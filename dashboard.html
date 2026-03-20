@@ -611,6 +611,11 @@
 <style>
 body{opacity:0;transition:opacity 0.18s ease;}
 body.rf-ready{opacity:1;}
+@media(min-width:1441px){ body { zoom: 1.2; } }
+@media(min-width:1800px){ body { zoom: 1.35; } }
+@media(min-width:2100px){ body { zoom: 1.55; } }
+@media(min-width:2560px){ body { zoom: 1.85; } }
+@media(min-width:3200px){ body { zoom: 2.2; } }
 </style>
 <script>
 (function(){
@@ -714,8 +719,11 @@ window.addEventListener('pageshow',function(){
           <button id="db-tab-profile" onclick="dbSwitchTab('profile')" style="padding:14px 28px;background:var(--gold);color:var(--dark);border:none;border-radius:0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-top-left-radius:6px;border-top-right-radius:6px;margin-right:4px;">
             👤 My Profile
           </button>
-          <button id="db-tab-list" onclick="dbSwitchTab('list')" style="padding:14px 28px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.55);border:none;border-radius:0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-top-left-radius:6px;border-top-right-radius:6px;">
+          <button id="db-tab-list" onclick="dbSwitchTab('list')" style="padding:14px 28px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.55);border:none;border-radius:0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-top-left-radius:6px;border-top-right-radius:6px;margin-right:4px;">
             <span id="db-tab-list-label">🏠 Properties List</span>
+          </button>
+          <button id="db-tab-chats" onclick="dbSwitchTab('chats')" style="padding:14px 28px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.55);border:none;border-radius:0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-top-left-radius:6px;border-top-right-radius:6px;position:relative;">
+            💬 My Chats <span id="db-chat-badge" style="display:none;position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span>
           </button>
         </div>
       </div>
@@ -852,75 +860,337 @@ window.addEventListener('pageshow',function(){
         <!-- ── Renter cards (shown to landlords) ── -->
         <!-- [BACKEND: render from API — replace static cards below] -->
         <div id="db-renters-panel" style="display:none;">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;">
-
-            <!-- Sample renter card — [BACKEND: generate these dynamically] -->
-            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(4,4,41,0.06);transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 6px 24px rgba(4,4,41,0.12)'" onmouseout="this.style.boxShadow='0 2px 12px rgba(4,4,41,0.06)'">
-              <div style="padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;">
-                <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#c9a668,#a07e42);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--dark);flex-shrink:0;">R</div>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:14px;font-weight:700;color:var(--dark);">Renter Name</div>
-                  <div style="font-size:12px;color:var(--mid);">Occupation · City</div>
-                </div>
-                <div style="font-size:13px;font-weight:700;color:var(--gold);white-space:nowrap;">₹XX,000/mo</div>
-              </div>
-              <div style="padding:16px 22px;display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--mid);">Looking For</span><span style="font-weight:600;color:var(--dark);">2 BHK</span></div>
-                <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--mid);">Preferred Area</span><span style="font-weight:600;color:var(--dark);">—</span></div>
-                <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--mid);">Family Size</span><span style="font-weight:600;color:var(--dark);">—</span></div>
-                <div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--mid);">Move-in</span><span style="font-weight:600;color:var(--dark);">Immediate</span></div>
-              </div>
-              <div style="padding:12px 22px;background:#fafafa;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:11px;color:var(--mid);">Listed: — days ago</span>
-                <!-- [BACKEND: show contact details or "Show Interest" action] -->
-                <button style="padding:7px 18px;background:var(--dark);color:var(--gold);border:none;border-radius:5px;font-size:12px;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;">Show Interest</button>
-              </div>
-            </div>
-
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;" id="renters-grid">
           </div>
           <p style="text-align:center;font-size:13px;color:var(--mid);margin-top:32px;padding:20px;background:#fff;border:1px dashed var(--border);border-radius:8px;">
-            <!-- [BACKEND: remove this notice once API is connected] -->
-            🔌 <strong>Backend Integration Point:</strong> Replace the sample card above with dynamically rendered renter profiles from your database.
+            🔌 <strong>Backend Integration Point:</strong> Replace sample cards with live renter profiles from your database.
           </p>
         </div>
 
         <!-- ── Property cards (shown to renters) ── -->
         <!-- [BACKEND: render from API — replace static cards below] -->
         <div id="db-properties-panel" style="display:none;">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;">
-
-            <!-- Sample property card — [BACKEND: generate these dynamically] -->
-            <div style="background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(4,4,41,0.06);transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 6px 24px rgba(4,4,41,0.12)'" onmouseout="this.style.boxShadow='0 2px 12px rgba(4,4,41,0.06)'">
-              <div style="height:120px;background:linear-gradient(145deg,#d4b896,#a07555,#6a4a35);position:relative;">
-                <span style="position:absolute;top:10px;left:10px;background:rgba(201,166,104,0.9);color:var(--dark);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:0.5px;">New</span>
-              </div>
-              <div style="padding:18px 20px;">
-                <div style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:4px;">₹XX,000 <span style="font-size:12px;font-weight:400;color:var(--mid);">/ month</span></div>
-                <div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:4px;">Property Name / Type</div>
-                <div style="font-size:12px;color:var(--mid);margin-bottom:12px;">📍 Area, City</div>
-                <div style="display:flex;gap:12px;font-size:12px;">
-                  <span style="background:var(--light);padding:3px 10px;border-radius:12px;font-weight:600;color:var(--dark);">2 BHK</span>
-                  <span style="background:var(--light);padding:3px 10px;border-radius:12px;font-weight:600;color:var(--dark);">2 Bath</span>
-                  <span style="background:var(--light);padding:3px 10px;border-radius:12px;font-weight:600;color:var(--dark);">— sqft</span>
-                </div>
-              </div>
-              <div style="padding:10px 20px;background:#fafafa;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:11px;color:var(--mid);">—</span>
-                <!-- [BACKEND: show landlord contact on click] -->
-                <button style="padding:7px 18px;background:var(--dark);color:var(--gold);border:none;border-radius:5px;font-size:12px;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;">View Details</button>
-              </div>
-            </div>
-
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;" id="properties-grid">
           </div>
           <p style="text-align:center;font-size:13px;color:var(--mid);margin-top:32px;padding:20px;background:#fff;border:1px dashed var(--border);border-radius:8px;">
-            <!-- [BACKEND: remove this notice once API is connected] -->
-            🔌 <strong>Backend Integration Point:</strong> Replace the sample card above with dynamically rendered property listings from your database.
+            🔌 <strong>Backend Integration Point:</strong> Replace sample cards with live property listings from your database.
           </p>
         </div>
 
+        <script>
+        // ── SAMPLE DATA ──────────────────────────────────────────
+        var SAMPLE_RENTERS = [
+          { id:'renter-001', name:'Rahul Sharma', initials:'RS', occupation:'Software Engineer', city:'Bengaluru', budget:'₹18,000–22,000/mo', bhk:'2 BHK', area:'Koramangala / Indiranagar', family:'3 (couple + 1 child)', moveIn:'Immediate' },
+          { id:'renter-002', name:'Priya Nair', initials:'PN', occupation:'Teacher', city:'Pune', budget:'₹10,000–14,000/mo', bhk:'1 BHK', area:'Kothrud / Baner', family:'2 (couple)', moveIn:'15 Apr 2025' },
+          { id:'renter-003', name:'Arjun Mehta', initials:'AM', occupation:'Business Owner', city:'Mumbai', budget:'₹30,000–40,000/mo', bhk:'3 BHK', area:'Andheri West / Juhu', family:'5 (joint family)', moveIn:'Immediate' },
+          { id:'renter-004', name:'Sunita Rao', initials:'SR', occupation:'Doctor', city:'Hyderabad', budget:'₹20,000–28,000/mo', bhk:'2 BHK', area:'Banjara Hills / Jubilee Hills', family:'2 (couple)', moveIn:'1 May 2025' },
+          { id:'renter-005', name:'Vikram Patel', initials:'VP', occupation:'Bank Manager', city:'Ahmedabad', budget:'₹12,000–16,000/mo', bhk:'2 BHK', area:'Satellite / Vastrapur', family:'4 (family)', moveIn:'Immediate' },
+          { id:'renter-006', name:'Deepika Joshi', initials:'DJ', occupation:'Graphic Designer', city:'Delhi', budget:'₹15,000–20,000/mo', bhk:'1 BHK', area:'Lajpat Nagar / Saket', family:'1 (single)', moveIn:'Immediate' }
+        ];
+
+        var SAMPLE_PROPERTIES = [
+          { id:'prop-001', landlordId:'landlord-001', landlordName:'Anita Singh', title:'Spacious 2BHK — Semi Furnished', bhk:'2 BHK', bath:'2', sqft:'980', rent:'18,500', deposit:'55,500', area:'Koramangala 5th Block', city:'Bengaluru', furnishing:'Semi Furnished', available:'Immediate', badge:'New' },
+          { id:'prop-002', landlordId:'landlord-002', landlordName:'Ramesh Gupta', title:'Modern 3BHK — Fully Furnished', bhk:'3 BHK', bath:'3', sqft:'1400', rent:'38,000', deposit:'1,14,000', area:'Andheri West', city:'Mumbai', furnishing:'Fully Furnished', available:'Immediate', badge:'Featured' },
+          { id:'prop-003', landlordId:'landlord-003', landlordName:'Kavya Reddy', title:'Cosy 1BHK — Near IT Park', bhk:'1 BHK', bath:'1', sqft:'550', rent:'11,000', deposit:'33,000', area:'Kothrud', city:'Pune', furnishing:'Unfurnished', available:'15 Apr 2025', badge:'New' },
+          { id:'prop-004', landlordId:'landlord-004', landlordName:'Suresh Iyer', title:'Premium 2BHK — Society Flat', bhk:'2 BHK', bath:'2', sqft:'1100', rent:'24,000', deposit:'72,000', area:'Banjara Hills', city:'Hyderabad', furnishing:'Semi Furnished', available:'1 May 2025', badge:'' },
+          { id:'prop-005', landlordId:'landlord-005', landlordName:'Meena Shah', title:'Affordable 2BHK — Ground Floor', bhk:'2 BHK', bath:'1', sqft:'820', rent:'13,500', deposit:'40,500', area:'Satellite', city:'Ahmedabad', furnishing:'Unfurnished', available:'Immediate', badge:'New' },
+          { id:'prop-006', landlordId:'landlord-006', landlordName:'Arun Kumar', title:'Studio Apartment — Metro Nearby', bhk:'1 RK', bath:'1', sqft:'350', rent:'9,500', deposit:'28,500', area:'Lajpat Nagar', city:'Delhi', furnishing:'Furnished', available:'Immediate', badge:'' }
+        ];
+
+        // Current logged-in user (demo — in production set from auth)
+        var CURRENT_USER_ID   = 'user-demo-landlord';
+        var CURRENT_USER_NAME = 'Anita Singh';
+        var CURRENT_USER_ROLE = 'landlord'; // 'landlord' or 'renter'
+
+        // ── CHAT SLOT MANAGEMENT ──────────────────────────────
+        var MAX_CHAT_SLOTS = 3;
+        var USER_CHATS_KEY = 'rf_user_chats_' + CURRENT_USER_ID;
+
+        function loadUserChats() { try { return JSON.parse(localStorage.getItem(USER_CHATS_KEY)) || []; } catch { return []; } }
+        function saveUserChats(c) { localStorage.setItem(USER_CHATS_KEY, JSON.stringify(c)); }
+
+        function navigateToChat(chatId, otherId, otherName, listingLabel) {
+          var url = './chat.html'
+            + '?chatId='    + encodeURIComponent(chatId)
+            + '&userId='    + encodeURIComponent(CURRENT_USER_ID)
+            + '&otherId='   + encodeURIComponent(otherId)
+            + '&otherName=' + encodeURIComponent(otherName)
+            + '&listing='   + encodeURIComponent(listingLabel);
+          window.location.href = url;
+        }
+
+        function escStr(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+        function escHtml(s) { return String(s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+        function hasDealActive(chatId) {
+          try {
+            var d = JSON.parse(localStorage.getItem('rf_deal_' + chatId));
+            return d && d.stage !== 'Cancelled' && (d.confirmedA || d.confirmedB);
+          } catch { return false; }
+        }
+
+        function openChat(otherId, otherName, listingLabel) {
+          var ids    = [CURRENT_USER_ID, otherId].sort();
+          var chatId = 'chat-' + ids[0] + '--' + ids[1];
+          var chats  = loadUserChats();
+          var active = chats.filter(function(c){ return c.status === 'active'; });
+
+          // Already active — just open
+          if (active.find(function(c){ return c.chatId === chatId; })) {
+            navigateToChat(chatId, otherId, otherName, listingLabel); return;
+          }
+
+          // Slot free — register and open
+          if (active.length < MAX_CHAT_SLOTS) {
+            if (!chats.find(function(c){ return c.chatId === chatId; })) {
+              chats.push({ chatId:chatId, otherId:otherId, otherName:otherName, listing:listingLabel, status:'active', startedTs:Date.now(), lastTs:Date.now() });
+              saveUserChats(chats);
+            }
+            navigateToChat(chatId, otherId, otherName, listingLabel); return;
+          }
+
+          // All 3 full — show prompt
+          showEndFirstPrompt(active, otherId, otherName, listingLabel, chatId);
+        }
+
+        function showEndFirstPrompt(active, newOtherId, newOtherName, newListing, newChatId) {
+          var ex = document.getElementById('slot-prompt-overlay'); if (ex) ex.remove();
+          var rows = active.map(function(c) {
+            var deal = hasDealActive(c.chatId);
+            var msgs = 0; try { msgs = (JSON.parse(localStorage.getItem('rf_chat_' + c.chatId)) || []).length; } catch {}
+            var last = c.lastTs ? new Date(c.lastTs).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+            var btn = deal
+              ? '<span style="font-size:10px;font-weight:700;color:#059669;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;white-space:nowrap;">🤝 Deal Active</span>'
+              : '<button onclick="endChatSlot(\''+escStr(c.chatId)+'\',\''+escStr(newOtherId)+'\',\''+escStr(newOtherName)+'\',\''+escStr(newListing)+'\',\''+escStr(newChatId)+'\')" style="padding:6px 14px;background:#040429;color:#d4a017;border:none;border-radius:6px;font-size:11px;font-weight:700;font-family:\'Outfit\',sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0;">End &amp; Free Slot</button>';
+            return '<div style="background:#f8f7f4;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;">'
+              + '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:#040429;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(c.otherName)+'</div>'
+              + '<div style="font-size:11px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(c.listing)+'</div>'
+              + '<div style="font-size:11px;color:#9ca3af;">'+msgs+' messages · '+last+'</div></div>'+btn+'</div>';
+          }).join('');
+          var ov = document.createElement('div');
+          ov.id = 'slot-prompt-overlay';
+          ov.style.cssText = 'position:fixed;inset:0;background:rgba(4,4,41,0.72);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+          ov.innerHTML = '<div style="background:#fff;border-radius:18px;padding:32px 28px 24px;max-width:480px;width:100%;box-shadow:0 24px 60px rgba(4,4,41,0.22);">'
+            + '<div style="font-family:\'Cormorant Garamond\',serif;font-size:24px;font-weight:700;color:#040429;margin-bottom:8px;">All 3 chat slots are full</div>'
+            + '<p style="font-size:13px;color:#6b7280;line-height:1.6;margin-bottom:20px;">To chat with <strong>'+escHtml(newOtherName)+'</strong>, end one existing chat first. Chats with an active deal cannot be ended.</p>'
+            + '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">'+rows+'</div>'
+            + '<button onclick="document.getElementById(\'slot-prompt-overlay\').remove()" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;background:transparent;color:#6b7280;font-family:\'Outfit\',sans-serif;font-size:13px;cursor:pointer;">Cancel</button></div>';
+          document.body.appendChild(ov);
+        }
+
+        function endChatSlot(chatIdToEnd, newOtherId, newOtherName, newListing, newChatId) {
+          if (hasDealActive(chatIdToEnd)) { alert('This chat has an active deal and cannot be ended. Contact RenterFinder support if you need help.'); return; }
+          var chats = loadUserChats();
+          var slot  = chats.find(function(c){ return c.chatId === chatIdToEnd; });
+          if (slot) { slot.status = 'archived'; slot.archivedTs = Date.now(); }
+          try {
+            var idx = JSON.parse(localStorage.getItem('rf_chats_index')) || [];
+            var ci  = idx.find(function(c){ return c.chatId === chatIdToEnd; });
+            if (ci) { ci.archived = true; ci.archivedTs = Date.now(); localStorage.setItem('rf_chats_index', JSON.stringify(idx)); }
+          } catch {}
+          if (!chats.find(function(c){ return c.chatId === newChatId; })) {
+            chats.push({ chatId:newChatId, otherId:newOtherId, otherName:newOtherName, listing:newListing, status:'active', startedTs:Date.now(), lastTs:Date.now() });
+          }
+          saveUserChats(chats);
+          var ov = document.getElementById('slot-prompt-overlay'); if (ov) ov.remove();
+          navigateToChat(newChatId, newOtherId, newOtherName, newListing);
+        }
+
+        function endChatFromDashboard(chatId) {
+          if (hasDealActive(chatId)) { alert('⚠️ This chat has an active deal in progress and cannot be ended. Contact RenterFinder support if you need assistance.'); return; }
+          if (!confirm('End this chat? It will be archived and locked for new messages.')) return;
+          var chats = loadUserChats();
+          var slot  = chats.find(function(c){ return c.chatId === chatId; });
+          if (slot) { slot.status = 'archived'; slot.archivedTs = Date.now(); }
+          try {
+            var idx = JSON.parse(localStorage.getItem('rf_chats_index')) || [];
+            var ci  = idx.find(function(c){ return c.chatId === chatId; });
+            if (ci) { ci.archived = true; ci.archivedTs = Date.now(); localStorage.setItem('rf_chats_index', JSON.stringify(idx)); }
+          } catch {}
+          saveUserChats(chats); buildChatSlots();
+        }
+
+        // ── ACTIVE CHATS TAB RENDERER ──────────────────────────
+        function buildChatSlots() {
+          var chats    = loadUserChats();
+          var active   = chats.filter(function(c){ return c.status === 'active'; });
+          var archived = chats.filter(function(c){ return c.status === 'archived'; });
+          var slotsDiv = document.getElementById('db-active-chat-slots');
+          var archDiv  = document.getElementById('db-archived-chat-list');
+          var archSec  = document.getElementById('db-archived-section');
+          var countEl  = document.getElementById('db-chat-slot-count');
+          var badgeEl  = document.getElementById('db-chat-badge');
+          if (!slotsDiv) return;
+
+          if (countEl) countEl.textContent = active.length;
+          if (badgeEl) badgeEl.style.display = active.length > 0 ? 'block' : 'none';
+          slotsDiv.innerHTML = '';
+
+          for (var i = 0; i < MAX_CHAT_SLOTS; i++) {
+            var c = active[i];
+            var card = document.createElement('div');
+            if (c) {
+              var deal = hasDealActive(c.chatId);
+              var msgs = 0; try { msgs = (JSON.parse(localStorage.getItem('rf_chat_' + c.chatId)) || []).length; } catch {}
+              var lastTs = c.lastTs ? new Date(c.lastTs).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'Just started';
+              var initials = String(c.otherName||'').split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
+              card.style.cssText = 'background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(4,4,41,0.06);';
+              card.innerHTML = '<div style="background:linear-gradient(135deg,#040429,#0d0d50);padding:16px 18px;display:flex;align-items:center;gap:12px;">'
+                + '<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#b8860b,#d4a017);display:flex;align-items:center;justify-content:center;font-weight:700;color:#040429;font-size:15px;flex-shrink:0;">'+initials+'</div>'
+                + '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(c.otherName)+'</div>'
+                + '<div style="font-size:11px;color:rgba(212,160,23,0.75);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(c.listing)+'</div></div>'
+                + '<span style="background:rgba(45,122,79,0.25);color:#4caf7d;font-size:10px;font-weight:700;border-radius:20px;padding:2px 8px;white-space:nowrap;">● Active</span></div>'
+                + '<div style="padding:14px 18px;display:flex;flex-direction:column;gap:8px;">'
+                + '<div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:#6b7280;">Messages</span><span style="font-weight:600;color:#040429;">'+msgs+'</span></div>'
+                + '<div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:#6b7280;">Last activity</span><span style="font-weight:600;color:#040429;">'+lastTs+'</span></div>'
+                + (deal ? '<span style="font-size:10px;font-weight:700;color:#059669;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:2px 8px;display:inline-block;margin-top:2px;">🤝 Deal Active</span>' : '')
+                + '</div>'
+                + '<div style="padding:10px 18px;background:#fafafa;border-top:1px solid #e5e7eb;display:flex;gap:8px;">'
+                + '<button onclick="navigateToChat(\''+escStr(c.chatId)+'\',\''+escStr(c.otherId)+'\',\''+escStr(c.otherName)+'\',\''+escStr(c.listing)+'\')" style="flex:1;padding:8px;background:#040429;color:#d4a017;border:none;border-radius:6px;font-family:\'Outfit\',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Open Chat</button>'
+                + (deal
+                  ? '<button style="padding:8px 12px;background:#f9fafb;color:#9ca3af;border:1px solid #e5e7eb;border-radius:6px;font-family:\'Outfit\',sans-serif;font-size:11px;cursor:not-allowed;" disabled title="Cannot end — deal active">End</button>'
+                  : '<button onclick="endChatFromDashboard(\''+escStr(c.chatId)+'\')" style="padding:8px 12px;background:#fff1f2;color:#ef4444;border:1px solid #fecaca;border-radius:6px;font-family:\'Outfit\',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">End</button>')
+                + '</div>';
+            } else {
+              card.style.cssText = 'background:#f9fafb;border:2px dashed #e5e7eb;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;gap:10px;min-height:200px;';
+              card.innerHTML = '<div style="font-size:32px;opacity:0.3;">💬</div>'
+                + '<div style="font-size:13px;font-weight:600;color:#9ca3af;">Slot '+(i+1)+' — Available</div>'
+                + '<div style="font-size:12px;color:#d1d5db;text-align:center;">Click Express Interest on any listing to start a chat</div>';
+            }
+            slotsDiv.appendChild(card);
+          }
+
+          if (archived.length > 0) {
+            archSec.style.display = 'block';
+            archDiv.innerHTML = '';
+            archived.slice().reverse().forEach(function(c) {
+              var msgs = 0; try { msgs = (JSON.parse(localStorage.getItem('rf_chat_' + c.chatId)) || []).length; } catch {}
+              var archivedTs = c.archivedTs ? new Date(c.archivedTs).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+              var row = document.createElement('div');
+              row.style.cssText = 'background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;opacity:0.75;';
+              row.innerHTML = '<div style="flex:1;min-width:0;">'
+                + '<div style="font-size:13px;font-weight:700;color:#040429;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(c.otherName)+'</div>'
+                + '<div style="font-size:11px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(c.listing)+'</div>'
+                + '<div style="font-size:11px;color:#9ca3af;">'+msgs+' messages · Ended: '+archivedTs+'</div></div>'
+                + '<span style="font-size:10px;font-weight:700;color:#9ca3af;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:20px;padding:2px 9px;white-space:nowrap;">Archived</span>'
+                + '<button onclick="navigateToChat(\''+escStr(c.chatId)+'\',\''+escStr(c.otherId)+'\',\''+escStr(c.otherName)+'\',\''+escStr(c.listing)+'\')" style="padding:6px 14px;background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;border-radius:6px;font-family:\'Outfit\',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">View (Read-only)</button>';
+              archDiv.appendChild(row);
+            });
+          } else {
+            archSec.style.display = 'none';
+          }
+        }
+
+        var gradients = [
+          'linear-gradient(135deg,#c9a668,#7a5c2e)',
+          'linear-gradient(135deg,#4a7c9e,#2c4f6a)',
+          'linear-gradient(135deg,#7a9e6a,#4a6a3e)',
+          'linear-gradient(135deg,#9e6a7a,#6a3e4a)',
+          'linear-gradient(135deg,#9e9a6a,#6a663e)',
+          'linear-gradient(135deg,#6a7a9e,#3e4a6a)'
+        ];
+
+        function buildRenterCards() {
+          var grid = document.getElementById('renters-grid');
+          if (!grid) return;
+          grid.innerHTML = '';
+          SAMPLE_RENTERS.forEach(function(r, i) {
+            var grad = gradients[i % gradients.length];
+            var card = document.createElement('div');
+            card.style.cssText = 'background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(4,4,41,0.06);transition:box-shadow 0.2s;';
+            card.onmouseover = function(){ this.style.boxShadow='0 6px 24px rgba(4,4,41,0.12)'; };
+            card.onmouseout  = function(){ this.style.boxShadow='0 2px 12px rgba(4,4,41,0.06)'; };
+            card.innerHTML = '<div style="padding:20px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;">'
+              + '<div style="width:44px;height:44px;border-radius:50%;background:' + grad + ';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;">' + r.initials + '</div>'
+              + '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:700;color:var(--dark);">' + r.name + '</div><div style="font-size:12px;color:var(--mid);">' + r.occupation + ' · ' + r.city + '</div></div>'
+              + '<div style="font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap;">' + r.budget + '</div>'
+              + '</div>'
+              + '<div style="padding:16px 22px;display:flex;flex-direction:column;gap:8px;">'
+              + '<div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--mid);">Looking For</span><span style="font-weight:600;color:var(--dark);">' + r.bhk + '</span></div>'
+              + '<div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--mid);">Preferred Area</span><span style="font-weight:600;color:var(--dark);text-align:right;max-width:60%;">' + r.area + '</span></div>'
+              + '<div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--mid);">Family Size</span><span style="font-weight:600;color:var(--dark);">' + r.family + '</span></div>'
+              + '<div style="display:flex;justify-content:space-between;font-size:12.5px;"><span style="color:var(--mid);">Move-in</span><span style="font-weight:600;color:var(--dark);">' + r.moveIn + '</span></div>'
+              + '</div>'
+              + '<div style="padding:12px 22px;background:#fafafa;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'
+              + '<span style="font-size:11px;color:var(--mid);">ID: ' + r.id + '</span>'
+              + '<button onclick="openChat(\'' + r.id + '\',\'' + r.name + '\',\'' + r.bhk + ' Search — ' + r.city + '\')" style="padding:8px 20px;background:var(--dark);color:var(--gold);border:none;border-radius:5px;font-size:12px;font-weight:700;font-family:\'Outfit\',sans-serif;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#b8860b\'" onmouseout="this.style.background=\'var(--dark)\'">💬 Express Interest</button>'
+              + '</div>';
+            grid.appendChild(card);
+          });
+        }
+
+        function buildPropertyCards() {
+          var grid = document.getElementById('properties-grid');
+          if (!grid) return;
+          grid.innerHTML = '';
+          SAMPLE_PROPERTIES.forEach(function(p, i) {
+            var grad = gradients[i % gradients.length];
+            var card = document.createElement('div');
+            card.style.cssText = 'background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(4,4,41,0.06);transition:box-shadow 0.2s;';
+            card.onmouseover = function(){ this.style.boxShadow='0 6px 24px rgba(4,4,41,0.12)'; };
+            card.onmouseout  = function(){ this.style.boxShadow='0 2px 12px rgba(4,4,41,0.06)'; };
+            var badgeHtml = p.badge ? '<span style="position:absolute;top:10px;left:10px;background:rgba(201,166,104,0.92);color:var(--dark);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:0.5px;">' + p.badge + '</span>' : '';
+            card.innerHTML = '<div style="height:110px;background:' + grad + ';position:relative;">' + badgeHtml + '</div>'
+              + '<div style="padding:18px 20px;">'
+              + '<div style="font-size:17px;font-weight:700;color:var(--gold);margin-bottom:2px;">₹' + p.rent + ' <span style="font-size:12px;font-weight:400;color:var(--mid);">/ month</span></div>'
+              + '<div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:3px;">' + p.title + '</div>'
+              + '<div style="font-size:12px;color:var(--mid);margin-bottom:10px;">📍 ' + p.area + ', ' + p.city + '</div>'
+              + '<div style="display:flex;gap:8px;flex-wrap:wrap;font-size:11px;">'
+              + '<span style="background:#f3f4f6;padding:3px 10px;border-radius:12px;font-weight:600;color:var(--dark);">' + p.bhk + '</span>'
+              + '<span style="background:#f3f4f6;padding:3px 10px;border-radius:12px;font-weight:600;color:var(--dark);">' + p.bath + ' Bath</span>'
+              + '<span style="background:#f3f4f6;padding:3px 10px;border-radius:12px;font-weight:600;color:var(--dark);">' + p.sqft + ' sqft</span>'
+              + '<span style="background:#f3f4f6;padding:3px 10px;border-radius:12px;font-weight:600;color:var(--dark);">' + p.furnishing + '</span>'
+              + '</div>'
+              + '</div>'
+              + '<div style="padding:11px 20px;background:#fafafa;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'
+              + '<span style="font-size:11px;color:var(--mid);">Dep: ₹' + p.deposit + ' · Avail: ' + p.available + '</span>'
+              + '<button onclick="openChat(\'' + p.landlordId + '\',\'' + p.landlordName + '\',\'' + p.title + ' — ' + p.city + '\')" style="padding:8px 20px;background:var(--dark);color:var(--gold);border:none;border-radius:5px;font-size:12px;font-weight:700;font-family:\'Outfit\',sans-serif;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#b8860b\'" onmouseout="this.style.background=\'var(--dark)\'">💬 Express Interest</button>'
+              + '</div>';
+            grid.appendChild(card);
+          });
+        }
+
+        // Build cards on page load
+        document.addEventListener('DOMContentLoaded', function() {
+          buildRenterCards();
+          buildPropertyCards();
+          buildChatSlots();
+        });
+        // Also trigger immediately in case DOM is already ready
+        if (document.readyState !== 'loading') {
+          buildRenterCards();
+          buildPropertyCards();
+          buildChatSlots();
+        }
+        </script>
+
       </div>
     </div>
-  </div>
+
+      <!-- ════════════════════════════════
+           TAB 3: MY CHATS
+      ════════════════════════════════ -->
+      <div id="db-panel-chats" style="display:none;padding:40px 60px 80px;max-width:1100px;margin:0 auto;">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:8px;">
+          <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--dark);letter-spacing:-0.5px;margin:0;">My Active Chats</h2>
+          <div style="font-size:12px;color:var(--mid);background:#fff;border:1px solid var(--border);border-radius:20px;padding:5px 14px;">
+            <span id="db-chat-slot-count">0</span> / 3 slots used
+          </div>
+        </div>
+        <p style="font-size:13px;color:var(--mid);margin-bottom:28px;line-height:1.6;">You can have up to <strong>3 active chats</strong> at once. To start a new one when all slots are full, you must end an existing chat first. Ended chats are archived and remain visible below.</p>
+
+        <!-- Active chat slots -->
+        <div id="db-active-chat-slots" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-bottom:40px;"></div>
+
+        <!-- Archived chats -->
+        <div id="db-archived-section" style="display:none;">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--dark);margin-bottom:16px;padding-top:24px;border-top:1px solid var(--border);">Archived Chats</h3>
+          <div id="db-archived-chat-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </div>
+
+  </div><!-- close TAB CONTENT AREA -->
 
   <!-- SEO content block — how the dashboard works -->
   <section style="padding:40px 60px 48px;" aria-label="How your RenterFinder dashboard works">

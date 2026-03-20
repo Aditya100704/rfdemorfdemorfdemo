@@ -831,17 +831,39 @@ type === 'landlord' ? 'Browse Renters' : 'Available Properties';
 dbSwitchTab('profile');
 }
 function dbSwitchTab(tab) {
-const isProfile = tab === 'profile';
-document.getElementById('db-panel-profile').style.display = isProfile ? 'block' : 'none';
-document.getElementById('db-panel-list').style.display    = isProfile ? 'none'  : 'block';
-const tabProfile = document.getElementById('db-tab-profile');
-const tabList    = document.getElementById('db-tab-list');
-tabProfile.style.background = isProfile ? 'var(--gold)' : 'rgba(255,255,255,0.07)';
-tabProfile.style.color      = isProfile ? 'var(--dark)' : 'rgba(255,255,255,0.55)';
-tabProfile.style.fontWeight = isProfile ? '700' : '600';
-tabList.style.background    = isProfile ? 'rgba(255,255,255,0.07)' : 'var(--gold)';
-tabList.style.color         = isProfile ? 'rgba(255,255,255,0.55)' : 'var(--dark)';
-tabList.style.fontWeight    = isProfile ? '600' : '700';
+  var tabs    = ['profile', 'list', 'chats'];
+  var panels  = ['db-panel-profile', 'db-panel-list', 'db-panel-chats'];
+  var btnIds  = ['db-tab-profile', 'db-tab-list', 'db-tab-chats'];
+
+  tabs.forEach(function(t, i) {
+    var panel = document.getElementById(panels[i]);
+    var btn   = document.getElementById(btnIds[i]);
+    var active = (t === tab);
+    if (panel) panel.style.display = active ? 'block' : 'none';
+    if (btn) {
+      btn.style.background  = active ? 'var(--gold)' : 'rgba(255,255,255,0.07)';
+      btn.style.color       = active ? 'var(--dark)' : 'rgba(255,255,255,0.55)';
+      btn.style.fontWeight  = active ? '700' : '600';
+    }
+  });
+
+  // Build chat slots when switching to chats tab
+  if (tab === 'chats' && typeof buildChatSlots === 'function') {
+    buildChatSlots();
+  }
+
+  // Show correct list panel (renters vs properties) when on list tab
+  if (tab === 'list' && typeof window._dashboardUser !== 'undefined') {
+    var u = window._dashboardUser;
+    if (u) {
+      var rentersPanel    = document.getElementById('db-renters-panel');
+      var propertiesPanel = document.getElementById('db-properties-panel');
+      if (rentersPanel && propertiesPanel) {
+        rentersPanel.style.display    = (u.type === 'landlord') ? 'block' : 'none';
+        propertiesPanel.style.display = (u.type === 'renter')   ? 'block' : 'none';
+      }
+    }
+  }
 }
 function dbToggleEdit() {
 const inputs = document.querySelectorAll('#db-panel-profile .db-field-input');
