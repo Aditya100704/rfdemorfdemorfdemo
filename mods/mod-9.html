@@ -558,40 +558,9 @@
   const MOD_NAME = 'Mod 9';
   const AUTO_REFRESH_SECS = 30;
 
-  function toggleModPanel() {
-    const body    = document.getElementById('mod-mgmt-body');
-    const chevron = document.getElementById('mod-mgmt-chevron');
-    body.classList.toggle('open');
-    chevron.classList.toggle('open');
-  }
+  function toggleModPanel() { /* mod panel only on admin dashboard */ }
 
-  function renderModPanel() {
-    const active      = getModeActive();
-    const assignments = getAssignments();
-    const activeCount = MODS.filter(m => active[m.id]).length;
-    const totalAssigned = Object.keys(assignments).length;
-    document.getElementById('mod-mgmt-meta').textContent = `${activeCount} active · ${totalAssigned} chats assigned`;
-    const grid = document.getElementById('mod-grid');
-    grid.innerHTML = '';
-    MODS.forEach(m => {
-      const isActive   = !!active[m.id];
-      const chatCount  = Object.values(assignments).filter(v => v === m.id).length;
-      const card       = document.createElement('div');
-      card.className   = `mod-card${isActive?' active-mod':''}`;
-      card.innerHTML   = `
-        <div class="mod-card-avatar">${m.name.replace('Mod ','M')}</div>
-        <div class="mod-card-info">
-          <div class="mod-card-name">${m.name}</div>
-          <div class="mod-card-count">${chatCount} chat${chatCount!==1?'s':''} assigned</div>
-          <a class="mod-card-link" href="${m.path}" target="_blank">Open Dashboard ↗</a>
-        </div>
-        <label class="mod-toggle" title="${isActive?'Deactivate':'Activate'} ${m.name}">
-          <input type="checkbox" ${isActive?'checked':''} onchange="toggleMod('${m.id}')">
-          <span class="mod-toggle-slider"></span>
-        </label>`;
-      grid.appendChild(card);
-    });
-  }
+  function renderModPanel() { /* mod panel only on admin dashboard */ }
 
   function attemptLogin() {
     const pwd = document.getElementById('pwd-input').value;
@@ -737,8 +706,8 @@
     renderDealsList(getDeals(), document.getElementById('deals-list'));
     renderAppealsList(appeals, document.getElementById('appeals-list'));
     renderUsersTable(chats, modLog, getBanned());
-    renderArchivedList(document.getElementById('archived-list'));
-    renderHistoryList(document.getElementById('history-list'));
+    const _al = document.getElementById('archived-list'); if (_al) renderArchivedList(_al);
+    const _hl = document.getElementById('history-list'); if (_hl) renderHistoryList(_hl);
   }
 
   // ── CHATS LIST ───────────────────────────────────────────────
@@ -1075,9 +1044,9 @@
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
     pendingCancelChatId = chatId;
-    document.getElementById('cancel-deal-msg').textContent =
+    const _cdm = document.getElementById('cancel-deal-msg'); if (_cdm) _cdm.textContent =
       `Cancel the deal for "${deal.listing}" between ${deal.userA} and ${deal.userB}? This will notify both parties and cannot be undone.`;
-    document.getElementById('cancel-deal-confirm-box').classList.add('show');
+    const _cdb = document.getElementById('cancel-deal-confirm-box'); if (_cdb) _cdb.classList.add('show');
   }
 
   function closeCancelDealConfirm() {
@@ -1149,7 +1118,7 @@
     const cancelledDeals  = deals.filter(d => d.stage === 'Cancelled');
     const completedDeals  = deals.filter(d => d.stage === 'Complete' || d.stage_complete);
     const total = archivedChats.length + cancelledDeals.length;
-    document.getElementById('tab-archived-count').textContent = total;
+    const _tac = document.getElementById('tab-archived-count'); if (_tac) _tac.textContent = total;
     container.innerHTML = '';
     if (!archivedChats.length && !cancelledDeals.length && !completedDeals.length) {
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:60px 20px;"><div class="empty-icon">📁</div><h3>Nothing archived yet</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Completed and ended chats will appear here.</p></div>`;
@@ -1597,7 +1566,8 @@
   }
 
   function filterArchived() {
-    const q = document.getElementById('search-archived').value.trim().toLowerCase();
+    const _sa = document.getElementById('search-archived'); if (!_sa) return;
+    const q = _sa.value.trim().toLowerCase();
     const rows = document.querySelectorAll('#archived-list .deal-card, #archived-list .chat-row, #archived-list > div');
     let shown = 0;
     rows.forEach(row => {
@@ -1605,7 +1575,7 @@
       row.style.display = match ? '' : 'none';
       if (match) shown++;
     });
-    const el = document.getElementById('search-archived-count');
+    const el = document.getElementById('search-archived-count') || {};
     if (el) el.textContent = q ? `${shown} result${shown!==1?'s':''}` : '';
   }
 
@@ -1624,7 +1594,7 @@
     if (freshAppeals.length !== appeals.length){ _appeals = freshAppeals; }
 
     const total = freshLog.length + freshAppeals.length;
-    document.getElementById('tab-history-count').textContent = total;
+    const _thc = document.getElementById('tab-history-count'); if (_thc) _thc.textContent = total;
 
     if (!total) {
       container.innerHTML = `<div class="empty-state"><div class="empty-icon">🕓</div><h3>No recent history</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Flagged messages and appeals from the last 48 hours appear here, then auto-delete.</p></div>`;
@@ -1680,7 +1650,8 @@
   }
 
   function filterHistory() {
-    const q    = document.getElementById('search-history').value.trim().toLowerCase();
+    const _sh = document.getElementById('search-history'); if (!_sh) return;
+    const q = _sh.value.trim().toLowerCase();
     const rows = document.querySelectorAll('#history-list .flag-card');
     let shown  = 0;
     rows.forEach(row => {
@@ -1688,7 +1659,7 @@
       row.style.display = match ? '' : 'none';
       if (match) shown++;
     });
-    const el = document.getElementById('search-history-count');
+    const el = document.getElementById('search-history-count') || {};
     if (el) el.textContent = q ? `${shown} result${shown!==1?'s':''}` : '';
   }
 
