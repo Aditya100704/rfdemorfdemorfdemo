@@ -760,6 +760,7 @@
   let _banned     = {};
   let _msgCache   = {};   // chatId -> array of messages
   let _unsubList  = [];   // store unsubs to clean up
+  let _listenersStarted = false;
 
   // ── GETTERS (read from cache) ────────────────────────────────
   const getChatsIndex = () => _chats;
@@ -861,7 +862,6 @@
     loadDashboard();
   }
 
-  let _listenersStarted = false;
   function startFirestoreListeners() {
     if (_listenersStarted) return;
     _listenersStarted = true;
