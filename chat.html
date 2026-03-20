@@ -598,7 +598,7 @@
 
 <script>
   // Moderation endpoint — Cloud Function (key lives server-side, never exposed)
-  const MODERATE_URL = 'https://us-central1-renterfinder.cloudfunctions.net/moderateMessage';
+  const MODERATE_URL = 'https://moderatemessage-blalovfmaa-uc.a.run.app';
 
   const params     = new URLSearchParams(location.search);
   const CHAT_ID    = params.get('chatId')    || 'demo-001';

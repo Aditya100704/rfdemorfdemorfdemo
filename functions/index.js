@@ -3,17 +3,29 @@ const { defineSecret } = require('firebase-functions/params');
 
 const ANTHROPIC_KEY = defineSecret('ANTHROPIC_KEY');
 
-// ── MODERATION FUNCTION ───────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  'https://aditya100704.github.io',
+  'http://localhost',
+  'http://127.0.0.1'
+];
+
+function setCors(req, res) {
+  const origin = req.headers.origin;
+  const allowed = !origin || ALLOWED_ORIGINS.includes(origin);
+  res.set('Access-Control-Allow-Origin', allowed ? (origin || '*') : 'https://aditya100704.github.io');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+}
+
 exports.moderateMessage = onRequest(
-  { secrets: [ANTHROPIC_KEY], cors: true },
+  { secrets: [ANTHROPIC_KEY], cors: false },
   async (req, res) => {
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' });
-    }
+    setCors(req, res);
+    if (req.method === 'OPTIONS') return res.status(204).send('');
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
     const { text } = req.body;
-    if (!text || typeof text !== 'string') {
-      return res.status(400).json({ error: 'Missing text' });
-    }
+    if (!text || typeof text !== 'string') return res.status(400).json({ error: 'Missing text' });
 
     const patterns = [
       { re: /(\+?91[\s\-]?)?[6-9]\d{9}/, reason: 'Phone numbers are not allowed.', violationType: 'contact_info' },
@@ -53,13 +65,16 @@ Message: ${JSON.stringify(text)}`;
   }
 );
 
-// ── CHATBOT FUNCTION ──────────────────────────────────────────
 exports.chatbot = onRequest(
-  { secrets: [ANTHROPIC_KEY], cors: true },
+  { secrets: [ANTHROPIC_KEY], cors: false },
   async (req, res) => {
+    setCors(req, res);
+    if (req.method === 'OPTIONS') return res.status(204).send('');
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
     const { messages, system } = req.body;
     if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'Missing messages' });
+
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
