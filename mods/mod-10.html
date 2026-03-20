@@ -679,12 +679,7 @@
     if (i !== -1) { Object.assign(_modLog[i], patch); }
     RF.updateModLogEntry(id, patch).catch(e => console.warn('[RF] updateLogEntry', e));
   }
-  const isModJoined = id => {
-    const s = getJoinSlots(id);
-    return !!(s.admin || s.mod);
-  };
-  function isAdminJoined(chatId) { return !!getJoinSlots(chatId).admin; }
-  function isModSlotJoined(chatId) { return !!getJoinSlots(chatId).mod; }
+
   function getJoinUrl(chatId) {
     const chat = getChatsIndex().find(c => c.chatId === chatId);
     const listing = chat ? chat.listing : '';
