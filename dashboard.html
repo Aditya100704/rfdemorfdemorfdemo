@@ -616,6 +616,115 @@ body.rf-ready{opacity:1;}
 @media(min-width:2100px){ body { zoom: 1.55; } }
 @media(min-width:2560px){ body { zoom: 1.85; } }
 @media(min-width:3200px){ body { zoom: 2.2; } }
+
+  /* ══════════════════════════════════════════════════════
+     USER DASHBOARD — RESPONSIVE / MOBILE
+  ══════════════════════════════════════════════════════ */
+  @media (max-width: 768px) {
+    /* Hero strip */
+    .db-hero-strip { padding: 20px 16px 0 !important; }
+
+    /* Quick stats strip: allow horizontal scroll */
+    .db-stats-strip {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      gap: 0;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+    .db-stats-strip::-webkit-scrollbar { display: none; }
+    .db-stats-strip > div {
+      padding: 12px 18px 12px 0 !important;
+      margin-right: 18px !important;
+      flex-shrink: 0;
+    }
+
+    /* Tab button row: full width, equal split, wrap if needed */
+    .db-tab-row { flex-wrap: wrap; gap: 4px !important; margin-top: 12px !important; }
+    .db-tab-row button {
+      flex: 1 1 auto;
+      padding: 10px 10px !important;
+      font-size: 11px !important;
+      border-radius: 6px 6px 0 0 !important;
+      margin-right: 0 !important;
+      white-space: nowrap;
+    }
+
+    /* Main content area */
+    .db-content-area { padding: 20px 14px 40px !important; }
+
+    /* Profile card header: stack avatar and name on tiny screens */
+    .db-card-header { padding: 18px 18px !important; gap: 14px !important; }
+    #db-avatar { width: 52px !important; height: 52px !important; font-size: 20px !important; }
+    #db-profile-name-display { font-size: 17px !important; }
+    #db-profile-mobile-display { font-size: 12px !important; }
+
+    /* Profile fields body */
+    .db-fields-body { padding: 20px 16px !important; }
+
+    /* Field grids: 1 column on mobile */
+    .db-field-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
+
+    /* Fields that span full row: keep spanning */
+    .db-field-grid [style*="grid-column:1/-1"] { grid-column: 1 / -1 !important; }
+
+    /* Profile placeholder */
+    .db-placeholder { padding: 32px 16px !important; }
+
+    /* How-it-works section */
+    .db-how-section { padding: 28px 16px 32px !important; }
+    .db-how-section > div > div { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+    /* Section headings and button rows */
+    #db-panel-profile > div:first-child,
+    #db-panel-list > div:first-child,
+    #db-panel-chats > div:first-child {
+      flex-direction: column;
+      align-items: flex-start !important;
+    }
+
+    /* Heading sizes */
+    #db-panel-profile h2,
+    #db-panel-list h2,
+    #db-panel-chats h2 { font-size: 20px !important; }
+
+    /* Edit/Save buttons */
+    #db-edit-btn, #db-save-btn { font-size: 12px !important; padding: 8px 14px !important; }
+
+    /* Renters/properties grid */
+    #renters-grid,
+    #db-properties-grid { grid-template-columns: 1fr !important; }
+
+    /* Welcome name */
+    #db-welcome-name { font-size: clamp(22px, 6vw, 32px) !important; }
+
+    /* Status badge row */
+    #db-status-badge { padding: 5px 12px !important; }
+    #db-status-badge span:last-child { font-size: 11px !important; }
+
+    /* Chat list rows */
+    #db-chat-list > div,
+    .db-chat-row { flex-wrap: wrap; }
+  }
+
+  @media (max-width: 480px) {
+    .db-hero-strip { padding: 16px 12px 0 !important; }
+    .db-content-area { padding: 14px 10px 32px !important; }
+    .db-card-header { padding: 14px 12px !important; gap: 10px !important; }
+    .db-fields-body { padding: 14px 12px !important; }
+    .db-field-grid { gap: 8px !important; }
+    .db-tab-row button { font-size: 10px !important; padding: 9px 6px !important; }
+    #db-avatar { width: 44px !important; height: 44px !important; font-size: 17px !important; }
+    #db-welcome-name { font-size: clamp(18px, 5vw, 26px) !important; }
+
+    /* Stats strip items: smaller text */
+    .db-stats-strip > div > div:first-child { font-size: 9px !important; letter-spacing: 1px !important; }
+    .db-stats-strip > div > div:last-child { font-size: 13px !important; }
+
+    /* Inline search filter pill */
+    #db-panel-list > div:first-child > div:last-child { font-size: 11px !important; padding: 6px 10px !important; }
+  }
+
 </style>
 <script>
 (function(){
@@ -677,7 +786,7 @@ window.addEventListener('pageshow',function(){
   <div style="min-height:100vh;padding-top:72px;background:var(--offwhite);">
 
     <!-- ── DASHBOARD HERO STRIP ── -->
-    <div style="background:var(--dark);padding:32px 60px 0;border-bottom:1px solid rgba(201,166,104,0.2);">
+    <div class="db-hero-strip" style="background:var(--dark);padding:32px 60px 0;border-bottom:1px solid rgba(201,166,104,0.2);">
       <div style="max-width:1100px;margin:0 auto;">
 
         <!-- Top bar: welcome + status badge -->
@@ -699,7 +808,7 @@ window.addEventListener('pageshow',function(){
         </div>
 
         <!-- Quick stats strip -->
-        <div style="display:flex;gap:0;border-top:1px solid rgba(201,166,104,0.15);">
+        <div class="db-stats-strip" style="display:flex;gap:0;border-top:1px solid rgba(201,166,104,0.15);">
           <div style="padding:16px 32px 16px 0;border-right:1px solid rgba(201,166,104,0.15);margin-right:32px;">
             <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:4px;">Member ID</div>
             <div id="db-member-id" style="font-size:14px;font-weight:700;color:var(--gold);font-family:monospace;letter-spacing:1px;">RF-2025-—</div>
@@ -715,7 +824,7 @@ window.addEventListener('pageshow',function(){
         </div>
 
         <!-- Tab switcher (anchored to bottom of hero) -->
-        <div style="display:flex;gap:0;margin-top:8px;">
+        <div class="db-tab-row" style="display:flex;gap:0;margin-top:8px;">
           <button id="db-tab-profile" onclick="dbSwitchTab('profile')" style="padding:14px 28px;background:var(--gold);color:var(--dark);border:none;border-radius:0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-top-left-radius:6px;border-top-right-radius:6px;margin-right:4px;">
             👤 My Profile
           </button>
@@ -730,7 +839,7 @@ window.addEventListener('pageshow',function(){
     </div>
 
     <!-- ── TAB CONTENT AREA ── -->
-    <div style="max-width:1100px;margin:0 auto;padding:40px 60px 80px;">
+    <div class="db-content-area" style="max-width:1100px;margin:0 auto;padding:40px 60px 80px;">
 
       <!-- ════════════════════════════════
            TAB 1: MY PROFILE
@@ -751,7 +860,7 @@ window.addEventListener('pageshow',function(){
         <div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
 
           <!-- Card header with avatar -->
-          <div style="background:var(--dark);padding:28px 36px;display:flex;align-items:center;gap:24px;">
+          <div class="db-card-header" style="background:var(--dark);padding:28px 36px;display:flex;align-items:center;gap:24px;">
             <div id="db-avatar" style="width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dk));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--dark);flex-shrink:0;border:3px solid rgba(201,166,104,0.4);">U</div>
             <div>
               <div id="db-profile-name-display" style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--white);">—</div>
@@ -761,9 +870,9 @@ window.addEventListener('pageshow',function(){
 
           <!-- ── RENTER PROFILE FIELDS ── -->
           <!-- [BACKEND: show/hide renter vs landlord sections based on user.type] -->
-          <div id="db-renter-fields" style="padding:32px 36px;display:none;">
+          <div id="db-renter-fields" class="db-fields-body" style="padding:32px 36px;display:none;">
             <div style="font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Personal Details</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
+            <div class="db-field-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
               <div class="db-field-group"><label class="db-field-label">Full Name</label><input class="db-field-input" id="db-rn-name" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Father / Spouse Name</label><input class="db-field-input" id="db-rn-father" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Gender</label><input class="db-field-input" id="db-rn-gender" type="text" placeholder="—" disabled></div>
@@ -781,7 +890,7 @@ window.addEventListener('pageshow',function(){
               <div class="db-field-group"><label class="db-field-label">Present State</label><input class="db-field-input" id="db-rn-present-state" type="text" placeholder="—" disabled></div>
             </div>
             <div style="font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Rental Requirements</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="db-field-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
               <div class="db-field-group"><label class="db-field-label">BHK Requirement</label><input class="db-field-input" id="db-rn-bhk" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Preferred Size</label><input class="db-field-input" id="db-rn-size" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Rent Range</label><input class="db-field-input" id="db-rn-rent-range" type="text" placeholder="—" disabled></div>
@@ -795,9 +904,9 @@ window.addEventListener('pageshow',function(){
 
           <!-- ── LANDLORD PROFILE FIELDS ── -->
           <!-- [BACKEND: show/hide renter vs landlord sections based on user.type] -->
-          <div id="db-landlord-fields" style="padding:32px 36px;display:none;">
+          <div id="db-landlord-fields" class="db-fields-body" style="padding:32px 36px;display:none;">
             <div style="font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Personal Details</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
+            <div class="db-field-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
               <div class="db-field-group"><label class="db-field-label">Full Name</label><input class="db-field-input" id="db-ll-name" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Father / Spouse Name</label><input class="db-field-input" id="db-ll-father" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Gender</label><input class="db-field-input" id="db-ll-gender" type="text" placeholder="—" disabled></div>
@@ -809,7 +918,7 @@ window.addEventListener('pageshow',function(){
               <div class="db-field-group"><label class="db-field-label">Personal District</label><input class="db-field-input" id="db-ll-personal-district" type="text" placeholder="—" disabled></div>
             </div>
             <div style="font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);">Property Details</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="db-field-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
               <div class="db-field-group"><label class="db-field-label">Property Type</label><input class="db-field-input" id="db-ll-prop-type" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Available For</label><input class="db-field-input" id="db-ll-available-for" type="text" placeholder="—" disabled></div>
               <div class="db-field-group"><label class="db-field-label">Monthly Rent (₹)</label><input class="db-field-input" id="db-ll-rent" type="text" placeholder="—" disabled></div>
@@ -829,7 +938,7 @@ window.addEventListener('pageshow',function(){
           </div>
 
           <!-- Placeholder shown before user data is loaded -->
-          <div id="db-profile-placeholder" style="padding:60px 36px;text-align:center;">
+          <div id="db-profile-placeholder" class="db-placeholder" style="padding:60px 36px;text-align:center;">
             <div style="font-size:40px;margin-bottom:16px;opacity:0.3;">👤</div>
             <div style="font-size:14px;color:var(--mid);">
               <!-- [BACKEND: remove this placeholder once user data is loaded] -->
@@ -1170,7 +1279,7 @@ window.addEventListener('pageshow',function(){
       <!-- ════════════════════════════════
            TAB 3: MY CHATS
       ════════════════════════════════ -->
-      <div id="db-panel-chats" style="display:none;padding:40px 60px 80px;max-width:1100px;margin:0 auto;">
+      <div id="db-panel-chats" class="db-content-area" style="display:none;padding:40px 60px 80px;max-width:1100px;margin:0 auto;">
 
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:8px;">
           <h2 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--dark);letter-spacing:-0.5px;margin:0;">My Active Chats</h2>
@@ -1193,7 +1302,7 @@ window.addEventListener('pageshow',function(){
   </div><!-- close TAB CONTENT AREA -->
 
   <!-- SEO content block — how the dashboard works -->
-  <section style="padding:40px 60px 48px;" aria-label="How your RenterFinder dashboard works">
+  <section class="db-how-section" style="padding:40px 60px 48px;" aria-label="How your RenterFinder dashboard works">
     <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(22px,3vw,30px);font-weight:700;color:var(--dark);margin-bottom:16px;">How Your Dashboard Works</h2>
     <p style="font-size:15px;color:var(--mid);line-height:1.8;margin-bottom:14px;">Your RenterFinder.com dashboard is your personal control centre for managing your rental profile or property listing. Once you log in, all your information — profile details, active listings, match notifications, and account settings — are available in one place.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:24px;">
