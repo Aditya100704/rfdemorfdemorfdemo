@@ -630,111 +630,80 @@
   const SEND_COOLDOWN_MS = 2000;    // #9 rate limit
   const CHAT_EXPIRY_DAYS = 60;      // #11 chat expiry
 
-  const STORAGE_KEY     = `rf_chat_${CHAT_ID}`;
-  const VIOLATIONS_KEY  = `rf_violations_${CHAT_ID}`;
-  const MOD_LOG_KEY     = 'rf_modlog';
-  const CHATS_INDEX_KEY = 'rf_chats_index';
-  const MOD_JOINED_KEY  = `rf_mod_joined_${CHAT_ID}`;
-  const MOD_APPROVE_KEY = `rf_mod_approve_${CHAT_ID}`;
-  const READ_KEY        = `rf_read_${CHAT_ID}`;    // #6 read receipts
-  const TYPING_KEY      = `rf_typing_${CHAT_ID}`;  // #12 real typing indicator
-  const APPEALS_KEY     = 'rf_appeals';
-  const DEALS_KEY       = 'rf_deals';
-  const DEAL_KEY        = `rf_deal_${CHAT_ID}`;
+  // ── IN-MEMORY STATE — Firebase is the only source of truth ──
+  // These vars are populated by onSnapshot listeners below.
+  // Nothing reads from localStorage for chat data anymore.
+  let _messages   = [];
+  let _violations = {};
+  let _deal       = null;
+  let _meeting    = null;
+  let _joinSlots  = { admin: null, mod: null };
+  let _chatMeta   = {};          // lastTs, started, archived, etc.
 
-  // ── FIREBASE FIRE-AND-FORGET WRAPPER ─────────────────────────
-  // Calls fn() asynchronously, never throws, never blocks UI
-  function _fb(fn) { try { Promise.resolve(fn()).catch(e => console.warn('[RF]', e)); } catch(e) { console.warn('[RF]', e); } }
+  // Only truly local/ephemeral things stay in localStorage:
+  const READ_KEY   = `rf_read_${CHAT_ID}`;
+  const TYPING_KEY = `rf_typing_${CHAT_ID}`;
+  const MEETING_KEY = `rf_meeting_${CHAT_ID}`; // kept as key name only; value lives in _meeting
 
-
-  const loadMessages   = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }    catch { return []; } };
-  const _saveMessagesLS = m => localStorage.setItem(STORAGE_KEY, JSON.stringify(m));
-  const saveMessages = (m) => {
-    _saveMessagesLS(m);
-    // Also write each new message to Firestore (messages push, not full replace)
-    // Called by sendMessage which pushes one msg then calls saveMessages
-    // We detect the last message and save it
-    if (m.length > 0) {
-      const last = m[m.length - 1];
-      _fb(() => RF.saveMessage(CHAT_ID, last));
-    }
+  // ── DATA ACCESSORS ────────────────────────────────────────────
+  const loadMessages   = () => _messages;
+  const saveMessages   = (m) => {
+    _messages = m;
+    if (m.length > 0) RF.saveMessage(CHAT_ID, m[m.length - 1]).catch(e => console.warn('[RF]', e));
   };
-  const loadViolations = () => { try { return JSON.parse(localStorage.getItem(VIOLATIONS_KEY)) || {}; } catch { return {}; } };
+  const loadViolations = () => _violations;
   const saveViolations = (v) => {
-    localStorage.setItem(VIOLATIONS_KEY, JSON.stringify(v));
-    _fb(() => RF.saveViolations(CHAT_ID, v));
+    _violations = v;
+    RF.saveViolations(CHAT_ID, v).catch(e => console.warn('[RF]', e));
   };
-  function getJoinSlots() {
-    try { return JSON.parse(localStorage.getItem(MOD_JOINED_KEY)) || { admin: null, mod: null }; }
-    catch { return { admin: null, mod: null }; }
-  }
+  function getJoinSlots()       { return _joinSlots; }
   function saveJoinSlots(slots) {
-    localStorage.setItem(MOD_JOINED_KEY, JSON.stringify(slots));
-    _fb(() => RF.saveJoinSlots(CHAT_ID, slots));
+    _joinSlots = slots;
+    RF.saveJoinSlots(CHAT_ID, slots).catch(e => console.warn('[RF]', e));
   }
-  const isModJoined = () => { const s = getJoinSlots(); return !!(s.admin || s.mod); };
+  const isModJoined = () => !!(_joinSlots.admin || _joinSlots.mod);
   function setModJoined() {
-    const slots = getJoinSlots();
+    const slots = { ..._joinSlots };
     if (URL_ROLE === 'mod' && URL_MOD_ID) {
-      slots.mod = { id: URL_MOD_ID, name: URL_MOD_NAME, ts: Date.now() };
+      slots.mod   = { id: URL_MOD_ID, name: URL_MOD_NAME, ts: Date.now() };
     } else {
       slots.admin = { id: 'admin', name: URL_MOD_NAME || 'Admin', ts: Date.now() };
     }
     saveJoinSlots(slots);
   }
-  const loadModLog     = () => { try { return JSON.parse(localStorage.getItem(MOD_LOG_KEY)) || []; } catch { return []; } };
-
   function appendModLog(e) {
-    const log = loadModLog(); log.unshift(e);
-    if (log.length > 500) log.splice(500);
-    localStorage.setItem(MOD_LOG_KEY, JSON.stringify(log));
-    _fb(() => RF.appendModLog(e));
+    RF.appendModLog(e).catch(err => console.warn('[RF]', err));
   }
 
-  function registerChat() {
-    // Register chat in localStorage index
-    const idx = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
-    if (!idx.find(c => c.chatId === CHAT_ID)) {
-      idx.push({ chatId: CHAT_ID, userA: USERS.A.name, userB: USERS.B.name, listing: LISTING, started: Date.now() });
-      localStorage.setItem(CHATS_INDEX_KEY, JSON.stringify(idx));
-    }
-    // Also register in Firestore
-    _fb(() => RF.registerChat(CHAT_ID, { userA: USERS.A.name, userB: USERS.B.name, listing: LISTING, violations:{A:0,B:0}, joinSlots:{admin:null,mod:null} }));
-    // Always try to assign
-    autoAssignChat(CHAT_ID);
+  async function registerChat() {
+    await RF.registerChat(CHAT_ID, { userA: USERS.A.name, userB: USERS.B.name, listing: LISTING, violations:{A:0,B:0}, joinSlots:{admin:null,mod:null} });
+    await autoAssignChat(CHAT_ID);
   }
 
-  function autoAssignChat(chatId) {
-    // Initialise mod-1 and mod-2 as active by default
-    const stored = JSON.parse(localStorage.getItem('rf_mods_active')) || {};
-    if (stored['mod-1'] === undefined) stored['mod-1'] = true;
-    if (stored['mod-2'] === undefined) stored['mod-2'] = true;
-    localStorage.setItem('rf_mods_active', JSON.stringify(stored));
-
-    // Skip if already assigned (admin may have manually assigned)
-    const assignments = JSON.parse(localStorage.getItem('rf_chat_assignments')) || {};
-    if (assignments[chatId]) return;
-
-    // Build active mod pool
+  async function autoAssignChat(chatId) {
+    const existing = await RF.getAssignment(chatId);
+    if (existing) return; // already assigned
+    // Read active mods from Firestore
+    let modsActive = { 'mod-1': true, 'mod-2': true };
+    try {
+      const snap = await db.collection('modsActive').get();
+      if (!snap.empty) {
+        modsActive = {};
+        snap.docs.forEach(d => { modsActive[d.id] = d.data().active; });
+      }
+    } catch {}
     const ALL_MODS = ['mod-1','mod-2','mod-3','mod-4','mod-5','mod-6','mod-7','mod-8','mod-9','mod-10'];
-    const pool = ALL_MODS.filter(id => stored[id]);
+    const pool = ALL_MODS.filter(id => modsActive[id]);
     if (!pool.length) pool.push('mod-1');
-
-    // Deterministic hash — no counter, no race condition
     let h = 0;
     for (let i = 0; i < chatId.length; i++) { h = ((h << 5) - h) + chatId.charCodeAt(i); h |= 0; }
-    assignments[chatId] = pool[Math.abs(h) % pool.length];
-    localStorage.setItem('rf_chat_assignments', JSON.stringify(assignments));
-    console.log('[RF] Chat', chatId, '→ assigned to', assignments[chatId]);
-    _fb(() => RF.saveAssignment(chatId, assignments[chatId]));
+    const assignedMod = pool[Math.abs(h) % pool.length];
+    await RF.saveAssignment(chatId, assignedMod);
+    console.log('[RF] Chat', chatId, '→ assigned to', assignedMod);
   }
+
   function updateChatIndex(text) {
-    try {
-      const idx = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
-      const chat = idx.find(c => c.chatId === CHAT_ID);
-      if (chat) { chat.lastMessage = text.slice(0,60); chat.lastTs = Date.now(); localStorage.setItem(CHATS_INDEX_KEY, JSON.stringify(idx)); }
-    } catch {}
-    _fb(() => RF.updateChatMeta(CHAT_ID, { lastMessage: text.slice(0,60), lastTs: Date.now() }));
+    RF.updateChatMeta(CHAT_ID, { lastMessage: text.slice(0,60), lastTs: Date.now() }).catch(e => console.warn('[RF]', e));
   }
 
   function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -742,9 +711,8 @@
   // ── #11 CHAT EXPIRY CHECK ─────────────────────────────────────
   function checkExpiry() {
     try {
-      const idx  = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
-      const chat = idx.find(c => c.chatId === CHAT_ID);
-      if (!chat) return;
+      const chat = _chatMeta;
+      if (!chat || !chat.started) return;
       const lastActivity = chat.lastTs || chat.started;
       const daysIdle = (Date.now() - lastActivity) / (1000 * 60 * 60 * 24);
       const daysLeft = Math.max(0, Math.ceil(CHAT_EXPIRY_DAYS - daysIdle));
@@ -1137,11 +1105,7 @@ Message: ${JSON.stringify(text)}`;
 
   // ── #13 FLAG FOR MONITORING ───────────────────────────────────
   function flagForMonitoring() {
-    try {
-      const idx  = JSON.parse(localStorage.getItem(CHATS_INDEX_KEY)) || [];
-      const chat = idx.find(c => c.chatId === CHAT_ID);
-      if (chat) { chat.needsMonitoring = true; localStorage.setItem(CHATS_INDEX_KEY, JSON.stringify(idx)); }
-    } catch {}
+    RF.updateChatMeta(CHAT_ID, { needsMonitoring: true }).catch(e => console.warn('[RF]', e));
   }
 
   // ── #7 IMAGE HANDLING ─────────────────────────────────────────
@@ -1193,52 +1157,55 @@ Message: ${JSON.stringify(text)}`;
     const text = document.getElementById('appeal-text').value.trim();
     if (!text || text.length < 10) { document.getElementById('appeal-text').style.borderColor = '#ef4444'; return; }
     try {
-      const appeals = JSON.parse(localStorage.getItem(APPEALS_KEY)) || [];
-      appeals.unshift({
+      const appeal = {
         id: Date.now(), chatId: CHAT_ID, listing: LISTING,
         userId: USERS[currentIdentity].id,
         userName: USERS[currentIdentity].name,
         userRole: USERS[currentIdentity].role,
         text, ts: Date.now(), status: 'pending'
-      });
-      localStorage.setItem(APPEALS_KEY, JSON.stringify(appeals));
-      _fb(() => RF.saveAppeal(appeals[0]));
+      };
+      RF.saveAppeal(appeal).catch(e => console.warn('[RF] appeal', e));
     } catch {}
     document.getElementById('appeal-form-view').style.display = 'none';
     document.getElementById('appeal-success-view').style.display = 'block';
   }
 
   // ── CROSS-TAB EVENTS ─────────────────────────────────────────
-  window.addEventListener('storage', function(e) {
-    if (e.key === MOD_APPROVE_KEY && e.newValue) {
-      try {
-        const approval = JSON.parse(e.newValue);
-        const msgs = loadMessages();
-        if (!msgs.find(m => m.id === approval.originalId)) {
-          msgs.push({ id: approval.originalId || Date.now(), senderIdentity: approval.senderIdentity, senderId: approval.senderId, senderName: approval.senderName, text: approval.text, ts: Date.now(), moderatorApproved: true });
-          saveMessages(msgs);
-        }
-        const container = document.getElementById('chat-messages');
-        renderMessages();
-        localStorage.removeItem(MOD_APPROVE_KEY);
-      } catch {}
-    }
-    if (e.key === MOD_JOINED_KEY && e.newValue) {
-      document.getElementById('mod-joined-banner').classList.add('show');
-      try {
-        const slots = JSON.parse(e.newValue) || {};
-        const joinerName = slots.mod?.name || slots.admin?.name || 'RenterFinder Moderator';
+  // ── FIREBASE REAL-TIME LISTENERS ─────────────────────────────
+  // These replace all localStorage storage-event cross-device signalling.
+  // Everything flows through Firestore onSnapshot.
+
+  // 1. Messages — receives new msgs from other party AND mod-approved msgs
+  RF.onMessages(CHAT_ID, function(msgs) {
+    _messages = msgs;
+    renderMessages();
+    markRead();
+  });
+
+  // 2. Chat meta — meeting, deal, joinSlots, violations, expiry
+  RF.onChatMeta(CHAT_ID, function(data) {
+    // Merge everything into in-memory state
+    _chatMeta = data;
+    if (data.violations !== undefined) _violations = data.violations;
+    if (data.deal       !== undefined) { _deal    = data.deal;    updateDealBar();    }
+    if (data.meeting    !== undefined) { _meeting = data.meeting; updateCalendarBtn(); }
+    if (data.joinSlots  !== undefined) {
+      const wasJoined = isModJoined();
+      _joinSlots = data.joinSlots;
+      if (!wasJoined && isModJoined()) {
+        const joinerName = _joinSlots.mod?.name || _joinSlots.admin?.name || 'RenterFinder Moderator';
         const nameEl = document.getElementById('mod-joined-name');
         if (nameEl) nameEl.textContent = joinerName;
-      } catch {}
-      const container = document.getElementById('chat-messages');
-      const sys = document.createElement('div'); sys.className = 'sys-msg mod-sys';
-      sys.textContent = '🛡️ RenterFinder Moderator has joined this chat';
-      container.appendChild(sys); container.scrollTop = container.scrollHeight;
+        document.getElementById('mod-joined-banner').classList.add('show');
+      }
     }
-    if (e.key === STORAGE_KEY) renderMessages();
-    if (e.key === READ_KEY) renderMessages(); // refresh read receipts
-    if (e.key === DEAL_KEY || e.key === MEETING_KEY) { updateDealBar(); updateCalendarBtn(); renderMessages(); }
+    checkExpiry();
+    renderMessages();
+  });
+
+  // Typing indicator stays localStorage (ephemeral same-device)
+  window.addEventListener('storage', function(e) {
+    if (e.key === READ_KEY) renderMessages();
   });
 
   // ── IDENTITY SWITCH ──────────────────────────────────────────
@@ -1305,31 +1272,24 @@ Message: ${JSON.stringify(text)}`;
   // ── ARCHIVED STATE CHECK ─────────────────────────────────────
   function checkArchivedState() {
     try {
-      // Check if this chat has been ended/archived by the user
-      var allUserChatKeys = Object.keys(localStorage).filter(function(k){ return k.indexOf('rf_user_chats_') === 0; });
-      for (var i = 0; i < allUserChatKeys.length; i++) {
-        var userChats = JSON.parse(localStorage.getItem(allUserChatKeys[i])) || [];
-        var slot = userChats.find(function(c){ return c.chatId === CHAT_ID; });
-        if (slot && slot.status === 'archived') {
-          // Lock input, show archived banner
-          document.getElementById('msg-input').disabled = true;
-          document.getElementById('send-btn').disabled  = true;
-          document.getElementById('attach-btn').disabled = true;
-          document.getElementById('deal-btn').disabled   = true;
-          var banner = document.getElementById('expiry-banner');
-          document.getElementById('expiry-text').textContent = 'This chat has been ended and archived. You can read the history but cannot send new messages.';
-          banner.classList.add('show');
-          break;
-        }
+      // Archived flag lives on the chat meta doc in Firestore (_chatMeta populated by onChatMeta)
+      if (_chatMeta && _chatMeta.archived) {
+        document.getElementById('msg-input').disabled = true;
+        document.getElementById('send-btn').disabled  = true;
+        document.getElementById('attach-btn').disabled = true;
+        document.getElementById('deal-btn').disabled   = true;
+        var banner = document.getElementById('expiry-banner');
+        document.getElementById('expiry-text').textContent = 'This chat has been ended and archived. You can read the history but cannot send new messages.';
+        banner.classList.add('show');
       }
     } catch(e) {}
   }
 
   // ── DEAL SYSTEM ───────────────────────────────────────────────
-  function loadDeal()  { try { return JSON.parse(localStorage.getItem(DEAL_KEY)); } catch { return null; } }
+  function loadDeal()  { return _deal; }
   function saveDeal(d) {
-    localStorage.setItem(DEAL_KEY, JSON.stringify(d));
-    _fb(() => RF.saveDeal(CHAT_ID, d));
+    _deal = d;
+    RF.saveDeal(CHAT_ID, d).catch(e => console.warn('[RF]', e));
   }
 
   function updateDealBar() {
@@ -1431,14 +1391,7 @@ Message: ${JSON.stringify(text)}`;
   }
 
   function registerDealGlobally(deal) {
-    try {
-      const deals = JSON.parse(localStorage.getItem(DEALS_KEY)) || [];
-      const existing = deals.findIndex(d => d.chatId === deal.chatId);
-      if (existing !== -1) deals[existing] = deal;
-      else deals.unshift(deal);
-      localStorage.setItem(DEALS_KEY, JSON.stringify(deals));
-    } catch {}
-    _fb(() => RF.saveDeal(deal.chatId, deal));
+    RF.saveDeal(deal.chatId, deal).catch(e => console.warn('[RF] registerDealGlobally', e));
   }
 
   function checkDealOnLoad() {
@@ -1477,10 +1430,10 @@ Message: ${JSON.stringify(text)}`;
     }
     // else: overlay stays visible
   }
-  const loadMeeting  = () => { try { return JSON.parse(localStorage.getItem(MEETING_KEY)); } catch { return null; } };
-  const saveMeeting = (m) => {
-    localStorage.setItem(MEETING_KEY, JSON.stringify(m));
-    _fb(() => RF.saveMeeting(CHAT_ID, m));
+  const loadMeeting  = () => _meeting;
+  const saveMeeting  = (m) => {
+    _meeting = m;
+    RF.saveMeeting(CHAT_ID, m).catch(e => console.warn('[RF]', e));
   };
 
   // Sync meeting into deal object so mod dashboard can see it
@@ -1817,17 +1770,10 @@ Message: ${JSON.stringify(text)}`;
   }
 
   function autoTickMeetingStage(meeting, deal) {
-    // Sync the confirmed meeting into the global deals array so mod sees it auto-ticked
-    try {
-      const deals = JSON.parse(localStorage.getItem(DEALS_KEY)) || [];
-      const idx   = deals.findIndex(d => d.chatId === CHAT_ID);
-      if (idx !== -1) {
-        deals[idx].stage_meeting    = true;
-        deals[idx].stage_meeting_ts = Date.now();
-        deals[idx].meeting          = meeting;
-        localStorage.setItem(DEALS_KEY, JSON.stringify(deals));
-      }
-    } catch {}
+    // Patch the deal in Firestore so the mod dashboard sees the meeting stage ticked
+    if (deal && deal.chatId) {
+      RF.saveDeal(deal.chatId, { ...deal, stage_meeting: true, stage_meeting_ts: Date.now(), meeting }).catch(e => console.warn('[RF] autoTick', e));
+    }
   }
 
   function dateKey(date) {
@@ -1841,37 +1787,33 @@ Message: ${JSON.stringify(text)}`;
 
   // ── INIT ──────────────────────────────────────────────────────
   function init() {
-    registerChat();
+    // registerChat is async (reads from Firestore) — fire and don't block UI
+    registerChat().catch(e => console.warn('[RF] registerChat', e));
+
     document.getElementById('other-name').textContent   = OTHER_NAME;
     document.getElementById('other-avatar').textContent = OTHER_NAME.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     document.getElementById('chat-context').textContent = `Renter · ${LISTING}`;
-    if (isModJoined()) {
-      document.getElementById('mod-joined-banner').classList.add('show');
-      // Update banner name from slots
-      const slots = getJoinSlots();
-      const joinerName = slots.mod?.name || slots.admin?.name || 'RenterFinder Moderator';
-      const nameEl = document.getElementById('mod-joined-name');
-      if (nameEl) nameEl.textContent = joinerName;
-    }
+
     // Auto-switch to MOD if opened via join link
     if (URL_ROLE === 'admin' || URL_ROLE === 'mod') {
       USERS.MOD.name = URL_MOD_NAME || (URL_ROLE === 'admin' ? 'Admin' : 'RenterFinder Moderator');
       USERS.MOD.id   = URL_MOD_ID || 'rf-moderator';
       setTimeout(() => switchIdentity('MOD'), 100);
     }
-    checkExpiry();
-    checkArchivedState();
-    checkDealOnLoad();
+
+    // UI will be populated by the Firebase onMessages + onChatMeta listeners above.
+    // Call lightweight UI setup that doesn't depend on Firestore data.
     updateDealBar();
     updateCalendarBtn();
-    renderMessages();
-    markRead();
+    renderMessages();   // renders empty state initially; listeners will re-render with data
     checkWelcome();
+
     setTimeout(() => {
       const ls = document.getElementById('loading-screen');
       ls.classList.add('fade');
       setTimeout(() => ls.remove(), 400);
     }, 600);
+
   }
   init();
 </script>

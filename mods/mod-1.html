@@ -600,6 +600,7 @@
       document.getElementById('dashboard').classList.add('show');
       startAutoRefresh();
       loadDashboard();
+      startFirestoreSync();
     } else {
       document.getElementById('login-error').classList.add('show');
       document.getElementById('pwd-input').value = '';
@@ -627,19 +628,56 @@
   }
 
   // ── DATA HELPERS ─────────────────────────────────────────────
-  const getModLog     = () => { try { return JSON.parse(localStorage.getItem('rf_modlog')) || []; } catch { return []; } };
-  const getChatsIndex = () => { try { return JSON.parse(localStorage.getItem('rf_chats_index')) || []; } catch { return []; } };
-  const getChatMsgs   = id => { try { return JSON.parse(localStorage.getItem(`rf_chat_${id}`)) || []; } catch { return []; } };
-  const getChatVio    = id => { try { return JSON.parse(localStorage.getItem(`rf_violations_${id}`)) || {}; } catch { return {}; } };
-  const getBanned     = ()  => { try { return JSON.parse(localStorage.getItem('rf_banned_users')) || {}; } catch { return {}; } };
-  const saveBanned    = b   => localStorage.setItem('rf_banned_users', JSON.stringify(b));
-  // ── CHAT JOIN SLOT SYSTEM ────────────────────────────────────
+  // ── IN-MEMORY STATE — Firebase is the only source of truth ──
+  let _chatsIndex      = [];
+  let _msgsByChat      = {};
+  let _vioByChat       = {};
+  let _dealByChat      = {};
+  let _meetingByChat   = {};
+  let _joinSlotsByChat = {};
+  let _assignments     = {};
+  let _modLog          = [];
+  let _deals           = [];
+  let _appeals         = [];
+  let _banned          = {};
+  let _modsActive      = { 'mod-1': true, 'mod-2': true };
+
+  // ── DATA ACCESSORS (read from in-memory, write to Firestore) ──
+  const getModLog      = () => _modLog;
+  const getChatsIndex  = () => _chatsIndex;
+  const getChatMsgs    = id => _msgsByChat[id]      || [];
+  const getChatVio     = id => _vioByChat[id]        || {};
+  const getBanned      = () => _banned;
+  const getDeals       = () => _deals;
+  const getAppeals     = () => _appeals;
+  const getModeActive  = () => _modsActive;
+  const getAssignments = () => _assignments;
+
   function getJoinSlots(chatId) {
-    try { return JSON.parse(localStorage.getItem(`rf_mod_joined_${chatId}`)) || { admin: null, mod: null }; }
-    catch { return { admin: null, mod: null }; }
+    return _joinSlotsByChat[chatId] || { admin: null, mod: null };
   }
   function saveJoinSlots(chatId, slots) {
-    localStorage.setItem(`rf_mod_joined_${chatId}`, JSON.stringify(slots));
+    _joinSlotsByChat[chatId] = slots;
+    RF.saveJoinSlots(chatId, slots).catch(e => console.warn('[RF] saveJoinSlots', e));
+  }
+  const isModJoined     = id => { const s = getJoinSlots(id); return !!(s.admin || s.mod); };
+  const isAdminJoined   = chatId => !!getJoinSlots(chatId).admin;
+  const isModSlotJoined = chatId => !!getJoinSlots(chatId).mod;
+
+  const saveBanned = b => { _banned = b; Object.entries(b).forEach(([uid, data]) => RF.banUser(uid, data).catch(e => console.warn('[RF]', e))); };
+  const saveDeals  = d => { _deals = Array.isArray(d) ? d : [d]; _deals.forEach(deal => { if (deal.chatId) RF.saveDeal(deal.chatId, deal).catch(e => console.warn('[RF]', e)); }); };
+  const saveAppeals = a => { _appeals = Array.isArray(a) ? a : [a]; _appeals.forEach(appeal => RF.saveAppeal(appeal).catch(e => console.warn('[RF]', e))); };
+  const saveModeActive = v => { _modsActive = v; Object.entries(v).forEach(([modId, active]) => RF.setModActive(modId, active).catch(e => console.warn('[RF]', e))); };
+  const saveAssignments = v => { _assignments = v; Object.entries(v).forEach(([chatId, modId]) => RF.saveAssignment(chatId, modId).catch(e => console.warn('[RF]', e))); };
+
+  function saveModLog(log) {
+    _modLog = log;
+    // Individual entries already written via appendModLog/updateLogEntry
+  }
+  function updateLogEntry(id, patch) {
+    const i = _modLog.findIndex(e => e.id === id);
+    if (i !== -1) { Object.assign(_modLog[i], patch); }
+    RF.updateModLogEntry(id, patch).catch(e => console.warn('[RF] updateLogEntry', e));
   }
   const isModJoined = id => {
     const s = getJoinSlots(id);
@@ -653,12 +691,7 @@
     const userB   = chat ? chat.userB   : '';
     return `../chat.html?chatId=${encodeURIComponent(chatId)}&userId=user-landlord-001&otherId=user-renter-001&otherName=${encodeURIComponent(userB)}&listing=${encodeURIComponent(listing)}&role=mod&modId=mod-1&modName=${encodeURIComponent('Mod 1')}`;
   }
-  const getDeals    = () => { try { return JSON.parse(localStorage.getItem('rf_deals')) || []; } catch { return []; } };
-  const saveDeals   = d  => localStorage.setItem('rf_deals', JSON.stringify(d));
-  const getAppeals    = ()  => { try { return JSON.parse(localStorage.getItem('rf_appeals')) || []; } catch { return []; } };
-  const saveAppeals   = a   => localStorage.setItem('rf_appeals', JSON.stringify(a));
-  function saveModLog(log)  { localStorage.setItem('rf_modlog', JSON.stringify(log)); }
-  function updateLogEntry(id, patch) { const log = getModLog(); const i = log.findIndex(e => e.id === id); if(i !== -1){ Object.assign(log[i], patch); saveModLog(log); } }
+
 
   function showToast(msg, type='') {
     const t = document.getElementById('toast');
@@ -670,7 +703,6 @@
 
   // ── LOAD DASHBOARD ───────────────────────────────────────────
   function loadDashboard() {
-    assignNewChats();
     renderModPanel();
     const modLog  = getModLog();
     const allChats = getChatsIndex();
@@ -890,7 +922,7 @@
       // Auto-tick meeting stage if parties have confirmed a date
       if (stage.key === 'meeting' && !d.stage_meeting) {
         try {
-          const meeting = JSON.parse(localStorage.getItem(`rf_meeting_${d.chatId}`));
+          const meeting = _meetingByChat[d.chatId] || null;
           if (meeting?.status === 'confirmed') {
             d.stage_meeting    = true;
             d.stage_meeting_ts = meeting.confirmedTs || Date.now();
@@ -1029,9 +1061,10 @@
     deal.completedTs       = Date.now();
     postDealSystemMsg(chatId, '🏆 Deal fully completed and archived by RenterFinder. Congratulations to both parties!');
     try {
-      const idx  = JSON.parse(localStorage.getItem('rf_chats_index')) || [];
-      const chat = idx.find(c => c.chatId === chatId);
-      if (chat) { chat.archived = true; chat.archivedTs = Date.now(); chat.dealComplete = true; localStorage.setItem('rf_chats_index', JSON.stringify(idx)); }
+      // Archive in Firestore; mod pages will see update via onAllChats listener
+      RF.updateChatMeta(chatId, { archived: true, archivedTs: Date.now(), dealComplete: true }).catch(e => console.warn('[RF] archive', e));
+      const chat = _chatsIndex.find(c => c.chatId === chatId);
+      if (chat) { chat.archived = true; chat.archivedTs = Date.now(); chat.dealComplete = true; }
     } catch {}
     saveDeals(deals);
     syncDealToChat(chatId, deal);
@@ -1098,15 +1131,13 @@
   }
 
   function syncDealToChat(chatId, deal) {
-    try { localStorage.setItem(`rf_deal_${chatId}`, JSON.stringify(deal)); } catch {}
+    _dealByChat[chatId] = deal;
+    RF.saveDeal(chatId, deal).catch(e => console.warn('[RF] syncDealToChat', e));
   }
 
   function postDealSystemMsg(chatId, text) {
-    try {
-      const msgs = JSON.parse(localStorage.getItem(`rf_chat_${chatId}`)) || [];
-      msgs.push({ id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true });
-      localStorage.setItem(`rf_chat_${chatId}`, JSON.stringify(msgs));
-    } catch {}
+    const msg = { id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true, chatId };
+    RF.saveMessage(chatId, msg).catch(e => console.warn('[RF] postDealSystemMsg', e));
   }
 
   function fmtTs(ts) {
@@ -1262,7 +1293,8 @@
       // Reset violations for this chat
       try {
         const vio = {};
-        localStorage.setItem(`rf_violations_${a.chatId}`, JSON.stringify(vio));
+        _vioByChat[a.chatId] = vio;
+        RF.saveViolations(a.chatId, vio).catch(e => console.warn("[RF] ban vio", e));
       } catch {}
       showToast('✓ Chat reinstated — violations cleared', 'success');
     } else {
@@ -1277,18 +1309,14 @@
     const entry = log.find(e => e.id === logId);
     if (!entry) return;
     const payload = { originalId: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text };
-    localStorage.setItem(`rf_mod_approve_${entry.chatId}`, JSON.stringify(payload));
-    try {
-      const msgs = JSON.parse(localStorage.getItem(`rf_chat_${entry.chatId}`)) || [];
-      if (!msgs.find(m => m.id === logId)) {
-        msgs.push({ id: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text, ts: Date.now(), moderatorApproved: true });
-        localStorage.setItem(`rf_chat_${entry.chatId}`, JSON.stringify(msgs));
-      }
-    } catch {}
-    try {
-      const vio = JSON.parse(localStorage.getItem(`rf_violations_${entry.chatId}`)) || {};
-      if ((vio[entry.senderIdentity] || 0) > 0) { vio[entry.senderIdentity]--; localStorage.setItem(`rf_violations_${entry.chatId}`, JSON.stringify(vio)); }
-    } catch {}
+    // Write approved message directly to Firestore — chat.html onMessages listener picks it up
+    const approvedMsg = { id: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text, ts: Date.now(), moderatorApproved: true, chatId: entry.chatId };
+    RF.saveMessage(entry.chatId, approvedMsg).catch(e => console.warn('[RF] approveMessage msg', e));
+    // Decrement violation count in-memory and Firestore
+    const vio = { ...(_vioByChat[entry.chatId] || {}) };
+    if ((vio[entry.senderIdentity] || 0) > 0) { vio[entry.senderIdentity]--; }
+    _vioByChat[entry.chatId] = vio;
+    RF.saveViolations(entry.chatId, vio).catch(e => console.warn('[RF] approveMessage vio', e));
     updateLogEntry(logId, { status: 'approved' });
     showToast('✓ Message approved and delivered', 'success');
     loadDashboard();
@@ -1596,8 +1624,8 @@
     // Auto-purge entries older than 48hrs from storage
     const freshLog     = modLog.filter(e => (now - (e.ts || 0)) < HISTORY_TTL);
     const freshAppeals = appeals.filter(a => (now - (a.ts || 0)) < HISTORY_TTL);
-    if (freshLog.length !== modLog.length)     { try { localStorage.setItem('rf_modlog',   JSON.stringify(freshLog));     } catch {} }
-    if (freshAppeals.length !== appeals.length){ try { localStorage.setItem('rf_appeals',  JSON.stringify(freshAppeals)); } catch {} }
+    if (freshLog.length !== modLog.length)     { _modLog  = freshLog;    freshLog.forEach(e => RF.updateModLogEntry(e.id, {}).catch(()=>{})); }
+    if (freshAppeals.length !== appeals.length){ _appeals = freshAppeals; }
 
     const total = freshLog.length + freshAppeals.length;
     document.getElementById('tab-history-count').textContent = total;
@@ -1672,7 +1700,7 @@
     if (!confirm(`Permanently delete this deal record? This cannot be undone.`)) return;
     try {
       const deals = getDeals().filter(d => d.chatId !== chatId);
-      localStorage.setItem('rf_deals', JSON.stringify(deals));
+      _deals = deals;
     } catch {}
     showToast('Deal record permanently deleted', 'error');
     loadDashboard();
@@ -1700,80 +1728,64 @@
     if (!_isLocal) startFirestoreSync();
   }
 
-  // ── FIRESTORE SYNC (additive — localStorage is still source of truth) ──
-  // These listeners write incoming Firestore data INTO localStorage,
+  // ── FIRESTORE REAL-TIME LISTENERS — Firebase is the only source of truth ──
+  // All listeners update in-memory state then re-render. No localStorage.
   // then call loadDashboard() so the existing v38 render functions pick it up.
   // Nothing in v38 mod-dashboard code is changed.
 
-  let _fsLoaded = { chats:false, assignments:false, modlog:false, deals:false, appeals:false };
-
-  function _fsCheck() {
-    if (Object.values(_fsLoaded).every(Boolean)) loadDashboard();
-  }
-
   function startFirestoreSync() {
-    // All chats → write to rf_chats_index localStorage
+    // All chats
     RF.onAllChats(chats => {
       // Merge: keep localStorage data for fields Firestore doesn't have
       const existing = {};
-      try { (JSON.parse(localStorage.getItem('rf_chats_index'))||[]).forEach(c => { existing[c.chatId] = c; }); } catch {}
+      _chatsIndex.forEach(c => { existing[c.chatId] = c; });
       const merged = chats.map(c => ({ ...existing[c.chatId], ...c }));
-      localStorage.setItem('rf_chats_index', JSON.stringify(merged));
-      // Also write per-chat violations back
+      _chatsIndex = merged;
       chats.forEach(c => {
-        if (c.violations) localStorage.setItem(`rf_violations_${c.chatId}`, JSON.stringify(c.violations));
-        if (c.deal)       localStorage.setItem(`rf_deal_${c.chatId}`, JSON.stringify(c.deal));
-        if (c.meeting)    localStorage.setItem(`rf_meeting_${c.chatId}`, JSON.stringify(c.meeting));
-        if (c.joinSlots)  localStorage.setItem(`rf_mod_joined_${c.chatId}`, JSON.stringify(c.joinSlots));
-        // Subscribe to messages for this chat
+        if (c.violations) _vioByChat[c.chatId]      = c.violations;
+        if (c.deal)       _dealByChat[c.chatId]     = c.deal;
+        if (c.meeting)    _meetingByChat[c.chatId]  = c.meeting;
+        if (c.joinSlots)  _joinSlotsByChat[c.chatId]= c.joinSlots;
+        // Real-time messages per chat
         db.collection('chats').doc(c.chatId).collection('messages')
           .orderBy('ts','asc').onSnapshot(snap => {
-            const msgs = snap.docs.map(d => d.data());
-            localStorage.setItem(`rf_chat_${c.chatId}`, JSON.stringify(msgs));
+            _msgsByChat[c.chatId] = snap.docs.map(d => d.data());
+            loadDashboard();
           });
       });
-      _fsLoaded.chats = true;
-      _fsCheck();
+      loadDashboard();
     });
 
     // Assignments → write to rf_chat_assignments localStorage
     RF.onAssignments(map => {
-      localStorage.setItem('rf_chat_assignments', JSON.stringify(map));
-      _fsLoaded.assignments = true;
-      _fsCheck();
+      _assignments = map;
     });
 
     // Modlog → write to rf_modlog localStorage
     RF.onModLog(log => {
-      localStorage.setItem('rf_modlog', JSON.stringify(log));
-      _fsLoaded.modlog = true;
-      _fsCheck();
+      _modLog = log;
     });
 
     // Deals → write to rf_deals localStorage + per-chat rf_deal_*
     RF.onDeals(deals => {
       const sorted = [...deals].sort((a,b) => (b.initiatedTs||0)-(a.initiatedTs||0));
-      localStorage.setItem('rf_deals', JSON.stringify(sorted));
-      deals.forEach(d => { if (d.chatId) localStorage.setItem(`rf_deal_${d.chatId}`, JSON.stringify(d)); });
-      _fsLoaded.deals = true;
-      _fsCheck();
+      _deals = sorted;
+      deals.forEach(d => { if (d.chatId) _dealByChat[d.chatId] = d; });
     });
 
     // Appeals → write to rf_appeals localStorage
     RF.onAppeals(appeals => {
-      localStorage.setItem('rf_appeals', JSON.stringify(appeals));
-      _fsLoaded.appeals = true;
-      _fsCheck();
+      _appeals = appeals;
     });
 
     // Banned → write to rf_banned_users localStorage
     RF.onBanned(banned => {
-      localStorage.setItem('rf_banned_users', JSON.stringify(banned));
+      _banned = banned;
     });
 
     // ModsActive → write to rf_mods_active localStorage
     RF.onModsActive(map => {
-      localStorage.setItem('rf_mods_active', JSON.stringify(map));
+      _modsActive = map;
       renderModPanel();
     });
   }
@@ -1785,7 +1797,6 @@
   const _origSyncDealToChat = syncDealToChat;
   syncDealToChat = function(chatId, deal) {
     _origSyncDealToChat(chatId, deal);  // v38: writes to rf_deal_${chatId}
-    if (!_isLocal) RF.saveDeal(chatId, deal).catch(e => console.warn('[RF] syncDealToChat', e));
   };
 
   const _origPostDealSystemMsg = postDealSystemMsg;
@@ -1793,78 +1804,24 @@
     _origPostDealSystemMsg(chatId, text);  // v38: writes to rf_chat_${chatId}
     if (!_isLocal) {
       const msg = { id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true, chatId };
-      RF.saveMessage(chatId, msg).catch(e => console.warn('[RF] postDealSystemMsg', e));
     }
   };
 
-  const _origSaveDeals = saveDeals;
-  saveDeals = function(d) {
-    _origSaveDeals(d);  // v38: writes to rf_deals
-    if (!_isLocal) {
-      const arr = Array.isArray(d) ? d : [d];
-      arr.forEach(deal => { if (deal.chatId) RF.saveDeal(deal.chatId, deal).catch(e => console.warn('[RF] saveDeals', e)); });
-    }
-  };
 
-  const _origSaveAppeals = saveAppeals;
-  saveAppeals = function(a) {
-    _origSaveAppeals(a);  // v38: writes to rf_appeals
-    if (!_isLocal) {
-      const arr = Array.isArray(a) ? a : [a];
-      arr.forEach(appeal => RF.saveAppeal(appeal).catch(e => console.warn('[RF] saveAppeals', e)));
-    }
-  };
 
-  const _origSaveBanned = saveBanned;
-  saveBanned = function(b) {
-    _origSaveBanned(b);  // v38: writes to rf_banned_users
-    if (!_isLocal) {
-      Object.entries(b).forEach(([uid, data]) => RF.banUser(uid, data).catch(e => console.warn('[RF] banUser', e)));
-    }
-  };
 
-  const _origUpdateLogEntry = updateLogEntry;
-  updateLogEntry = function(id, patch) {
-    _origUpdateLogEntry(id, patch);  // v38: writes to rf_modlog
-    if (!_isLocal) RF.updateModLogEntry(id, patch).catch(e => console.warn('[RF] updateLogEntry', e));
-  };
 
-  const _origSaveAssignments = saveAssignments;
-  saveAssignments = function(v) {
-    _origSaveAssignments(v);  // v38: writes to rf_chat_assignments
-    if (!_isLocal) {
-      Object.entries(v).forEach(([chatId, modId]) => RF.saveAssignment(chatId, modId).catch(e => console.warn('[RF] saveAssignment', e)));
-    }
-  };
 
-  const _origSaveModeActive = saveModeActive;
-  saveModeActive = function(v) {
-    _origSaveModeActive(v);  // v38: writes to rf_mods_active
-    if (!_isLocal) {
-      Object.entries(v).forEach(([modId, active]) => RF.setModActive(modId, active).catch(e => console.warn('[RF] setModActive', e)));
-    }
-  };
 
-  const _origSaveJoinSlots = saveJoinSlots;
-  saveJoinSlots = function(chatId, slots) {
-    _origSaveJoinSlots(chatId, slots);  // v38: writes to rf_mod_joined_${chatId}
-    if (!_isLocal) RF.saveJoinSlots(chatId, slots).catch(e => console.warn('[RF] saveJoinSlots', e));
-  };
 
-  const _origApproveMsg = approveMessage;
-  approveMessage = function(logId) {
-    _origApproveMsg(logId);  // v38: writes approved msg to rf_chat_${chatId}
-    // Also write to Firestore so chat.html sees it via real-time listener
-    if (!_isLocal) {
-      const log = getModLog();
-      const entry = log.find(e => e.id === logId);
-      if (entry) {
-        const msg = { id: entry.originalId || entry.id, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text, ts: entry.ts || Date.now(), moderatorApproved: true, chatId: entry.chatId };
-        RF.saveMessage(entry.chatId, msg).catch(e => console.warn('[RF] approveMessage', e));
-        RF.saveViolations(entry.chatId, getChatVio(entry.chatId)).catch(e => console.warn('[RF] saveViolations', e));
-      }
-    }
-  };
+
+
+
+
+
+
+
+
 </script>
 </body>
 </html>
