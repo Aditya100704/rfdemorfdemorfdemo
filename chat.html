@@ -754,7 +754,11 @@
     // Chat meta — violations, deal, meeting, joinSlots, typing, modApprove
     _unsubMeta = RF.onChatMeta(CHAT_ID, (data) => {
       if (data.violations)  _violations = data.violations;
-      if (data.deal !== undefined) { _deal = data.deal; updateDealBar(); updateCalendarBtn(); }
+      if (data.deal !== undefined) {
+        _deal = data.deal;
+        console.log('[RF] onChatMeta deal update, stage_advance_payment:', _deal?.stage_advance_payment, 'confirmedA:', _deal?.confirmedA, 'confirmedB:', _deal?.confirmedB);
+        updateDealBar(); updateCalendarBtn();
+      }
       if (data.meeting !== undefined) { _meeting = data.meeting; updateCalendarBtn(); }
       if (data.joinSlots) {
         _joinSlots = data.joinSlots;
@@ -1521,6 +1525,7 @@
 
     const advanceDone   = deal?.stage_advance_payment === true;
     const bothConfirmed = deal?.confirmedA && deal?.confirmedB;
+    console.log('[RF] updateCalendarBtn - advanceDone:', advanceDone, 'bothConfirmed:', bothConfirmed, 'identity:', currentIdentity);
     if (!bothConfirmed || !advanceDone) { btn.classList.remove('show'); return; }
 
     if (meeting?.status === 'confirmed') { btn.classList.remove('show'); return; }

@@ -760,6 +760,7 @@
   const saveDeals = async (arr) => {
     arr.forEach(d => { _deals[d.chatId] = d; });
     try { localStorage.setItem('rf_deals', JSON.stringify(arr)); } catch {}
+    if (_isLocal) return;
     try {
       const batch = db.batch();
       arr.forEach(d => batch.set(db.collection('deals').doc(d.chatId), d));
@@ -770,6 +771,7 @@
   const saveAppeals = async (arr) => {
     _appeals = arr;
     try { localStorage.setItem('rf_appeals', JSON.stringify(arr)); } catch {}
+    if (_isLocal) return;
     try {
       const batch = db.batch();
       arr.forEach(a => batch.set(db.collection('appeals').doc(String(a.id)), a));
@@ -1322,7 +1324,11 @@
     // Dual-write: localStorage + Firestore
     try { localStorage.setItem(`rf_deal_${chatId}`, JSON.stringify(deal)); } catch {}
     if (!_isLocal) {
-      try { await RF.saveDeal(chatId, deal); } catch(e) { console.error('syncDealToChat', e); }
+      try {
+        console.log('[RF] syncDealToChat', chatId, 'stage_advance_payment:', deal.stage_advance_payment);
+        await RF.saveDeal(chatId, deal);
+        console.log('[RF] syncDealToChat done');
+      } catch(e) { console.error('syncDealToChat', e); }
     }
   }
 
