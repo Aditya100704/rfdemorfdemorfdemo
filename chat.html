@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RenterFinder Chat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🏠</text></svg>">
+  <title>RenterFinder — Chat</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -435,6 +437,7 @@
 
 <div class="mod-joined-banner" id="mod-joined-banner">🛡️ <strong style="margin-right:4px;" id="mod-joined-name">RenterFinder Moderator</strong> has joined this chat.</div>
 <div class="expiry-banner" id="expiry-banner">⏳ <span id="expiry-text"></span></div>
+<div class="expiry-banner" id="deal-cancelled-banner" style="background:#fff1f2;border-bottom-color:#fecdd3;display:none;">❌ <span id="deal-cancelled-text">This deal has been cancelled by RenterFinder moderation.</span></div>
 <div class="chat-messages" id="chat-messages"></div>
 
 <div class="violation-banner" id="violation-banner"><span>⚠️</span><span id="violation-text"></span></div>
@@ -446,6 +449,7 @@
 
 <div class="mod-status" id="mod-status"></div>
 <div class="cooldown-bar" id="cooldown-bar"></div>
+    <div style="font-size:10px;color:var(--mid,#666);text-align:right;padding:0 4px 2px;">Enter to send · Shift+Enter for new line</div>
 
 <!-- Image preview -->
 <div class="img-preview-bar" id="img-preview-bar">
@@ -573,7 +577,7 @@
     <div id="appeal-form-view">
       <div class="modal-title">📝 Submit an Appeal</div>
       <div class="modal-sub">Explain why you believe your chat should be reinstated. Our moderation team will review within 24 hours.</div>
-      <textarea class="modal-textarea" id="appeal-text" placeholder="Describe your situation and why you believe the suspension was incorrect…" maxlength="500"></textarea>
+      <textarea class="modal-textarea" id="appeal-text" placeholder="Describe your situation and why you believe the suspension was incorrect…" maxlength="500" oninput="document.getElementById('appeal-counter').textContent=(this.value.length)+' / 500'" onpaste="setTimeout(()=>document.getElementById('appeal-counter').textContent=(document.getElementById('appeal-text').value.length)+' / 500',0)"></textarea>
       <div style="font-size:11px;color:var(--mid);text-align:right;margin-top:-8px;" id="appeal-counter">0 / 500</div>
       <div class="modal-btns">
         <button class="modal-cancel" onclick="closeAppeal()">Cancel</button>
@@ -612,6 +616,7 @@
   const OTHER_ID   = params.get('otherId')   || 'user-renter-001';
   const OTHER_NAME = params.get('otherName') || 'Rahul Sharma';
   const LISTING    = params.get('listing')   || '2BHK in Koramangala';
+  document.title = LISTING ? `${LISTING} — RenterFinder` : 'RenterFinder — Chat';
   const URL_ROLE   = params.get('role')      || '';   // 'admin' | 'mod'
   const URL_MOD_ID = params.get('modId')     || '';
   const URL_MOD_NAME = params.get('modName') || 'RenterFinder Moderator';
@@ -710,11 +715,27 @@
   function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
   // ── #11 CHAT EXPIRY CHECK ─────────────────────────────────────
+  function checkDealCancelledBanner() {
+    const banner = document.getElementById('deal-cancelled-banner');
+    if (!banner) return;
+    if (_deal && _deal.stage === 'Cancelled') {
+      const reason = _deal.cancelNotes ? ` Reason: ${_deal.cancelNotes}` : '';
+      document.getElementById('deal-cancelled-text').textContent = `❌ This deal has been cancelled by RenterFinder moderation.${reason}`;
+      banner.style.display = 'flex';
+      document.getElementById('msg-input').disabled = true;
+      document.getElementById('send-btn').disabled = true;
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
   function checkExpiry() {
     try {
       const chat = _chatMeta;
-      if (!chat || !chat.started) return;
+      if (!chat) return;
+      // Wait until Firestore has populated at least one timestamp
       const lastActivity = chat.lastTs || chat.started;
+      if (!lastActivity || lastActivity > Date.now()) return; // not loaded or future timestamp
       const daysIdle = (Date.now() - lastActivity) / (1000 * 60 * 60 * 24);
       const daysLeft = Math.max(0, Math.ceil(CHAT_EXPIRY_DAYS - daysIdle));
       const banner = document.getElementById('expiry-banner');
@@ -1189,9 +1210,9 @@ Message: ${JSON.stringify(text)}`;
   }
   function closeAppeal() { document.getElementById('appeal-modal').classList.remove('show'); }
 
-  document.getElementById('appeal-text').addEventListener('input', function() {
-    document.getElementById('appeal-counter').textContent = `${this.value.length} / 500`;
-  });
+  ['input','paste'].forEach(evt => document.getElementById('appeal-text').addEventListener(evt, function() {
+    setTimeout(() => { document.getElementById('appeal-counter').textContent = `${this.value.length} / 500`; }, 0);
+  }));
 
   function submitAppeal() {
     const text = document.getElementById('appeal-text').value.trim();
@@ -1227,7 +1248,7 @@ Message: ${JSON.stringify(text)}`;
     // Merge everything into in-memory state
     _chatMeta = data;
     if (data.violations !== undefined) _violations = data.violations;
-    if (data.deal       !== undefined) { _deal    = data.deal;    updateDealBar();    }
+    if (data.deal       !== undefined) { _deal    = data.deal;    updateDealBar();    checkDealCancelledBanner(); }
     if (data.meeting    !== undefined) { _meeting = data.meeting; updateCalendarBtn(); }
     if (data.joinSlots  !== undefined) {
       const wasJoined = isModJoined();
