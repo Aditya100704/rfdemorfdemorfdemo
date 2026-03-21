@@ -664,9 +664,11 @@
         </div>
       </div>
       <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
-        <table class="mod-metrics-table"><thead><tr>
-          <th>Mod / Admin</th><th>Reviewed</th><th>Approved / Dismissed</th><th>Approval %</th><th>Avg Response</th><th>Last Action</th>
-        </tr></thead><tbody id="mod-metrics-body"></tbody></table>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+          <table class="mod-metrics-table" style="min-width:560px;"><thead><tr>
+            <th>Mod / Admin</th><th>Reviewed</th><th>Approved / Dismissed</th><th>Approval %</th><th>Avg Response</th><th>Last Action</th>
+          </tr></thead><tbody id="mod-metrics-body"></tbody></table>
+        </div>
       </div>
     </div>
 
