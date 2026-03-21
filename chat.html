@@ -627,6 +627,7 @@
   let pendingImageName = '';
   let isSending = false;
   let lastSendTime = 0;
+  // _isLocal declared in firebase-config.js
   const SEND_COOLDOWN_MS = 2000;    // #9 rate limit
   const CHAT_EXPIRY_DAYS = 60;      // #11 chat expiry
 
@@ -914,16 +915,39 @@
   }
 
   // ── #10 REGEX PRE-FILTER ─────────────────────────────────────
+  // Map written-out digit words to numerals for phone number detection
+  const _digitWords = { zero:'0',one:'1',two:'2',three:'3',four:'4',five:'5',six:'6',seven:'7',eight:'8',nine:'9',
+    shunya:'0',ek:'1',do:'2',teen:'3',char:'4',paanch:'5',chhe:'6',saat:'7',aath:'8',nau:'9' };
+
   function regexPreFilter(text) {
+    // Normalise: replace written digit words, then strip spaces/dashes/dots between digits
+    let norm = text.toLowerCase()
+      .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|shunya|ek|do|teen|char|paanch|chhe|saat|aath|nau)\b/g, w => _digitWords[w] || w);
+    const stripped = norm.replace(/(\d)[\s\-\.](\d)/g, '$1$2')
+                         .replace(/(\d)[\s\-\.](\d)/g, '$1$2'); // run twice for gaps like 9 8 7 6 5
+
     const patterns = [
-      { re: /(\+?91[\s\-]?)?[6-9]\d{9}/,           reason: 'Phone numbers are not allowed on this platform.' },
-      { re: /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/, reason: 'Email addresses are not allowed on this platform.' },
-      { re: /wa\.me\/|whatsapp\.com\/|t\.me\//i,   reason: 'Sharing WhatsApp or Telegram links is not allowed.' },
-      { re: /(instagram|facebook|twitter|linkedin|snapchat|youtube)\.com\//i, reason: 'Social media links are not allowed.' },
-      { re: /@[a-zA-Z0-9_]{3,}/,                   reason: 'Social media handles are not allowed.' },
+      // Phone: Indian mobile (6-9 start, 10 digits) — check both original and normalised/stripped
+      { re: /(\+?91[\s\-]?)?[6-9]\d{9}/, reason: 'Phone numbers are not allowed on this platform.', against: [text, stripped] },
+      // Phone: any 10-digit sequence after stripping separators
+      { re: /[6-9]\d{9}/, reason: 'Phone numbers are not allowed on this platform.', against: [stripped] },
+      // Email
+      { re: /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/, reason: 'Email addresses are not allowed on this platform.', against: [text] },
+      // Obfuscated email: "name at domain"
+      { re: /\b\w+\s+at\s+\w+\s*dot\s*\w+\b/i, reason: 'Email addresses are not allowed on this platform.', against: [text] },
+      // WhatsApp / Telegram
+      { re: /wa\.me\/|whatsapp\.com\/|t\.me\//i, reason: 'Sharing WhatsApp or Telegram links is not allowed.', against: [text] },
+      // "call me on whatsapp" / "ping on wa" type phrases
+      { re: /\b(whatsapp|wa|telegram|tele|watsapp|whtsp)\b/i, reason: 'Sharing off-platform contact is not allowed.', against: [text] },
+      // Social media sites
+      { re: /(instagram|facebook|twitter|linkedin|snapchat|youtube)\.com\//i, reason: 'Social media links are not allowed.', against: [text] },
+      // Social handles
+      { re: /@[a-zA-Z0-9_]{3,}/, reason: 'Social media handles are not allowed.', against: [text] },
     ];
     for (const p of patterns) {
-      if (p.re.test(text)) return { blocked: true, reason: p.reason, violationType: 'contact_info' };
+      for (const target of (p.against || [text])) {
+        if (p.re.test(target)) return { blocked: true, reason: p.reason, violationType: 'contact_info' };
+      }
     }
     return { blocked: false };
   }
@@ -931,9 +955,19 @@
   // ── AI MODERATION ────────────────────────────────────────────
   async function moderateMessage(text, isImage) {
     if (isImage) {
-      // For images: ask AI to describe and assess
-      const prompt = `A user sent an image in a property rental chat. Assume it has been scanned. For this demo, always ALLOW property-related images. Respond ONLY with valid JSON: {"decision":"ALLOW","reason":"","violationType":""}`;
-      return { decision: 'ALLOW', reason: '', violationType: '' };
+      // Images: check via Cloud Function (looks for embedded text like phone numbers)
+      if (_isLocal) return { decision: 'ALLOW', reason: '', violationType: '' };
+      try {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(MODERATE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: '[Image sent by user — scan for embedded contact info or QR codes]', isImage: true }),
+          signal: controller.signal
+        });
+        return await res.json();
+      } catch { return { decision: 'ALLOW', reason: '', violationType: '' }; }
     }
 
     // #10: regex pre-filter first (saves API call for obvious violations)
@@ -961,17 +995,23 @@ Respond ONLY valid JSON, no markdown:
 
 Message: ${JSON.stringify(text)}`;
 
+    // Skip AI moderation locally (CORS), use regex only
+    if (_isLocal) return { decision: 'ALLOW', reason: '', violationType: '' };
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
     try {
-      // Skip AI moderation locally (CORS), use regex only
-      if (_isLocal) return { decision: 'ALLOW', reason: '', violationType: '' };
       const res = await fetch(MODERATE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text }),
+        signal: controller.signal
       });
+      clearTimeout(timer);
       return await res.json();
     } catch(e) {
-      console.error('Moderation error:', e);
+      clearTimeout(timer);
+      if (e.name === 'AbortError') console.warn('Moderation timed out — falling back to regex-only');
+      else console.error('Moderation error:', e);
       return { decision:'ALLOW', reason:'', violationType:'' };
     }
   }

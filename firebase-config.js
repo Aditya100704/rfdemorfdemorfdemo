@@ -2,7 +2,7 @@
 // Loaded before firebase-db.js on all pages
 // On file:// (local) creates a stub so pages don't crash
 
-const _isLocal = (location.protocol === 'file:');
+const _isLocal = (location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
 
 if (_isLocal) {
   console.warn('[RF] Local file:// — Firebase disabled, using localStorage only');

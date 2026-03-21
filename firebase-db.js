@@ -49,6 +49,11 @@ const RF = (function() {
   }
 
   // ── DEAL ─────────────────────────────────────────────────────
+  async function deleteDeal(chatId) {
+    try { await db.collection('deals').doc(String(chatId)).delete(); }
+    catch(e) { console.error('[RF] deleteDeal', e); }
+  }
+
   async function saveDeal(chatId, deal) {
     try {
       await chatDoc(chatId).set({ deal }, { merge: true });
@@ -225,7 +230,7 @@ const RF = (function() {
     saveAssignment, deleteAssignment, getAssignment, onAssignments,
     setModActive, onModsActive,
     banUser, unbanUser, onBanned,
-    onAllChats, onDeals,
+    onAllChats, onDeals, deleteDeal,
     getUserChats, saveUserChats,
     postSystemMsg
   };

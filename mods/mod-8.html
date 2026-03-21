@@ -503,7 +503,7 @@
     <div class="dash-tab" data-tab="chats" onclick="switchTab('chats')">💬 All Chats <span class="tab-count green" id="tab-chats-count">0</span></div>
     <div class="dash-tab" data-tab="flagged" onclick="switchTab('flagged')">🚩 Flagged <span class="tab-count" id="tab-flagged-count">0</span></div>
     <div class="dash-tab" data-tab="deals" onclick="switchTab('deals')">🤝 Deal Tracker <span class="tab-count green" id="tab-deals-count">0</span></div>
-    <div class="dash-tab" data-tab="appeals" onclick="switchTab('appeals')">📝 Appeals <span class="tab-count purple" id="tab-appeals-count">0</span></div>
+    <div class="dash-tab" data-tab="archived" onclick="switchTab('archived')">📁 Archived <span class="tab-count" id="tab-archived-count" style="background:rgba(255,255,255,0.06);color:var(--muted);">0</span></div>
     <div class="dash-tab" data-tab="users" onclick="switchTab('users')">👥 Users</div>
   </div>
 
@@ -538,11 +538,7 @@
             <div class="stat-value green" id="stat-deals">0</div>
             <div class="stat-arrow">→ Deal Tracker</div>
           </div>
-          <div class="stat-card" onclick="switchTab('appeals')" title="View open appeals">
-            <div class="stat-label">Open Appeals</div>
-            <div class="stat-value blue" id="stat-appeals">0</div>
-            <div class="stat-arrow">→ Appeals</div>
-          </div>
+
           <div class="stat-card" onclick="switchTab('users')" title="View suspended chats">
             <div class="stat-label">Suspended Chats</div>
             <div class="stat-value red" id="stat-suspended">0</div>
@@ -584,15 +580,6 @@
       <div id="deals-list"></div>
     </div>
 
-    <!-- APPEALS -->
-    <div class="tab-panel" id="panel-appeals">
-      <div class="section-header"><div class="section-title">User Appeals</div><div class="section-sub">Suspension appeals submitted by users</div></div>
-      <div class="tab-search-bar">
-        <div class="tab-search-wrap"><span class="search-icon">🔍</span><input class="tab-search-input" id="search-appeals" type="text" placeholder="Search by user name or chat ID…" oninput="filterAppeals()"></div>
-        <span class="tab-search-count" id="search-appeals-count"></span>
-      </div>
-      <div id="appeals-list" class="appeal-list"></div>
-    </div>
 
     <!-- USERS -->
     <div class="tab-panel" id="panel-users">
@@ -609,6 +596,15 @@
       </div>
     </div>
 
+    <!-- ARCHIVED CHATS -->
+    <div class="tab-panel" id="panel-archived">
+      <div class="section-header"><div class="section-title">Archived Chats</div><div class="section-sub">Inactive chats and completed deals</div></div>
+      <div class="tab-search-bar">
+        <div class="tab-search-wrap"><span class="search-icon">🔍</span><input class="tab-search-input" id="search-archived" type="text" placeholder="Search archived chats…" oninput="filterArchived()"></div>
+        <span class="tab-search-count" id="search-archived-count"></span>
+      </div>
+      <div id="archived-list"></div>
+    </div>
 
   </div>
 </div>
@@ -716,6 +712,7 @@
   // ── IN-MEMORY STATE — Firebase is the only source of truth ──
   let _chatsIndex      = [];
   let _msgsByChat      = {};
+  let _msgListeners    = new Set();
   let _vioByChat       = {};
   let _dealByChat      = {};
   let _meetingByChat   = {};
@@ -791,26 +788,23 @@
     const appeals = getAppeals();
 
     let totalMsgs = 0, suspended = 0;
-    chats.forEach(c => {
+    chats.filter(c => !c.archived && !c.autoArchived && !c.manualArchived).forEach(c => {
       totalMsgs += getChatMsgs(c.chatId).length;
       const v = getChatVio(c.chatId);
       if (Math.max(...Object.values(v).concat([0])) >= 3) suspended++;
     });
 
     const pending      = modLog.filter(e => e.status === 'pending').length;
-    const openAppeals  = appeals.filter(a => a.status === 'pending').length;
     const activeDeals  = getDeals().filter(d => d.stage !== 'Cancelled' && !d.stage_complete).length;
 
     document.getElementById('stat-total-chats').textContent = chats.length;
     document.getElementById('stat-total-msgs').textContent  = totalMsgs;
     document.getElementById('stat-flagged').textContent     = pending;
     document.getElementById('stat-pending').textContent     = pending;
-    document.getElementById('stat-appeals').textContent     = openAppeals;
     document.getElementById('stat-deals').textContent       = activeDeals;
     document.getElementById('stat-suspended').textContent   = suspended;
     document.getElementById('tab-chats-count').textContent  = chats.length;
     document.getElementById('tab-flagged-count').textContent = pending;
-    document.getElementById('tab-appeals-count').textContent = openAppeals;
     document.getElementById('tab-deals-count').textContent  = activeDeals;
 
 
@@ -819,7 +813,6 @@
     document.getElementById('chat-count-sub').textContent = `${chats.length} chat${chats.length !== 1 ? 's' : ''} initiated`;
     renderFlaggedList(modLog.filter(e => e.status === 'pending'), document.getElementById('flagged-list'), modLog.filter(e => e.status !== 'pending').length);
     renderDealsList(getDeals(), document.getElementById('deals-list'));
-    renderAppealsList(appeals, document.getElementById('appeals-list'));
     renderUsersTable(chats, modLog, getBanned());
     const _al = document.getElementById('archived-list'); if (_al) renderArchivedList(_al);
     const _hl = document.getElementById('history-list'); if (_hl) renderHistoryList(_hl);
@@ -846,41 +839,37 @@
       ).join('');
       const row = document.createElement('div');
       row.className = `chat-row${hasFlg?' flagged':''}${isSusp?' suspended':''}${c.needsMonitoring?' needs-monitoring':''}`;
+      const slots2      = getJoinSlots(c.chatId);
+      const adminJoined = !!slots2.admin;
+      const modJoined2  = !!slots2.mod;
+      const joinUrl     = getJoinUrl(c.chatId);
       row.innerHTML = `
         <div class="chat-icon">🏠</div>
         <div class="chat-meta">
           <div class="chat-title">${escH(c.userA)} ↔ ${escH(c.userB)}</div>
           <div class="chat-sub">${escH(c.listing)} · ${lastTs}</div>
-        </div>
-        <div class="chat-badges">
-          ${isSusp?'<span class="badge badge-banned">Suspended</span>':hasFlg?'<span class="badge badge-flagged">⚠ Flagged</span>':'<span class="badge badge-active">Active</span>'}
-          ${c.needsMonitoring?'<span class="badge badge-monitor">🔴 Monitor</span>':''}
-          ${modIn?'<span class="badge badge-mod">🛡️ Joined</span>':''}
-          <span class="badge badge-msgs">${msgs.length} msg${msgs.length!==1?'s':''}</span>
-        </div>
-        <div class="chat-actions" style="flex-wrap:wrap;gap:6px;align-items:center;">
-          <div style="display:flex;flex-direction:column;gap:2px;">
-            <div class="assign-label">Assigned to</div>
-            <select class="assign-select" onchange="reassignChat('${c.chatId}',this.value)">
-              <option value="" ${!currentMod?'selected':''}>— Unassigned —</option>
-              ${modOptions}
-            </select>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;">
+            ${isSusp?'<span class="badge badge-banned">Suspended</span>':hasFlg?'<span class="badge badge-flagged">⚠ Flagged</span>':'<span class="badge badge-active">Active</span>'}
+            ${c.needsMonitoring?'<span class="badge badge-monitor">🔴 Monitor</span>':''}
           </div>
+        </div>
+        <div class="chat-actions" style="gap:6px;align-items:center;flex-shrink:0;">
           <button class="chat-action-btn btn-view" onclick="viewChat('${c.chatId}','${escH(c.listing)}','${escH(c.userA)}','${escH(c.userB)}')">View</button>
-          ${(()=>{
-            const slots = getJoinSlots(c.chatId);
-            const adminJoined = !!slots.admin;
-            const modJoined   = !!slots.mod;
-            const url = getJoinUrl(c.chatId);
-            if (adminJoined) {
-              return `<a href="${url}" target="_blank" class="chat-action-btn btn-join joined" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">✓ You Joined ↗</a>
-                      <button class="chat-action-btn" style="font-size:10px;opacity:0.6;" onclick="leaveChat('${c.chatId}')">Leave</button>`;
-            }
-            const modLabel = modJoined ? `🛡️ ${slots.mod.name} in chat` : '';
-            const canJoin  = !adminJoined;
-            return `<button class="chat-action-btn btn-join" onclick="joinChat('${c.chatId}')" ${canJoin?'':'disabled'}>🛡️ Join as Admin</button>
-                    ${modJoined?`<span style="font-size:10px;color:#6ee7b7;white-space:nowrap;">${escH(modLabel)}</span>`:''}`;
-          })()}
+          ${adminJoined
+            ? `<a href="${joinUrl}" target="_blank" class="chat-action-btn btn-join joined" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">✓ Joined ↗</a>
+               <button class="chat-action-btn" style="font-size:10px;opacity:0.6;padding:4px 8px;" onclick="leaveChat('${c.chatId}')">Leave</button>`
+            : `<button class="chat-action-btn btn-join" onclick="joinChat('${c.chatId}')">${modJoined2?`🛡️ ${escH(slots2.mod?.name||'')} active`:'🛡️ Join'}</button>`
+          }
+          <details class="chat-details-menu">
+            <summary class="chat-details-btn" title="More info">•••</summary>
+            <div class="chat-details-panel">
+              <div class="cdp-row"><span class="cdp-label">Messages</span><span>${msgs.length}</span></div>
+              <div class="cdp-row"><span class="cdp-label">Mod active</span><span>${modJoined2 ? escH(slots2.mod?.name||'Mod') : '—'}</span></div>
+              <div class="cdp-row"><span class="cdp-label">Admin joined</span><span>${adminJoined ? 'Yes' : 'No'}</span></div>
+              <hr style="border:none;border-top:1px solid rgba(255,255,255,0.06);margin:4px 0;">
+              <button onclick="archiveChatManual('${c.chatId}')" style="width:100%;text-align:left;padding:4px 0;background:transparent;border:none;color:var(--muted);font-size:12px;font-family:'Outfit',sans-serif;cursor:pointer;" onmouseover="this.style.color='#fcd34d'" onmouseout="this.style.color=''">📁 Archive Chat</button>
+            </div>
+          </details>
         </div>`;
       container.appendChild(row);
     });
@@ -1226,169 +1215,50 @@
 
   // ── ARCHIVED TAB ─────────────────────────────────────────────
   function renderArchivedList(container) {
-    const chats        = getChatsIndex();
-    const deals        = getDeals();
-    const modLog       = getModLog();
-    const archivedChats   = chats.filter(c => c.archived || c.dealComplete);
-    const cancelledDeals  = deals.filter(d => d.stage === 'Cancelled');
-    const completedDeals  = deals.filter(d => d.stage === 'Complete' || d.stage_complete);
-    const total = archivedChats.length + cancelledDeals.length;
-    const _tac = document.getElementById('tab-archived-count'); if (_tac) _tac.textContent = total;
+    if (!container) return;
+    const chats    = getChatsIndex();
+    const deals    = getDeals();
+    const modLog   = getModLog();
+    const dealChatIds = new Set(deals.map(d => d.chatId));
+    const archivedChats = chats.filter(c => (c.archived || c.autoArchived || c.manualArchived) && !dealChatIds.has(c.chatId));
+    const _tacEl = document.getElementById('tab-archived-count'); if (_tacEl) _tacEl.textContent = archivedChats.length;
     container.innerHTML = '';
-    if (!archivedChats.length && !cancelledDeals.length && !completedDeals.length) {
-      container.innerHTML = `<div class="empty-state" style="text-align:center;padding:60px 20px;"><div class="empty-icon">📁</div><h3>Nothing archived yet</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Completed and ended chats will appear here.</p></div>`;
+    if (!archivedChats.length) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">💬</div><h3>No archived chats</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Chats inactive for 7+ days (with no deal started) appear here.</p></div>`;
       return;
     }
-    if (completedDeals.length || cancelledDeals.length) {
-      const dealSection = document.createElement('div');
-      dealSection.innerHTML = `<div class="archived-section-title">Deals (${completedDeals.length} completed · ${cancelledDeals.length} cancelled)</div>`;
-      [...completedDeals, ...cancelledDeals].forEach(d => {
-        const card = document.createElement('div');
-        card.className = 'archived-card';
-        card.style.marginBottom = '12px';
-        const isComplete  = d.stage === 'Complete' || d.stage_complete;
-        const msgs        = getChatMsgs(d.chatId);
-        const violations  = Object.values(getChatVio(d.chatId));
-        const totalVio    = violations.reduce((a,b)=>a+b,0);
-        const chatFlags   = modLog.filter(e => e.chatId === d.chatId).length;
-        const pipelineRows = PIPELINE.map(s => {
-          const done = d[`stage_${s.key}`];
-          const ts   = d[`stage_${s.key}_ts`] ? ' · ' + fmtTs(d[`stage_${s.key}_ts`]) : '';
-          return `<div class="archived-timeline-row"><div class="archived-timeline-label">${s.icon} ${s.label}</div><span style="color:${done?'#6ee7b7':'#f87171'};">${done?'✓ Done'+ts:'✗ Not reached'}</span></div>`;
-        }).join('');
-        card.innerHTML = `
-          <div class="deal-card-header">
-            <div class="deal-card-icon" style="background:${isComplete?'linear-gradient(135deg,#78350f,#d97706)':'linear-gradient(135deg,#450a0a,#991b1b)'};">${isComplete?'🏆':'❌'}</div>
-            <div class="deal-card-meta">
-              <div class="deal-card-title">${escH(d.listing)}</div>
-              <div class="deal-card-sub">${escH(d.userA)} ↔ ${escH(d.userB)}</div>
-            </div>
-            <span class="badge ${isComplete?'':'badge-banned'}" style="${isComplete?'background:rgba(212,160,23,0.15);color:#fcd34d;border:1px solid rgba(212,160,23,0.3);':''}">${isComplete?'🏆 Complete':'❌ Cancelled'}</span>
+    archivedChats.forEach(c => {
+      const msgs   = getChatMsgs(c.chatId);
+      const v      = getChatVio(c.chatId);
+      const maxV   = Math.max(...Object.values(v).concat([0]));
+      const isSusp = maxV >= 3;
+      const hasFlg = modLog.some(m => m.chatId === c.chatId);
+      const lastTs = c.lastTs ? new Date(c.lastTs).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'No messages';
+      const archiveReason = c.autoArchived ? '🕒 7-day inactivity' : '📁 Manually archived';
+      const row = document.createElement('div');
+      row.className = `chat-row${hasFlg?' flagged':''}${isSusp?' suspended':''}`;
+      row.innerHTML = `
+        <div class="chat-icon">🏠</div>
+        <div class="chat-meta">
+          <div class="chat-title">${escH(c.userA)} ↔ ${escH(c.userB)}</div>
+          <div class="chat-sub">${escH(c.listing)} · ${lastTs}</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;">
+            ${isSusp?'<span class="badge badge-banned">Suspended</span>':hasFlg?'<span class="badge badge-flagged">⚠ Flagged</span>':'<span class="badge badge-active">Active</span>'}
+            <span class="badge" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid rgba(255,255,255,0.08);">${archiveReason}</span>
           </div>
-          <div class="archived-meta-grid">
-            <div class="deal-meta-item"><div class="deal-meta-label">Initiated</div><div class="deal-meta-value" style="font-size:12px;">${d.initiatedTs?fmtTs(d.initiatedTs):'—'}</div></div>
-            <div class="deal-meta-item"><div class="deal-meta-label">${isComplete?'Completed':'Cancelled'}</div><div class="deal-meta-value" style="font-size:12px;">${(d.completedTs||d.cancelledTs)?fmtTs(d.completedTs||d.cancelledTs):'—'}</div></div>
-            <div class="deal-meta-item"><div class="deal-meta-label">Messages</div><div class="deal-meta-value">${msgs.length}</div></div>
-            <div class="deal-meta-item"><div class="deal-meta-label">Flags</div><div class="deal-meta-value" style="color:${chatFlags>0?'#fcd34d':'#34d399'};">${chatFlags}</div></div>
-            <div class="deal-meta-item"><div class="deal-meta-label">Total Violations</div><div class="deal-meta-value" style="color:${totalVio>0?'#f87171':'#34d399'};">${totalVio}</div></div>
-            <div class="deal-meta-item"><div class="deal-meta-label">Initiated By</div><div class="deal-meta-value">${escH(d.initiatedBy==='A'?d.userA:d.userB)}</div></div>
-          </div>
-          <div class="archived-timeline">${pipelineRows}</div>
-          ${d.notes?`<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);"><strong style="color:var(--text);">Mod Notes:</strong> ${escH(d.notes)}</div>`:''}
-          <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
-            ${!isComplete ? `<button class="deal-stage-btn" style="background:rgba(16,185,129,0.12);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);" onclick="reinstateDeal('${d.chatId}')">↩ Reinstate Deal</button>` : ''}
-            <button class="chat-action-btn btn-view" onclick="viewChat('${d.chatId}','${escH(d.listing)}','${escH(d.userA)}','${escH(d.userB)}')">View Chat</button>
-            <button class="deal-cancel-deal-btn" style="font-size:11px;padding:5px 12px;" onclick="permanentDeleteDeal('${d.chatId}')">🗑 Delete</button>
-          </div>`;
-        dealSection.appendChild(card);
-      });
-      container.appendChild(dealSection);
-    }
-    if (archivedChats.length) {
-      const chatSection = document.createElement('div');
-      chatSection.innerHTML = `<div class="archived-section-title">Archived Chats (${archivedChats.length})</div>`;
-      archivedChats.forEach(c => {
-        const msgs      = getChatMsgs(c.chatId);
-        const v         = getChatVio(c.chatId);
-        const maxV      = Math.max(...Object.values(v).concat([0]));
-        const chatFlags = modLog.filter(e => e.chatId === c.chatId).length;
-        const card = document.createElement('div');
-        card.className = 'archived-card';
-        card.style.marginBottom = '12px';
-        card.innerHTML = `
-          <div class="deal-card-header">
-            <div class="chat-icon">🏠</div>
-            <div class="deal-card-meta">
-              <div class="deal-card-title">${escH(c.userA)} ↔ ${escH(c.userB)}</div>
-              <div class="deal-card-sub">${escH(c.listing)}</div>
-            </div>
-            <span class="badge" style="background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid rgba(255,255,255,0.1);">${c.dealComplete?'Deal Complete':'Ended'}</span>
-          </div>
-          <div class="archived-meta-grid">
-            <div class="deal-meta-item"><div class="deal-meta-label">Started</div><div class="deal-meta-value" style="font-size:12px;">${c.started?fmtTs(c.started):'—'}</div></div>
-            <div class="deal-meta-item"><div class="deal-meta-label">Archived</div><div class="deal-meta-value" style="font-size:12px;">${c.archivedTs?fmtTs(c.archivedTs):'—'}</div></div>
-            <div class="deal-meta-item"><div class="deal-meta-label">Messages</div><div class="deal-meta-value">${msgs.length}</div></div>
-            <div class="deal-meta-item"><div class="deal-meta-label">Flags</div><div class="deal-meta-value" style="color:${chatFlags>0?'#fcd34d':'#34d399'};">${chatFlags}</div></div>
-            <div class="deal-meta-item"><div class="deal-meta-label">Max Violations</div><div class="deal-meta-value" style="color:${maxV>=3?'#f87171':maxV>=1?'#fcd34d':'#34d399'};">${maxV} / 3</div></div>
-          </div>
-          <div style="display:flex;gap:8px;justify-content:flex-end;">
-            <button class="chat-action-btn btn-view" onclick="viewChat('${c.chatId}','${escH(c.listing)}','${escH(c.userA)}','${escH(c.userB)}')">View Chat</button>
-          </div>`;
-        chatSection.appendChild(card);
-      });
-      container.appendChild(chatSection);
-    }
-  }
-
-
-  // ── #14 APPEALS LIST ─────────────────────────────────────────
-  function renderAppealsList(appeals, container) {
-    const pending  = appeals.filter(a => a.status === 'pending');
-    const resolved = appeals.filter(a => a.status !== 'pending');
-    if (!pending.length && !resolved.length) {
-      container.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><h3>No appeals</h3><p>No users have submitted appeals yet.</p></div>`;
-      return;
-    }
-    if (!pending.length) {
-      container.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><h3>All caught up</h3><p>${resolved.length} appeal${resolved.length!==1?'s have':' has'} already been resolved.</p></div>`;
-      return;
-    }
-    container.innerHTML = '';
-    pending.forEach(a => {
-      const initials = String(a.userName||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      const time     = new Date(a.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-      const card     = document.createElement('div');
-      card.className = 'appeal-card';
-      card.innerHTML = `
-        <div class="appeal-header">
-          <div class="appeal-avatar">${initials}</div>
-          <div class="flag-info">
-            <div class="flag-who">${escH(a.userName)} <span style="color:var(--muted);font-weight:400;font-size:12px;">(${a.userRole})</span></div>
-            <div class="flag-when">${escH(a.listing)} · ${time}</div>
-          </div>
-          <span class="flag-count" style="background:rgba(124,58,237,0.15);color:#c4b5fd;border-color:rgba(124,58,237,0.3);">Pending Review</span>
         </div>
-        <div class="appeal-msg-box"><div class="appeal-msg-label">User\'s Appeal</div><div class="appeal-msg-text">${escH(a.text)}</div></div>
-        <div class="appeal-actions">
-          <button class="btn-deny" onclick="resolveAppeal(${a.id},'denied')">Deny</button>
-          <button class="btn-reinstate" onclick="resolveAppeal(${a.id},'reinstated')">✓ Reinstate Chat</button>
+        <div class="chat-actions" style="gap:6px;align-items:center;flex-shrink:0;">
+          <button class="deal-stage-btn" style="background:rgba(59,130,246,0.12);color:#93c5fd;border:1px solid rgba(59,130,246,0.3);" onclick="unarchiveChat('${c.chatId}')">↩ Unarchive</button>
+          <button class="chat-action-btn btn-view" onclick="viewChat('${c.chatId}','${escH(c.listing)}','${escH(c.userA)}','${escH(c.userB)}')">View</button>
         </div>`;
-      container.appendChild(card);
+      container.appendChild(row);
     });
-    if (resolved.length) {
-      const note = document.createElement('div');
-      note.style.cssText = 'text-align:center;font-size:12px;color:var(--muted);padding:12px 0 4px;';
-      note.textContent = `${resolved.length} resolved appeal${resolved.length!==1?'s':''} not shown`;
-      container.appendChild(note);
-    }
-  }
-  function resolveAppeal(id, status) {
-    const appeals = getAppeals();
-    const a = appeals.find(x => x.id === id);
-    if (!a) return;
-    a.status = status;
-    saveAppeals(appeals);
-
-    if (status === 'reinstated') {
-      // Reset violations for this chat
-      try {
-        const vio = {};
-        _vioByChat[a.chatId] = vio;
-        RF.saveViolations(a.chatId, vio).catch(e => console.warn("[RF] ban vio", e));
-      } catch {}
-      showToast('✓ Chat reinstated — violations cleared', 'success');
-    } else {
-      showToast('Appeal denied', '');
-    }
-    loadDashboard();
   }
 
-  // ── APPROVE MESSAGE ──────────────────────────────────────────
   function approveMessage(logId) {
     const log   = getModLog();
     const entry = log.find(e => e.id === logId);
     if (!entry) return;
-    const payload = { originalId: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text };
     // Write approved message directly to Firestore — chat.html onMessages listener picks it up
     const approvedMsg = { id: logId, senderIdentity: entry.senderIdentity, senderId: entry.senderId, senderName: entry.senderName, text: entry.text, ts: Date.now(), moderatorApproved: true, chatId: entry.chatId };
     RF.saveMessage(entry.chatId, approvedMsg).catch(e => console.warn('[RF] approveMessage msg', e));
@@ -1397,12 +1267,12 @@
     if ((vio[entry.senderIdentity] || 0) > 0) { vio[entry.senderIdentity]--; }
     _vioByChat[entry.chatId] = vio;
     RF.saveViolations(entry.chatId, vio).catch(e => console.warn('[RF] approveMessage vio', e));
-    updateLogEntry(logId, { status: 'approved' });
+    updateLogEntry(logId, { status: 'approved', actorName: MOD_NAME, actorTs: Date.now() });
     showToast('✓ Message approved and delivered', 'success');
     loadDashboard();
   }
 
-  function dismissFlag(logId) { updateLogEntry(logId, { status: 'dismissed' }); showToast('Flag dismissed', ''); loadDashboard(); }
+  function dismissFlag(logId) { updateLogEntry(logId, { status: 'dismissed', actorName: MOD_NAME, actorTs: Date.now() }); showToast('Flag dismissed', ''); loadDashboard(); }
 
   // ── JOIN CHAT ────────────────────────────────────────────────
   function joinChat(chatId) {
@@ -1414,6 +1284,7 @@
     }
     slots.mod = { id: 'mod-8', name: 'Mod 8', ts: Date.now() };
     saveJoinSlots(chatId, slots);
+    RF.updateChatMeta(chatId, { lastTs: Date.now() }).catch(()=>{});
     showToast('🛡️ Joined chat as Mod 8', 'info');
     window.open(getJoinUrl(chatId), '_blank');
     setTimeout(loadDashboard, 400);
@@ -1422,6 +1293,7 @@
     const slots = getJoinSlots(chatId);
     slots.mod = null;
     saveJoinSlots(chatId, slots);
+    RF.updateChatMeta(chatId, { lastTs: Date.now() }).catch(()=>{});
     showToast('Left chat', '');
     loadDashboard();
   }
@@ -1654,18 +1526,6 @@
     if (el) el.textContent = q ? `${shown} result${shown!==1?'s':''}` : '';
   }
 
-  function filterAppeals() {
-    const q = document.getElementById('search-appeals').value.trim().toLowerCase();
-    const rows = document.querySelectorAll('#appeals-list .appeal-card, #appeals-list > div');
-    let shown = 0;
-    rows.forEach(row => {
-      const match = !q || row.textContent.toLowerCase().includes(q);
-      row.style.display = match ? '' : 'none';
-      if (match) shown++;
-    });
-    const el = document.getElementById('search-appeals-count');
-    if (el) el.textContent = q ? `${shown} result${shown!==1?'s':''}` : '';
-  }
 
   function filterUsers() {
     const q = document.getElementById('search-users').value.trim().toLowerCase();
@@ -1764,6 +1624,25 @@
     });
   }
 
+
+  function unarchiveChat(chatId) {
+    const chat = _chatsIndex.find(c => c.chatId === chatId);
+    if (chat) { chat.archived = false; delete chat.archivedTs; delete chat.autoArchived; }
+    RF.updateChatMeta(chatId, { archived: false, archivedTs: null, autoArchived: false }).catch(e => console.warn('[RF] unarchive', e));
+    showToast('↩ Chat restored to active', 'success');
+    loadDashboard();
+  }
+
+  function archiveChatManual(chatId) {
+    const activeDeal = getDeals().find(d => d.chatId === chatId && d.stage !== 'Cancelled' && !d.stage_complete);
+    if (activeDeal) { showToast('Cannot archive a chat with an active deal.', 'error'); return; }
+    const chat = _chatsIndex.find(c => c.chatId === chatId);
+    if (chat) { chat.archived = true; chat.archivedTs = Date.now(); chat.manualArchived = true; }
+    RF.updateChatMeta(chatId, { archived: true, archivedTs: Date.now(), manualArchived: true }).catch(e => console.warn('[RF] archiveManual', e));
+    showToast('📁 Chat archived', 'success');
+    loadDashboard();
+  }
+
   function filterHistory() {
     const _sh = document.getElementById('search-history'); if (!_sh) return;
     const q = _sh.value.trim().toLowerCase();
@@ -1792,7 +1671,7 @@
     document.querySelectorAll('.dash-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tab}`));
     // Clear search on tab switch
-    ['chats','flagged','deals','appeals','users','archived','history'].forEach(id => {
+    ['chats','flagged','deals','users','archived','history'].forEach(id => {
       const el = document.getElementById(`search-${id}`);
       const ct = document.getElementById(`search-${id}-count`);
       if (el) el.value = '';
@@ -1814,7 +1693,10 @@
   // then call loadDashboard() so the existing v38 render functions pick it up.
   // Nothing in v38 mod-dashboard code is changed.
 
+  var _syncStarted = false;
   function startFirestoreSync() {
+    if (_syncStarted) return;
+    _syncStarted = true;
     // All chats
     RF.onAllChats(chats => {
       // Merge: keep localStorage data for fields Firestore doesn't have
@@ -1827,12 +1709,15 @@
         if (c.deal)       _dealByChat[c.chatId]     = c.deal;
         if (c.meeting)    _meetingByChat[c.chatId]  = c.meeting;
         if (c.joinSlots)  _joinSlotsByChat[c.chatId]= c.joinSlots;
-        // Real-time messages per chat
-        db.collection('chats').doc(c.chatId).collection('messages')
-          .orderBy('ts','asc').onSnapshot(snap => {
-            _msgsByChat[c.chatId] = snap.docs.map(d => d.data());
-            loadDashboard();
-          });
+        // Real-time messages per chat (guard prevents duplicate listeners)
+        if (!_msgListeners.has(c.chatId)) {
+          _msgListeners.add(c.chatId);
+          db.collection('chats').doc(c.chatId).collection('messages')
+            .orderBy('ts','asc').onSnapshot(snap => {
+              _msgsByChat[c.chatId] = snap.docs.map(d => d.data());
+              loadDashboard();
+            });
+        }
       });
       loadDashboard();
     });
