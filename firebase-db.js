@@ -49,6 +49,11 @@ const RF = (function() {
   }
 
   // ── DEAL ─────────────────────────────────────────────────────
+  async function saveDefaulter(defaulter) {
+    try { await db.collection('defaulters').doc(String(defaulter.id)).set(defaulter); }
+    catch(e) { console.error('[RF] saveDefaulter', e); }
+  }
+
   async function deleteDeal(chatId) {
     try { await db.collection('deals').doc(String(chatId)).delete(); }
     catch(e) { console.error('[RF] deleteDeal', e); }
@@ -230,7 +235,7 @@ const RF = (function() {
     saveAssignment, deleteAssignment, getAssignment, onAssignments,
     setModActive, onModsActive,
     banUser, unbanUser, onBanned,
-    onAllChats, onDeals, deleteDeal,
+    onAllChats, onDeals, deleteDeal, saveDefaulter,
     getUserChats, saveUserChats,
     postSystemMsg
   };

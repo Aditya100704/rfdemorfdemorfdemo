@@ -1058,7 +1058,7 @@
   const getModeActive  = () => _modsActive;
   const getAssignments = () => _assignments;
   const getDefaulters  = () => _defaulters;
-  const saveDefaulters = d => { _defaulters = Array.isArray(d) ? d : [d]; _defaulters.forEach(x => RF.saveDefaulter ? RF.saveDefaulter(x).catch(()=>{}) : db.collection('defaulters').doc(String(x.id)).set(x).catch(()=>{})); };
+  const saveDefaulters = d => { _defaulters = Array.isArray(d) ? d : [d]; _defaulters.forEach(x => RF.saveDefaulter(x).catch(e => console.warn('[RF] saveDefaulter', e))); };
 
   function getJoinSlots(chatId) {
     return _joinSlotsByChat[chatId] || { admin: null, mod: null };
@@ -1495,6 +1495,8 @@
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
+    if (deal.stage === 'Cancelled') { showToast('This deal has already been cancelled.', 'error'); return; }
+    if (deal.stage_complete || deal.stage === 'Complete') { showToast('This deal is already marked complete.', ''); return; }
     deal.stage_complete    = true;
     deal.stage_complete_ts = Date.now();
     deal.stage             = 'Complete';

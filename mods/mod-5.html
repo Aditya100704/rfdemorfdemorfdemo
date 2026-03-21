@@ -782,6 +782,18 @@
 
   // ── LOAD DASHBOARD ───────────────────────────────────────────
   function loadDashboard() {
+    // ── Auto-archive: chats inactive 7 days (no deal started) ────
+    const _now7 = Date.now();
+    const _SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+    const _anyDealChatIds = new Set(getDeals().map(d => d.chatId));
+    _chatsIndex.forEach(chat => {
+      if (chat.archived || _anyDealChatIds.has(chat.chatId)) return;
+      const lastActivity = chat.lastTs || chat.started || 0;
+      if (lastActivity && (_now7 - lastActivity) > _SEVEN_DAYS) {
+        chat.archived = true; chat.archivedTs = _now7; chat.autoArchived = true;
+        RF.updateChatMeta(chat.chatId, { archived: true, archivedTs: _now7, autoArchived: true }).catch(()=>{});
+      }
+    });
     renderModPanel();
     const modLog  = getModLog();
     const allChats = getChatsIndex();
