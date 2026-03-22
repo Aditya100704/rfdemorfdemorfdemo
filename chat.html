@@ -38,7 +38,7 @@
   .chat-topbar{background:linear-gradient(135deg,var(--dark),var(--dark2));border-bottom:1.5px solid var(--gold-dk);padding:0 20px;height:64px;display:flex;align-items:center;gap:14px;flex-shrink:0;box-shadow:0 2px 20px rgba(4,4,41,0.3);}
   .topbar-back{width:36px;height:36px;border-radius:50%;border:1px solid rgba(212,160,23,0.3);background:transparent;color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background 0.2s;text-decoration:none;}
   .topbar-back:hover{background:rgba(212,160,23,0.1);}
-  .topbar-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dk),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--dark);font-size:16px;flex-shrink:0;border:2px solid rgba(212,160,23,0.4);}
+  .topbar-avatar{width:40px;height:40px;border-radius:50%;background:#3a3d45;display:flex;align-items:center;justify-content:center;font-weight:600;color:#9ca3af;font-size:16px;flex-shrink:0;border:1px solid rgba(255,255,255,0.1);}
   .topbar-info{flex:1;min-width:0;}
   .topbar-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .topbar-sub{font-size:11px;color:rgba(212,160,23,0.75);letter-spacing:0.3px;}
@@ -67,7 +67,7 @@
   .msg-row{display:flex;gap:8px;align-items:flex-end;animation:msgIn 0.2s ease;}
   @keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
   .msg-row.me{flex-direction:row-reverse;}
-  .msg-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dk),var(--gold));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--dark);flex-shrink:0;}
+  .msg-avatar{width:28px;height:28px;border-radius:50%;background:#3a3d45;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#9ca3af;flex-shrink:0;}
   .msg-avatar.other{background:linear-gradient(135deg,#374151,#4b5563);color:#fff;}
   .msg-avatar.mod-av{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;font-size:13px;}
   .msg-content{max-width:72%;display:flex;flex-direction:column;gap:3px;}
@@ -76,7 +76,7 @@
   .msg-sender.mod-sender{color:#a78bfa;}
   .msg-time{font-size:10px;color:rgba(255,255,255,0.35);padding:0 4px;}
   .bubble{padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5;word-break:break-word;}
-  .msg-row.me .bubble{background:linear-gradient(135deg,#b8860b,#d4a017);color:#fff;border-bottom-right-radius:4px;}
+  .msg-row.me .bubble{background:#2c3a4e;color:#d4dde8;border-bottom-right-radius:4px;border:1px solid rgba(255,255,255,0.08);}
   .msg-row:not(.me) .bubble{background:linear-gradient(135deg,var(--dark2),#131360);color:#e8e8ff;border-bottom-left-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,0.35);border:1px solid rgba(212,160,23,0.12);}
   .bubble.mod-bubble{background:linear-gradient(135deg,#5b21b6,#7c3aed)!important;color:#fff!important;border-radius:18px!important;border:none!important;}
   .sys-msg{text-align:center;font-size:11px;color:rgba(212,160,23,0.75);background:rgba(212,160,23,0.07);border:1px solid rgba(212,160,23,0.15);border-radius:20px;padding:5px 14px;align-self:center;}
@@ -258,6 +258,19 @@
 
   .mod-status{text-align:center;font-size:11px;color:var(--mid);padding:4px 0 0;min-height:18px;flex-shrink:0;}
   .chat-disclaimer{background:rgba(212,160,23,0.06);border-top:1px solid rgba(212,160,23,0.15);padding:7px 16px;font-size:10.5px;color:rgba(212,160,23,0.65);text-align:center;flex-shrink:0;line-height:1.4;}
+
+  /* Contact Mod FAB */
+  .contact-mod-fab{position:fixed;bottom:80px;right:16px;width:44px;height:44px;border-radius:10px;background:rgba(212,160,23,0.12);border:1.5px solid rgba(212,160,23,0.3);color:var(--gold);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:300;transition:all 0.2s;box-shadow:0 4px 16px rgba(0,0,0,0.4);}
+  .contact-mod-fab:hover{background:rgba(212,160,23,0.2);border-color:rgba(212,160,23,0.5);}
+  .contact-mod-fab svg{width:18px;height:18px;}
+  .contact-mod-fab.has-thread{background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);color:#6ee7b7;}
+  .contact-mod-fab.blink{animation:fabBlink 0.7s ease-in-out infinite;}
+  @keyframes fabBlink{0%,100%{box-shadow:0 4px 16px rgba(0,0,0,0.4);}50%{box-shadow:0 0 0 7px rgba(16,185,129,0.3),0 4px 16px rgba(0,0,0,0.4);background:rgba(16,185,129,0.25);border-color:rgba(16,185,129,0.7);color:#34d399;}}
+  .contact-mod-fab.hidden{display:none;}
+  .contact-thread-bubble{padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.55;word-break:break-word;max-width:80%;}
+  .contact-thread-bubble.user{background:#2c3a4e;color:#d4dde8;border:1px solid rgba(255,255,255,0.07);align-self:flex-end;}
+  .contact-thread-bubble.mod{background:#1e2832;color:#a8c5e0;border:1px solid rgba(100,160,210,0.2);align-self:flex-start;}
+  .contact-thread-bubble .ct-label{font-size:10px;font-weight:600;letter-spacing:0.3px;margin-bottom:4px;opacity:0.6;text-transform:uppercase;}
 
   /* LOADING */
   #loading-screen{position:fixed;inset:0;background:var(--dark);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:999;transition:opacity 0.4s;}
@@ -600,6 +613,58 @@
   <img id="lightbox-img" src="" alt="">
 </div>
 
+<!-- Contact Mod FAB + Thread Modal -->
+<button class="contact-mod-fab" id="contact-mod-fab" onclick="openContactMod()" title="Contact your moderator">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+</button>
+
+<div class="modal-overlay" id="contact-modal" onclick="if(event.target===this)closeContactMod()">
+  <div class="modal-card" style="max-width:420px;gap:0;padding:0;overflow:hidden;background:#1a2030;border:1px solid rgba(255,255,255,0.08);">
+    <!-- Header always visible -->
+    <div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;background:#1a2030;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#243040;border:1px solid rgba(100,160,210,0.25);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">🛡️</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#d4dde8;">Moderator Support</div>
+          <div style="font-size:11px;color:#6b7a8d;margin-top:1px;" id="contact-modal-sub">Reach out to your assigned moderator</div>
+        </div>
+      </div>
+      <button onclick="closeContactMod()" style="background:none;border:none;font-size:16px;color:#6b7a8d;cursor:pointer;padding:4px;line-height:1;">✕</button>
+    </div>
+    <!-- New request form (shown when no thread exists) -->
+    <div id="contact-form-view" style="display:flex;flex-direction:column;gap:14px;padding:20px;background:#1a2030;">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#6b7a8d;letter-spacing:0.3px;display:block;margin-bottom:5px;">SUBJECT</label>
+        <select id="contact-subject" style="width:100%;padding:9px 12px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;color:#d4dde8;background:#243040;outline:none;">
+          <option value="">Select a subject…</option>
+          <option>General help</option>
+          <option>Issue with chat / messages</option>
+          <option>Question about the deal</option>
+          <option>Report a problem</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#6b7a8d;letter-spacing:0.3px;display:block;margin-bottom:5px;">MESSAGE</label>
+        <textarea id="contact-message" placeholder="Describe your issue or question…" maxlength="600" oninput="document.getElementById('contact-counter').textContent=this.value.length+' / 600'" style="width:100%;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;font-family:'Outfit',sans-serif;font-size:13px;color:#d4dde8;background:#243040;resize:vertical;min-height:90px;outline:none;"></textarea>
+        <div style="font-size:11px;color:#9ca3af;text-align:right;margin-top:3px;" id="contact-counter">0 / 600</div>
+      </div>
+      <div class="modal-btns" style="padding-bottom:4px;">
+        <button onclick="closeContactMod()" style="padding:10px 16px;border:1px solid rgba(255,255,255,0.1);border-radius:8px;background:transparent;color:#6b7a8d;font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;">Cancel</button>
+        <button onclick="submitContactMod()" style="padding:10px 20px;border:none;border-radius:8px;background:#2c4a6e;color:#a8c5e0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Send Message</button>
+      </div>
+    </div>
+    <!-- Thread view (shown after first message sent) -->
+    <div id="contact-thread-view" style="display:none;flex-direction:column;">
+      <div id="contact-thread-messages" style="padding:16px 18px;display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;background:#141b24;"></div>
+      <div style="padding:10px 14px;border-top:1px solid rgba(255,255,255,0.07);display:flex;gap:8px;align-items:flex-end;background:#1a2030;">
+        <textarea id="contact-followup" placeholder="Type a message…" maxlength="500" style="flex:1;resize:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;font-family:'Outfit',sans-serif;font-size:13px;color:#d4dde8;background:#243040;outline:none;min-height:44px;max-height:100px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendContactFollowup();}"></textarea>
+        <button onclick="sendContactFollowup()" style="padding:9px 16px;border:none;border-radius:8px;background:#2c4a6e;color:#a8c5e0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -724,6 +789,7 @@
       banner.style.display = 'flex';
       document.getElementById('msg-input').disabled = true;
       document.getElementById('send-btn').disabled = true;
+      setTimeout(() => { banner.style.display = 'none'; }, 5000);
     } else {
       banner.style.display = 'none';
     }
@@ -838,7 +904,9 @@
       modJoinEl.className = 'sys-msg mod-sys';
       modJoinEl.textContent = '🛡️ RenterFinder Moderator has joined this chat';
       container.appendChild(modJoinEl);
-      document.getElementById('mod-joined-banner').classList.add('show');
+      const _mjBanner = document.getElementById('mod-joined-banner');
+      _mjBanner.classList.add('show');
+      setTimeout(() => _mjBanner.classList.remove('show'), 4000);
     }
 
     msgs.forEach((m, idx) => {
@@ -862,12 +930,14 @@
 
     checkBlocked();
     markRead();
-    container.scrollTop = container.scrollHeight;
+    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
   }
 
   function renderSingleMessage(m, container, isSeen) {
     // System messages (deal confirmation, etc.)
     if (m.isSystem) {
+      // Skip contact-related system messages — those belong in the contact thread popup only
+      if (m.text && (m.text.includes('📩') || m.text.includes('contacted the moderator') || m.text.includes('contact request'))) return;
       const sysEl = document.createElement('div');
       sysEl.className = 'sys-msg mod-sys';
       sysEl.style.cssText = 'background:rgba(16,185,129,0.1);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25);';
@@ -1257,12 +1327,39 @@ Message: ${JSON.stringify(text)}`;
         const joinerName = _joinSlots.mod?.name || _joinSlots.admin?.name || 'RenterFinder Moderator';
         const nameEl = document.getElementById('mod-joined-name');
         if (nameEl) nameEl.textContent = joinerName;
-        document.getElementById('mod-joined-banner').classList.add('show');
+        const _mjBanner = document.getElementById('mod-joined-banner');
+      _mjBanner.classList.add('show');
+      setTimeout(() => _mjBanner.classList.remove('show'), 4000);
       }
     }
     checkExpiry();
     renderMessages();
   });
+
+  // Listen for contact updates (mod replies) via Firestore
+  if (!_isLocal) {
+    let _lastKnownReplyCount = 0;
+    RF.onContacts(function(contacts) {
+      // Update localStorage
+      try { localStorage.setItem('rf_mod_contacts', JSON.stringify(contacts)); } catch {}
+      // Find my contact
+      const myContact = contacts.find(c => c.chatId === CHAT_ID && c.userId === USERS[currentIdentity === 'MOD' ? 'A' : currentIdentity].id);
+      if (myContact) {
+        const replyCount = (myContact.replies || []).length;
+        // New reply arrived — blink the FAB
+        if (replyCount > _lastKnownReplyCount && _lastKnownReplyCount > 0) {
+          _blinkContactFab();
+        }
+        _lastKnownReplyCount = replyCount;
+        // If thread modal is open, re-render immediately
+        const modal = document.getElementById('contact-modal');
+        if (modal && modal.classList.contains('show')) {
+          _renderContactThread(myContact);
+        }
+      }
+      _checkForContactReplies();
+    });
+  }
 
   // Typing indicator stays localStorage (ephemeral same-device)
   window.addEventListener('storage', function(e) {
@@ -1286,7 +1383,9 @@ Message: ${JSON.stringify(text)}`;
 
     if (isMod && !isModJoined()) {
       setModJoined();
-      document.getElementById('mod-joined-banner').classList.add('show');
+      const _mjBanner = document.getElementById('mod-joined-banner');
+      _mjBanner.classList.add('show');
+      setTimeout(() => _mjBanner.classList.remove('show'), 4000);
       const container = document.getElementById('chat-messages');
       const sys = document.createElement('div'); sys.className = 'sys-msg mod-sys';
       sys.textContent = '🛡️ RenterFinder Moderator has joined this chat';
@@ -1876,7 +1975,186 @@ Message: ${JSON.stringify(text)}`;
     }, 600);
 
   }
+  // ── CONTACT MOD ──────────────────────────────────────────────
+  const CONTACTS_KEY = 'rf_mod_contacts';
+
+  function _getMyContacts() {
+    try { return JSON.parse(localStorage.getItem(CONTACTS_KEY) || '[]').filter(c => c.chatId === CHAT_ID && c.userId === USERS[currentIdentity === 'MOD' ? 'A' : currentIdentity].id); }
+    catch { return []; }
+  }
+
+  function _getMyActiveContact() {
+    return _getMyContacts().sort((a,b) => (b.ts||0)-(a.ts||0))[0] || null;
+  }
+
+  function openContactMod() {
+    if (currentIdentity === 'MOD') return;
+    // Stop blinking
+    const fab = document.getElementById('contact-mod-fab');
+    if (fab) fab.classList.remove('blink');
+    clearInterval(_blinkInterval);
+    const existing = _getMyActiveContact();
+    if (existing) {
+      _renderContactThread(existing);
+    } else {
+      document.getElementById('contact-form-view').style.display = 'flex';
+      document.getElementById('contact-form-view').style.flexDirection = 'column';
+      document.getElementById('contact-thread-view').style.display = 'none';
+      document.getElementById('contact-subject').value = '';
+      document.getElementById('contact-message').value = '';
+      document.getElementById('contact-counter').textContent = '0 / 600';
+      document.getElementById('contact-modal-sub').textContent = 'Reach out to your assigned moderator';
+    }
+    document.getElementById('contact-modal').classList.add('show');
+  }
+
+  function closeContactMod() {
+    document.getElementById('contact-modal').classList.remove('show');
+  }
+
+  function _renderContactThread(contact) {
+    document.getElementById('contact-form-view').style.display = 'none';
+    document.getElementById('contact-thread-view').style.display = 'flex';
+    document.getElementById('contact-thread-view').style.flexDirection = 'column';
+    const statusText = contact.status === 'answered' ? '✓ Replied by moderator' : '⏳ Awaiting moderator reply';
+    document.getElementById('contact-modal-sub').textContent = statusText;
+    const msgBox = document.getElementById('contact-thread-messages');
+    msgBox.innerHTML = '';
+
+    // Merge ALL messages into one array and sort chronologically
+    const allMsgs = [];
+    allMsgs.push({ text: contact.message, ts: contact.ts || 0, side: 'user', label: contact.subject });
+    (contact.followups || []).forEach(f => allMsgs.push({ text: f.text, ts: f.ts || 0, side: 'user' }));
+    const replies = contact.replies || (contact.reply ? [{ text: contact.reply, ts: contact.repliedTs || 0 }] : []);
+    replies.forEach(r => allMsgs.push({ text: r.text, ts: r.ts || 0, side: 'mod' }));
+    allMsgs.sort((a, b) => a.ts - b.ts);
+
+    allMsgs.forEach(m => {
+      const wrap = document.createElement('div');
+      const isMe = m.side === 'user';
+      wrap.style.cssText = `display:flex;flex-direction:column;align-items:${isMe ? 'flex-end' : 'flex-start'};gap:3px;`;
+      const label = m.label ? `<div class="ct-label">${escH(m.label)}</div>` : (m.side === 'mod' ? '<div class="ct-label">Moderator</div>' : '');
+      const time = m.ts ? new Date(m.ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : '';
+      wrap.innerHTML = `<div class="contact-thread-bubble ${m.side}">${label}${escH(m.text)}</div>
+        <div style="font-size:10px;color:${isMe ? 'rgba(255,255,255,0.35)' : 'var(--mid)'};margin-top:2px;">${time}</div>`;
+      msgBox.appendChild(wrap);
+    });
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
+
+  function submitContactMod() {
+    const subject = document.getElementById('contact-subject').value;
+    const message = document.getElementById('contact-message').value.trim();
+    if (!subject) { document.getElementById('contact-subject').style.borderColor='#ef4444'; return; }
+    if (!message || message.length < 5) { document.getElementById('contact-message').style.borderColor='#ef4444'; return; }
+
+    // Look up which mod is assigned to this chat
+    let assignedModId = null, assignedModName = null;
+    try {
+      const assignments = JSON.parse(localStorage.getItem('rf_chat_assignments') || '{}');
+      assignedModId = assignments[CHAT_ID] || null;
+      if (assignedModId) {
+        const modNum = assignedModId.replace('mod-','');
+        assignedModName = `Mod ${modNum}`;
+      }
+    } catch {}
+    const contact = {
+      id: Date.now(),
+      chatId: CHAT_ID,
+      listing: LISTING,
+      userId: USERS[currentIdentity].id,
+      userName: USERS[currentIdentity].name,
+      userRole: USERS[currentIdentity].role,
+      subject, message,
+      ts: Date.now(),
+      status: 'open',
+      replies: [],
+      followups: [],
+      assignedModId,
+      assignedModName
+    };
+
+    // Save to localStorage
+    try {
+      const contacts = JSON.parse(localStorage.getItem(CONTACTS_KEY) || '[]');
+      contacts.unshift(contact);
+      localStorage.setItem(CONTACTS_KEY, JSON.stringify(contacts));
+    } catch {}
+
+    // Save to Firestore
+    if (!_isLocal) RF.saveContact(contact).catch(e => console.warn('[RF] saveContact', e));
+
+    // Update FAB to thread mode
+    const fab = document.getElementById('contact-mod-fab');
+    if (fab) fab.classList.add('has-thread');
+
+    // Show thread view immediately
+    _renderContactThread(contact);
+  }
+
+  function sendContactFollowup() {
+    const textarea = document.getElementById('contact-followup');
+    const text = textarea.value.trim();
+    if (!text) return;
+    const contact = _getMyActiveContact();
+    if (!contact) return;
+    const followup = { text, ts: Date.now() };
+    contact.followups = contact.followups || [];
+    contact.followups.push(followup);
+    // Update localStorage
+    try {
+      const contacts = JSON.parse(localStorage.getItem(CONTACTS_KEY) || '[]');
+      const idx = contacts.findIndex(c => c.id === contact.id);
+      if (idx !== -1) contacts[idx] = contact;
+      localStorage.setItem(CONTACTS_KEY, JSON.stringify(contacts));
+    } catch {}
+    // Mark back as open (needs mod reply) and update Firestore
+    contact.status = 'open';
+    try {
+      const contacts2 = JSON.parse(localStorage.getItem(CONTACTS_KEY) || '[]');
+      const idx2 = contacts2.findIndex(c => c.id === contact.id);
+      if (idx2 !== -1) { contacts2[idx2] = contact; localStorage.setItem(CONTACTS_KEY, JSON.stringify(contacts2)); }
+    } catch {}
+    if (!_isLocal) RF.updateContact(contact.id, { followups: contact.followups, status: 'open' }).catch(e => console.warn('[RF] followup', e));
+    textarea.value = '';
+    _renderContactThread(contact);
+  }
+
+  // Listen for mod replies via Firestore onChatMeta / contacts
+  function _checkForContactReplies() {
+    const existing = _getMyActiveContact();
+    if (existing) {
+      const fab = document.getElementById('contact-mod-fab');
+      if (fab) fab.classList.add('has-thread');
+    }
+  }
+
+  let _blinkInterval = null;
+  function _blinkContactFab() {
+    const fab = document.getElementById('contact-mod-fab');
+    if (!fab) return;
+    fab.classList.add('blink');
+    // Stop blinking when user opens the thread
+    clearInterval(_blinkInterval);
+    _blinkInterval = setInterval(() => {
+      const modal = document.getElementById('contact-modal');
+      if (modal && modal.classList.contains('show')) {
+        fab.classList.remove('blink');
+        clearInterval(_blinkInterval);
+      }
+    }, 500);
+  }
+
+  // Override switchIdentity to hide FAB for MOD view
+  const _origSwitchIdentity = switchIdentity;
+  switchIdentity = function(id) {
+    _origSwitchIdentity(id);
+    const fab = document.getElementById('contact-mod-fab');
+    if (fab) fab.classList.toggle('hidden', id === 'MOD');
+  };
+
   init();
+  _checkForContactReplies();
 </script>
 </div><!-- #chat-wrap -->
 </body>

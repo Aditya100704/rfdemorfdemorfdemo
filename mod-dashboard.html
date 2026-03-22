@@ -593,10 +593,11 @@
 
   <div class="dash-tabs">
     <div class="dash-tab active" data-tab="overview" onclick="switchTab('overview')">📊 Overview</div>
-    <div class="dash-tab" data-tab="chats" onclick="switchTab('chats')">💬 All Chats <span class="tab-count green" id="tab-chats-count">0</span></div>
     <div class="dash-tab" data-tab="flagged" onclick="switchTab('flagged')">🚩 Flagged <span class="tab-count" id="tab-flagged-count">0</span></div>
-    <div class="dash-tab" data-tab="deals" onclick="switchTab('deals')">🤝 Deal Tracker <span class="tab-count green" id="tab-deals-count">0</span></div>
     <div class="dash-tab" data-tab="appeals" onclick="switchTab('appeals')">📝 Appeals <span class="tab-count purple" id="tab-appeals-count">0</span></div>
+    <div class="dash-tab" data-tab="deals" onclick="switchTab('deals')">🤝 Deal Tracker <span class="tab-count green" id="tab-deals-count">0</span></div>
+    <div class="dash-tab" data-tab="contacts" onclick="switchTab('contacts')">📩 Contacts <span class="tab-count purple" id="tab-contacts-count">0</span></div>
+    <div class="dash-tab" data-tab="chats" onclick="switchTab('chats')">💬 Active Chats <span class="tab-count green" id="tab-chats-count">0</span></div>
     <div class="dash-tab" data-tab="users" onclick="switchTab('users')">👥 Users</div>
     <div class="dash-tab" data-tab="archived" onclick="switchTab('archived')">📁 Archived <span class="tab-count" id="tab-archived-count" style="background:rgba(255,255,255,0.06);color:var(--muted);">0</span></div>
     <div class="dash-tab" data-tab="history" onclick="switchTab('history')">🕓 History <span class="tab-count" id="tab-history-count" style="background:rgba(255,255,255,0.06);color:var(--muted);">0</span></div>
@@ -644,6 +645,16 @@
             <div class="stat-value blue" id="stat-appeals">0</div>
             <div class="stat-arrow">→ Appeals</div>
           </div>
+          <div class="stat-card" onclick="switchTab('contacts')" title="View user contacts">
+            <div class="stat-label">Total Contacts</div>
+            <div class="stat-value purple" id="stat-contacts-total">0</div>
+            <div class="stat-arrow">→ Contacts</div>
+          </div>
+          <div class="stat-card" onclick="switchTab('contacts')" title="View answered contacts">
+            <div class="stat-label">Contacts Answered</div>
+            <div class="stat-value green" id="stat-contacts-answered">0</div>
+            <div class="stat-arrow">→ Contacts</div>
+          </div>
           <div class="stat-card" onclick="switchTab('users')" title="View suspended chats">
             <div class="stat-label">Suspended Chats</div>
             <div class="stat-value red" id="stat-suspended">0</div>
@@ -666,7 +677,7 @@
       <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
         <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
           <table class="mod-metrics-table" style="min-width:560px;"><thead><tr>
-            <th>Mod / Admin</th><th>Reviewed</th><th>Approved / Dismissed</th><th>Approval %</th><th>Avg Response</th><th>Last Action</th>
+            <th>Mod / Admin</th><th>Reviewed</th><th>Approved / Dismissed</th><th>Approval %</th><th>Avg Response</th><th>Contacts</th><th>Last Action</th>
           </tr></thead><tbody id="mod-metrics-body"></tbody></table>
         </div>
       </div>
@@ -674,7 +685,7 @@
 
     <!-- ALL CHATS -->
     <div class="tab-panel" id="panel-chats">
-      <div class="section-header"><div class="section-title">All Chats</div><div class="section-sub" id="chat-count-sub">Loading…</div></div>
+      <div class="section-header"><div class="section-title">Active Chats</div><div class="section-sub" id="chat-count-sub">Loading…</div></div>
       <div class="tab-search-bar">
         <div class="tab-search-wrap"><span class="search-icon">🔍</span><input class="tab-search-input" id="search-chats" type="text" placeholder="Search by user name or chat ID…" oninput="filterChats()"></div>
         <span class="tab-search-count" id="search-chats-count"></span>
@@ -752,6 +763,19 @@
       </div>
     </div>
 
+    <!-- CONTACTS -->
+    <div class="tab-panel" id="panel-contacts">
+      <div class="section-header">
+        <div><div class="section-title">User Contacts</div><div class="section-sub">Messages sent by users to their assigned moderator</div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="perf-period-btn active" onclick="filterContacts('all')" id="contacts-filter-all">All</button>
+          <button class="perf-period-btn" onclick="filterContacts('open')" id="contacts-filter-open">Open</button>
+          <button class="perf-period-btn" onclick="filterContacts('answered')" id="contacts-filter-answered">Answered</button>
+        </div>
+      </div>
+      <div id="contacts-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    </div>
+
     <!-- HISTORY -->
     <div class="tab-panel" id="panel-history">
       <div class="section-header"><div class="section-title">48hr History</div><div class="section-sub">Flagged messages &amp; appeals from the last 48 hours — auto-deleted after that</div></div>
@@ -772,6 +796,24 @@
     </div>
 
 
+  </div>
+</div>
+
+<!-- CONTACT THREAD POPUP -->
+<div style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:600;display:none;align-items:center;justify-content:center;padding:16px;" id="contact-thread-overlay" onclick="if(event.target===this)closeContactThreadPopup()">
+  <div style="background:var(--card);border-radius:16px;width:100%;max-width:480px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.4);">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);" id="ctp-title">Support Thread</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="ctp-sub"></div>
+      </div>
+      <button onclick="closeContactThreadPopup()" style="background:none;border:none;font-size:18px;color:var(--muted);cursor:pointer;">✕</button>
+    </div>
+    <div id="ctp-messages" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;"></div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
+      <textarea id="ctp-reply-input" placeholder="Type a reply…" maxlength="500" style="flex:1;resize:none;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);background:rgba(255,255,255,0.04);outline:none;min-height:50px;max-height:100px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendContactThreadReply();}"></textarea>
+      <button onclick="sendContactThreadReply()" style="padding:10px 20px;border:none;border-radius:8px;background:rgba(16,185,129,0.2);color:#6ee7b7;border:1px solid rgba(16,185,129,0.4);font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Send</button>
+    </div>
   </div>
 </div>
 
@@ -1057,6 +1099,10 @@
   const getAppeals     = () => _appeals;
   const getModeActive  = () => _modsActive;
   const getAssignments = () => _assignments;
+  let _contacts        = [];
+  try { _contacts = JSON.parse(localStorage.getItem('rf_mod_contacts') || '[]'); } catch {}
+  const getContacts    = () => _contacts;
+  let _contactsFilter  = 'all';
   const getDefaulters  = () => _defaulters;
   const saveDefaulters = d => { _defaulters = Array.isArray(d) ? d : [d]; _defaulters.forEach(x => RF.saveDefaulter(x).catch(e => console.warn('[RF] saveDefaulter', e))); };
 
@@ -1134,13 +1180,14 @@
     assignNewChats();
     renderModPanel();
     const modLog  = getModLog();
-    const chats   = getChatsIndex().filter(c => !c.archived && !c.autoArchived && !c.manualArchived);
     const allChats = getChatsIndex();
+    const chats   = allChats.filter(c => !c.archived && !c.autoArchived && !c.manualArchived);
     const appeals = getAppeals();
 
     let totalMsgs = 0, suspended = 0;
+    // Stat cards show ALL chats (incl. archived) for true totals
+    allChats.forEach(c => { totalMsgs += getChatMsgs(c.chatId).length; });
     chats.forEach(c => {
-      totalMsgs += getChatMsgs(c.chatId).length;
       const v = getChatVio(c.chatId);
       if (Math.max(...Object.values(v).concat([0])) >= 3) suspended++;
     });
@@ -1149,7 +1196,7 @@
     const openAppeals  = appeals.filter(a => a.status === 'pending').length;
     const activeDeals  = getDeals().filter(d => d.stage !== 'Cancelled' && !d.stage_complete).length;
 
-    document.getElementById('stat-total-chats').textContent = chats.length;
+    document.getElementById('stat-total-chats').textContent = allChats.length;
     document.getElementById('stat-total-msgs').textContent  = totalMsgs;
     document.getElementById('stat-flagged').textContent     = pending;
     document.getElementById('stat-pending').textContent     = pending;
@@ -1163,7 +1210,7 @@
 
 
     renderChatsList(chats, document.getElementById('all-chats-list'));
-    document.getElementById('chat-count-sub').textContent = `${chats.length} chat${chats.length !== 1 ? 's' : ''} initiated`;
+    document.getElementById('chat-count-sub').textContent = `${chats.length} active · ${allChats.length} total`;
     renderFlaggedList(modLog.filter(e => e.status === 'pending'), document.getElementById('flagged-list'), modLog.filter(e => e.status !== 'pending').length);
     renderDealsList(getDeals(), document.getElementById('deals-list'));
     renderAppealsList(appeals, document.getElementById('appeals-list'));
@@ -1176,6 +1223,15 @@
     const defCount = getDefaulters().length;
     const defEl = document.getElementById('stat-defaulters'); if (defEl) defEl.textContent = defCount;
     const defTab = document.getElementById('tab-defaulters-count'); if (defTab) defTab.textContent = defCount;
+
+    // Contacts stats
+    const allContacts    = getContacts();
+    const openContacts   = allContacts.filter(c => c.status === 'open').length;
+    const answeredConts  = allContacts.filter(c => c.status === 'answered').length;
+    const ctTotal = document.getElementById('stat-contacts-total'); if (ctTotal) ctTotal.textContent = allContacts.length;
+    const ctAns   = document.getElementById('stat-contacts-answered'); if (ctAns) ctAns.textContent = answeredConts;
+    const ctTab   = document.getElementById('tab-contacts-count'); if (ctTab) ctTab.textContent = openContacts;
+    renderContactsList(allContacts, document.getElementById('contacts-list'));
   }
 
   // ── CHATS LIST ───────────────────────────────────────────────
@@ -1317,16 +1373,44 @@
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:60px 20px;"><div class="empty-icon">🤝</div><h3>No deals yet</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Deals appear here once both parties confirm interest in a chat.</p></div>`;
       return;
     }
-    const active = deals.filter(d => d.stage !== 'Cancelled' && !d.stage_complete);
+    const sorted = [...deals].sort((a,b)=>(b.initiatedTs||0)-(a.initiatedTs||0));
+    const active = sorted.filter(d => d.stage !== 'Cancelled' && !d.stage_complete);
     container.innerHTML = '';
     if (!active.length) {
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:40px;"><div class="empty-icon">🎉</div><h3>No active deals</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">All deals are in the Archived tab.</p></div>`;
       return;
     }
-    active.forEach(d => renderDealCard(d, container));
+    active.forEach(d => {
+      const stageLabel = d.stage || 'Initiated';
+      const ts = d.initiatedTs ? fmtTs(d.initiatedTs) : '—';
+      const dealId = String(d.chatId).slice(-8).toUpperCase();
+      const acc = document.createElement('details');
+      acc.style.cssText = 'background:var(--card);border:1px solid rgba(16,185,129,0.25);border-radius:12px;margin-bottom:10px;overflow:hidden;';
+      acc.innerHTML = `
+        <summary style="display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;list-style:none;user-select:none;">
+          <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;">ID: ${dealId}</span>
+          <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${escH(d.listing||'—')}</span>
+          <span style="font-size:11px;color:var(--muted);">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
+          <span style="font-size:11px;font-weight:700;color:#34d399;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);">● ${escH(stageLabel)}</span>
+          <span style="font-size:11px;color:var(--muted);">${ts}</span>
+          <span style="color:var(--muted);font-size:16px;transition:transform 0.2s;" class="acc-chev">›</span>
+        </summary>
+        <div style="padding:0 18px 18px;border-top:1px solid rgba(16,185,129,0.15);" class="acc-body">
+          <div id="acc-active-${escH(d.chatId)}"></div>
+        </div>`;
+      acc.addEventListener('toggle', () => {
+        const chev = acc.querySelector('.acc-chev');
+        if (chev) chev.style.transform = acc.open ? 'rotate(90deg)' : '';
+        if (acc.open) {
+          const body = acc.querySelector(`#acc-active-${CSS.escape(d.chatId)}`);
+          if (body && !body.innerHTML) renderDealCard(d, body, false);
+        }
+      });
+      container.appendChild(acc);
+    });
   }
 
-  function renderDealCard(d, container) {
+  function renderDealCard(d, container, isArchived) {
     const isCancelled = d.stage === 'Cancelled';
     const curIdx      = currentPipelineIdx(d);
     const activeIdx   = isCancelled ? -1 : (curIdx + 1 < PIPELINE.length ? curIdx + 1 : PIPELINE.length - 1);
@@ -1417,7 +1501,11 @@
       <div class="deal-card-actions">
         <button class="deal-save-notes-btn" onclick="saveDealNotes('${d.chatId}')">💾 Save Notes</button>
         <button class="btn-defaulter" onclick="openDefaulterModal('${d.chatId}')">🚫 Defaulter</button>
-        <button class="deal-cancel-deal-btn" onclick="cancelDeal('${d.chatId}')">✕ Cancel Deal</button>
+        ${isArchived
+          ? `<button class="btn-reinstate" onclick="reinstateDeal('${d.chatId}')">↩ Reinstate Deal</button>
+             <button onclick="permanentDeleteOneDeal('${d.chatId}')" style="padding:6px 14px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:rgba(239,68,68,0.08);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);">🗑 Delete</button>`
+          : `<button class="deal-cancel-deal-btn" onclick="cancelDeal('${d.chatId}')">✕ Cancel Deal</button>`
+        }
       </div>`;
     card.appendChild(footer);
     container.appendChild(card);
@@ -1555,8 +1643,13 @@
 
   function unarchiveChat(chatId) {
     const chat = _chatsIndex.find(c => c.chatId === chatId);
-    if (chat) { chat.archived = false; delete chat.archivedTs; delete chat.autoArchived; }
-    RF.updateChatMeta(chatId, { archived: false, archivedTs: null, autoArchived: false }).catch(e => console.warn('[RF] unarchive', e));
+    if (chat) {
+      chat.archived = false;
+      chat.autoArchived = false;
+      chat.manualArchived = false;
+      delete chat.archivedTs;
+    }
+    RF.updateChatMeta(chatId, { archived: false, archivedTs: null, autoArchived: false, manualArchived: false }).catch(e => console.warn('[RF] unarchive', e));
     showToast('↩ Chat restored to active', 'success');
     loadDashboard();
   }
@@ -1669,7 +1762,7 @@
 
   function renderArchivedDeals(container) {
     if (!container) return;
-    const deals  = getDeals();
+    const deals = getDeals();
     const archivedDeals = deals.filter(d => d.stage === 'Cancelled' || d.stage_complete || d.stage === 'Complete');
     const tabEl = document.getElementById('tab-archived-deals-count');
     if (tabEl) tabEl.textContent = archivedDeals.length;
@@ -1678,8 +1771,59 @@
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:60px 20px;"><div class="empty-icon">🤝</div><h3>No archived deals</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Cancelled and completed deals appear here.</p></div>`;
       return;
     }
+    // Header with delete all
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:12px;';
+    hdr.innerHTML = `<button onclick="permanentDeleteAllDeals()" style="padding:7px 16px;border:1px solid rgba(239,68,68,0.35);border-radius:8px;background:rgba(239,68,68,0.08);color:#fca5a5;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">🗑 Permanently Delete All</button>`;
+    container.appendChild(hdr);
+    // Compact accordion list
     const sorted = [...archivedDeals].sort((a,b) => (b.cancelledTs||b.completedTs||b.initiatedTs||0) - (a.cancelledTs||a.completedTs||a.initiatedTs||0));
-    sorted.forEach(d => renderDealCard(d, container));
+    sorted.forEach(d => {
+      const statusLabel = d.stage === 'Complete' ? '✅ Completed' : d.stage_complete ? '✅ Completed' : '❌ Cancelled';
+      const statusColor = (d.stage === 'Complete' || d.stage_complete) ? '#6ee7b7' : '#fca5a5';
+      const ts = fmtTs(d.cancelledTs || d.completedTs || d.initiatedTs || 0);
+      const acc = document.createElement('details');
+      acc.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden;';
+      acc.innerHTML = `
+        <summary style="display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;list-style:none;user-select:none;">
+          <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;">ID: ${String(d.chatId||'').slice(-8).toUpperCase()}</span>
+          <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${escH(d.listing||'—')}</span>
+          <span style="font-size:11px;color:var(--muted);">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
+          <span style="font-size:11px;font-weight:700;color:${statusColor};padding:2px 8px;border-radius:20px;background:${statusColor}22;border:1px solid ${statusColor}44;">${statusLabel}</span>
+          <span style="font-size:11px;color:var(--muted);">${ts}</span>
+          <span style="color:var(--muted);font-size:14px;transition:transform 0.2s;" class="acc-chevron">›</span>
+        </summary>
+        <div style="padding:0 16px 16px;border-top:1px solid var(--border);" class="acc-body">
+          <div id="acc-deal-${escH(d.chatId)}"></div>
+        </div>`;
+      acc.addEventListener('toggle', () => {
+        const chevron = acc.querySelector('.acc-chevron');
+        if (chevron) chevron.style.transform = acc.open ? 'rotate(90deg)' : '';
+        if (acc.open) {
+          const body = acc.querySelector(`#acc-deal-${CSS.escape(d.chatId)}`);
+          if (body && !body.innerHTML) renderDealCard(d, body, true);
+        }
+      });
+      container.appendChild(acc);
+    });
+  }
+
+  function permanentDeleteAllDeals() {
+    if (!confirm('Permanently delete ALL archived/cancelled deals? This cannot be undone.')) return;
+    const remaining = getDeals().filter(d => d.stage !== 'Cancelled' && !d.stage_complete && d.stage !== 'Complete');
+    const toDelete  = getDeals().filter(d => d.stage === 'Cancelled' || d.stage_complete || d.stage === 'Complete');
+    saveDeals(remaining);
+    toDelete.forEach(d => db.collection('deals').doc(d.chatId).delete().catch(()=>{}));
+    showToast('🗑 All archived deals deleted', '');
+    loadDashboard();
+  }
+
+  function permanentDeleteOneDeal(chatId) {
+    if (!confirm('Permanently delete this deal? This cannot be undone.')) return;
+    saveDeals(getDeals().filter(d => d.chatId !== chatId));
+    db.collection('deals').doc(chatId).delete().catch(()=>{});
+    showToast('🗑 Deal deleted', '');
+    loadDashboard();
   }
 
 
@@ -1706,6 +1850,141 @@
       b.classList.toggle('active', Number(b.dataset.days) === days);
     });
     renderModMetrics();
+  }
+
+  // ── CONTACTS ─────────────────────────────────────────────────
+
+  function filterContacts(filter) {
+    _contactsFilter = filter;
+    ['all','open','answered'].forEach(f => {
+      const btn = document.getElementById(`contacts-filter-${f}`);
+      if (btn) btn.classList.toggle('active', f === filter);
+    });
+    renderContactsList(getContacts(), document.getElementById('contacts-list'));
+  }
+
+  function renderContactsList(contacts, container) {
+    if (!container) return;
+    const filtered = _contactsFilter === 'all' ? contacts : contacts.filter(c => c.status === _contactsFilter);
+    if (!filtered.length) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">📩</div><h3>No ${_contactsFilter === 'all' ? '' : _contactsFilter + ' '}contacts yet</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Users can reach out to their moderator from the chat.</p></div>`;
+      return;
+    }
+    container.innerHTML = '';
+    filtered.forEach(c => {
+      const ts = c.ts ? new Date(c.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+      const isOpen = c.status === 'open';
+      const card = document.createElement('div');
+      card.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px;';
+      card.innerHTML = `
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
+            <span style="font-size:13px;font-weight:700;color:var(--text);">${escH(c.userName)}</span>
+            <span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:20px;padding:1px 8px;">${escH(c.userRole)}</span>
+            <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;${isOpen ? 'background:rgba(251,146,60,0.15);color:#fb923c;border:1px solid rgba(251,146,60,0.3);' : 'background:rgba(16,185,129,0.12);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);'}">${isOpen ? 'Open' : '✓ Answered'}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">${escH(c.subject)} · ${ts}</div>
+        </div>
+        <button onclick="openContactThreadPopup(${c.id})" style="padding:7px 16px;border:1px solid rgba(99,102,241,0.4);border-radius:8px;background:rgba(99,102,241,0.1);color:#a5b4fc;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">💬 Thread</button>`;
+      container.appendChild(card);
+    });
+  }
+
+  function replyToContact(contactId, replyText) {
+    let reply = replyText;
+    if (!reply) {
+      const textarea = document.getElementById(`contact-reply-${contactId}`);
+      if (!textarea) return;
+      reply = textarea.value.trim();
+      if (!reply) { textarea.style.borderColor = '#ef4444'; return; }
+    }
+
+    const newReply = { text: reply, ts: Date.now(), author: 'Moderator' };
+
+    // Update in-memory + localStorage
+    const c = _contacts.find(c => c.id === contactId);
+    if (c) {
+      if (!c.replies) c.replies = [];
+      c.replies.push(newReply);
+      c.reply = reply; // backward compat
+      c.repliedTs = Date.now();
+      c.status = 'answered';
+    }
+    try { localStorage.setItem('rf_mod_contacts', JSON.stringify(_contacts)); } catch {}
+
+    // Write reply to Firestore — store in replies array + also write system msg to chat
+    RF.updateContact(contactId, { replies: (c && c.replies) || [newReply], reply, repliedTs: Date.now(), status: 'answered' })
+      .catch(e => console.warn('[RF] updateContact', e));
+
+    // Reply delivered via RF.onContacts listener in chat.html — no system message needed
+
+    showToast('✓ Reply sent', 'success');
+    loadDashboard();
+  }
+
+  // ── CONTACT THREAD POPUP ─────────────────────────────────────
+  let _activeThreadContactId = null;
+
+  function openContactThreadPopup(contactId) {
+    _activeThreadContactId = contactId;
+    const c = getContacts().find(x => x.id === contactId);
+    if (!c) return;
+    document.getElementById('ctp-title').textContent = c.subject || 'Support Thread';
+    document.getElementById('ctp-sub').textContent = `${c.userName} · ${c.listing || ''}`;
+    _renderThreadMessages(c);
+    document.getElementById('contact-thread-overlay').style.display = 'flex';
+    setTimeout(() => document.getElementById('ctp-reply-input').focus(), 100);
+  }
+
+  function closeContactThreadPopup() {
+    document.getElementById('contact-thread-overlay').style.display = 'none';
+    _activeThreadContactId = null;
+  }
+
+  function _renderThreadMessages(c) {
+    const box = document.getElementById('ctp-messages');
+    if (!box) return;
+    box.innerHTML = '';
+    // Merge ALL messages chronologically
+    const allMsgs = [];
+    allMsgs.push({ text: c.message, ts: c.ts || 0, author: c.userName, side: 'user', label: c.subject });
+    (c.followups || []).forEach(f => allMsgs.push({ text: f.text, ts: f.ts || 0, author: c.userName, side: 'user' }));
+    (c.replies || (c.reply ? [{ text: c.reply, ts: c.repliedTs || 0 }] : [])).forEach(r =>
+      allMsgs.push({ text: r.text, ts: r.ts || 0, author: 'Moderator', side: 'mod' })
+    );
+    allMsgs.sort((a,b) => a.ts - b.ts);
+    allMsgs.forEach(m => {
+      const wrap = document.createElement('div');
+      const isMod = m.side === 'mod';
+      wrap.style.cssText = `display:flex;flex-direction:column;align-items:${isMod?'flex-end':'flex-start'};gap:3px;`;
+      const bubble = document.createElement('div');
+      bubble.style.cssText = `max-width:78%;padding:9px 13px;border-radius:10px;font-size:13px;line-height:1.5;word-break:break-word;${isMod?'background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.25);':'background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border);'}`;
+      if (m.label) {
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:0.4px;margin-bottom:3px;opacity:0.65;';
+        lbl.textContent = m.label;
+        bubble.appendChild(lbl);
+      }
+      const txt = document.createElement('div'); txt.textContent = m.text;
+      bubble.appendChild(txt);
+      const meta = document.createElement('div');
+      meta.style.cssText = 'font-size:10px;color:var(--muted);';
+      meta.textContent = `${m.author} · ${m.ts ? new Date(m.ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) : ''}`;
+      wrap.appendChild(bubble); wrap.appendChild(meta);
+      box.appendChild(wrap);
+    });
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function sendContactThreadReply() {
+    const input = document.getElementById('ctp-reply-input');
+    const text = input.value.trim();
+    if (!text || !_activeThreadContactId) return;
+    replyToContact(_activeThreadContactId, text);
+    input.value = '';
+    // Re-render immediately from in-memory state
+    const c = getContacts().find(x => x.id === _activeThreadContactId);
+    if (c) _renderThreadMessages(c);
   }
 
   function renderModMetrics() {
@@ -1748,6 +2027,21 @@
         const rateStr = approvalRate !== null
           ? `<span style="color:${approvalRate>=70?'#34d399':approvalRate>=40?'#fcd34d':'#f87171'};font-weight:700;">${approvalRate}%</span>`
           : '<span style="color:var(--muted);">—</span>';
+        // Match contacts by assignedModId, assignedModName, or chatId assignment
+        const modObj = MODS.find(m => m.name === name);
+        const modContacts = getContacts().filter(c => {
+          if (name === 'Admin') {
+            // Admin: contacts with no mod assignment
+            return !c.assignedModId && !c.assignedModName;
+          }
+          // Match by assignedModId (v100+), assignedModName (older), or chat assignment map
+          if (c.assignedModId && modObj && c.assignedModId === modObj.id) return true;
+          if (c.assignedModName === name) return true;
+          // Fallback: look up current chat assignment
+          const chatAssignments = getAssignments();
+          return modObj && chatAssignments[c.chatId] === modObj.id;
+        });
+        const contactsStr = modContacts.length ? `${modContacts.filter(c=>c.status==='answered').length}/${modContacts.length}` : '—';
         const tr = document.createElement('tr');
         tr.style.opacity = total === 0 ? '0.45' : '1';
         tr.innerHTML = `
@@ -1756,6 +2050,7 @@
           <td><span style="color:#34d399;">${d.approved}</span> / <span style="color:#f87171;">${d.dismissed}</span></td>
           <td>${rateStr}</td>
           <td style="color:var(--muted);">${avgStr}</td>
+          <td style="color:var(--muted);">${contactsStr}</td>
           <td style="color:var(--muted);font-size:11px;">${lastStr}</td>`;
         container.appendChild(tr);
       });
@@ -2625,6 +2920,19 @@ if (_sess) {
     RF.onModsActive(map => {
       _modsActive = map;
       renderModPanel();
+    });
+
+    // Contacts listener — re-render open thread immediately without full dashboard reload
+    RF.onContacts(contacts => {
+      _contacts = contacts;
+      try { localStorage.setItem('rf_mod_contacts', JSON.stringify(contacts)); } catch {}
+      // If thread popup is open, re-render it live
+      const overlay = document.getElementById('contact-thread-overlay');
+      if (overlay && overlay.style.display === 'flex' && _activeThreadContactId) {
+        const c = contacts.find(x => x.id === _activeThreadContactId);
+        if (c) _renderThreadMessages(c);
+      }
+      loadDashboard();
     });
   }
 

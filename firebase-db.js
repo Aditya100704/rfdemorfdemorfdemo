@@ -219,6 +219,22 @@ const RF = (function() {
     catch(e) { console.error('[RF] saveUserChats', e); }
   }
 
+  // ── CONTACTS ─────────────────────────────────────────────────
+  async function saveContact(contact) {
+    try { await db.collection('contacts').doc(String(contact.id)).set(contact); }
+    catch(e) { console.error('[RF] saveContact', e); }
+  }
+  async function updateContact(id, patch) {
+    try { await db.collection('contacts').doc(String(id)).update(patch); }
+    catch(e) { console.error('[RF] updateContact', e); }
+  }
+  function onContacts(cb) {
+    return db.collection('contacts').onSnapshot(
+      snap => { const d = snap.docs.map(x => x.data()); d.sort((a,b)=>(b.ts||0)-(a.ts||0)); cb(d); },
+      e => console.error('[RF] onContacts', e)
+    );
+  }
+
   // ── SYSTEM MESSAGE ───────────────────────────────────────────
   async function postSystemMsg(chatId, text, extra) {
     const msg = { id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts: Date.now(), isSystem: true, chatId, ...(extra||{}) };
@@ -232,6 +248,7 @@ const RF = (function() {
     saveViolations, saveDeal, saveMeeting, saveJoinSlots,
     appendModLog, updateModLogEntry, onModLog,
     saveAppeal, updateAppeal, onAppeals,
+    saveContact, updateContact, onContacts,
     saveAssignment, deleteAssignment, getAssignment, onAssignments,
     setModActive, onModsActive,
     banUser, unbanUser, onBanned,
