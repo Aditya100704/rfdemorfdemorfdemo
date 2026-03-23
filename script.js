@@ -831,9 +831,9 @@ type === 'landlord' ? 'Browse Renters' : 'Available Properties';
 dbSwitchTab('profile');
 }
 function dbSwitchTab(tab) {
-  var tabs    = ['profile', 'list', 'chats'];
-  var panels  = ['db-panel-profile', 'db-panel-list', 'db-panel-chats'];
-  var btnIds  = ['db-tab-profile', 'db-tab-list', 'db-tab-chats'];
+  var tabs    = ['profile', 'list', 'chats', 'notifications'];
+  var panels  = ['db-panel-profile', 'db-panel-list', 'db-panel-chats', 'db-panel-notifications'];
+  var btnIds  = ['db-tab-profile', 'db-tab-list', 'db-tab-chats', 'db-tab-notifications'];
 
   tabs.forEach(function(t, i) {
     var panel = document.getElementById(panels[i]);

@@ -16,6 +16,7 @@
   /* LOGIN */
   #login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;background-image:radial-gradient(ellipse at 30% 20%,rgba(184,134,11,0.08) 0%,transparent 60%);}
   #login-screen.hidden{display:none;}
+  .hidden{display:none!important;}
   .login-card{background:var(--card);border:1px solid rgba(212,160,23,0.2);border-radius:20px;padding:48px 40px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,0.5);display:flex;flex-direction:column;gap:24px;}
   .login-shield{font-size:48px;text-align:center;}
   .login-logo{text-align:center;}
@@ -572,8 +573,8 @@
     <div class="dash-logo">RenterFinder</div>
     <div class="dash-badge" style="background:rgba(212,160,23,0.15);border-color:rgba(212,160,23,0.4);color:var(--gold);">ADMIN</div>
     <div class="dash-topbar-right">
-      <div class="auto-refresh-badge"><div class="auto-refresh-dot"></div> Auto-refresh <span class="refresh-countdown" id="refresh-countdown"></span></div>
-      <button class="refresh-btn" onclick="loadDashboard()">↻ Now</button>
+      <div class="auto-refresh-badge"><div class="auto-refresh-dot"></div> <span class="refresh-countdown" id="refresh-countdown"></span></div>
+      <button class="refresh-btn" onclick="loadDashboard()">↻ Refresh</button>
       <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
   </div>
@@ -594,9 +595,9 @@
   <div class="dash-tabs">
     <div class="dash-tab active" data-tab="overview" onclick="switchTab('overview')">📊 Overview</div>
     <div class="dash-tab" data-tab="flagged" onclick="switchTab('flagged')">🚩 Flagged <span class="tab-count" id="tab-flagged-count">0</span></div>
-    <div class="dash-tab" data-tab="appeals" onclick="switchTab('appeals')">📝 Appeals <span class="tab-count purple" id="tab-appeals-count">0</span></div>
     <div class="dash-tab" data-tab="deals" onclick="switchTab('deals')">🤝 Deal Tracker <span class="tab-count green" id="tab-deals-count">0</span></div>
-    <div class="dash-tab" data-tab="contacts" onclick="switchTab('contacts')">📩 Contacts <span class="tab-count purple" id="tab-contacts-count">0</span></div>
+    <div class="dash-tab" data-tab="contacts" onclick="switchTab('contacts')">📩 Query <span class="tab-count purple" id="tab-contacts-count">0</span></div>
+    <div class="dash-tab" data-tab="appeals" onclick="switchTab('appeals')">📝 Appeals <span class="tab-count purple" id="tab-appeals-count">0</span></div>
     <div class="dash-tab" data-tab="chats" onclick="switchTab('chats')">💬 Active Chats <span class="tab-count green" id="tab-chats-count">0</span></div>
     <div class="dash-tab" data-tab="users" onclick="switchTab('users')">👥 Users</div>
     <div class="dash-tab" data-tab="archived" onclick="switchTab('archived')">📁 Archived <span class="tab-count" id="tab-archived-count" style="background:rgba(255,255,255,0.06);color:var(--muted);">0</span></div>
@@ -740,6 +741,35 @@
 
     <!-- ARCHIVED -->
     <div class="tab-panel" id="panel-archived">
+      <!-- Download section -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:16px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:13px;font-weight:600;color:var(--text);">📥 Download Archive</span>
+          <span style="font-size:12px;color:var(--muted);">Quick export:</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button onclick="downloadArchive(7)"   style="padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">1 Week</button>
+            <button onclick="downloadArchive(30)"  style="padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">1 Month</button>
+            <button onclick="downloadArchive(90)"  style="padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">3 Months</button>
+            <button onclick="downloadArchive(180)" style="padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">6 Months</button>
+            <button onclick="downloadArchive(365)" style="padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">1 Year</button>
+            <button onclick="downloadArchive(0)"   style="padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">All Time</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--border);">
+          <span style="font-size:12px;color:var(--muted);white-space:nowrap;">Custom date range:</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <label style="font-size:11px;color:var(--muted);">From</label>
+              <input type="date" id="archive-date-from" style="padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,0.06);color:var(--text);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;outline:none;">
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <label style="font-size:11px;color:var(--muted);">To</label>
+              <input type="date" id="archive-date-to" style="padding:5px 8px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,0.06);color:var(--text);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;outline:none;">
+            </div>
+            <button onclick="downloadArchiveRange()" style="padding:5px 14px;border-radius:7px;border:1px solid rgba(212,160,23,0.4);background:rgba(212,160,23,0.1);color:var(--gold);font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">⬇ Download</button>
+          </div>
+        </div>
+      </div>
       <!-- Sub-tab switcher -->
       <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;">
         <div class="arch-sub-tab active" data-sub="chats" onclick="switchArchiveSub('chats')" style="padding:10px 20px;font-size:13px;font-weight:600;color:var(--gold);border-bottom:2px solid var(--gold);cursor:pointer;white-space:nowrap;">💬 Chats <span id="tab-archived-chats-count" style="background:rgba(255,255,255,0.06);color:var(--muted);border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;">0</span></div>
@@ -766,7 +796,7 @@
     <!-- CONTACTS -->
     <div class="tab-panel" id="panel-contacts">
       <div class="section-header">
-        <div><div class="section-title">User Contacts</div><div class="section-sub">Messages sent by users to their assigned moderator</div></div>
+        <div><div class="section-title">User Queries</div><div class="section-sub">Support requests sent by users to their assigned moderator</div></div>
         <div style="display:flex;gap:8px;">
           <button class="perf-period-btn active" onclick="filterContacts('all')" id="contacts-filter-all">All</button>
           <button class="perf-period-btn" onclick="filterContacts('open')" id="contacts-filter-open">Open</button>
@@ -865,6 +895,18 @@
   </div>
 </div>
 
+<!-- General purpose confirm dialog -->
+<div class="confirm-box" id="ask-confirm-box" style="z-index:1100;">
+  <div class="confirm-inner" style="border-color:rgba(212,160,23,0.3);max-width:420px;text-align:left;">
+    <h3 id="ask-confirm-title" style="font-size:16px;">Confirm</h3>
+    <p id="ask-confirm-msg" style="font-size:13px;color:var(--muted);line-height:1.6;"></p>
+    <div class="confirm-btns" style="justify-content:flex-end;">
+      <button class="confirm-no" onclick="closeAskConfirm()">Cancel</button>
+      <button class="confirm-yes" id="ask-confirm-yes" style="background:rgba(16,185,129,0.2);color:#6ee7b7;border:1px solid rgba(16,185,129,0.4);" onclick="closeAskConfirm();_askConfirmCb&&_askConfirmCb()">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <div class="confirm-box" id="cancel-deal-confirm-box">
   <div class="confirm-inner" style="max-width:420px;text-align:left;gap:12px;">
     <h3>❌ Cancel This Deal?</h3>
@@ -942,8 +984,26 @@
       delete assignments[chatId];
     }
     saveAssignments(assignments);
-    const modName = modId ? (MODS.find(m => m.id === modId)?.name || modId) : 'nobody';
-    showToast(`Chat reassigned to ${modName}`, 'success');
+    const modName = modId ? (MODS.find(m => m.id === modId)?.name || modId) : null;
+
+    // Also update any contacts for this chat so they follow the new mod
+    const contacts = getContacts();
+    let contactsChanged = false;
+    contacts.forEach(c => {
+      if (c.chatId === chatId) {
+        c.assignedModId   = modId || null;
+        c.assignedModName = modName;
+        RF.updateContact(c.id, { assignedModId: modId || null, assignedModName: modName })
+          .catch(e => console.warn('[RF] contact reassign', e));
+        contactsChanged = true;
+      }
+    });
+    if (contactsChanged) {
+      _contacts = contacts;
+      try { localStorage.setItem('rf_mod_contacts', JSON.stringify(contacts)); } catch {}
+    }
+
+    showToast(`Chat reassigned to ${modName || 'nobody'}`, 'success');
     loadDashboard();
   }
 
@@ -1059,17 +1119,10 @@
   let countdown    = AUTO_REFRESH_SECS;
 
   function startAutoRefresh() {
+    // Auto-refresh disabled — Firestore real-time listeners handle all updates instantly
+    const el = document.getElementById('refresh-countdown');
+    if (el) el.textContent = '(live)';
     clearInterval(refreshTimer);
-    countdown = AUTO_REFRESH_SECS;
-    refreshTimer = setInterval(() => {
-      countdown--;
-      const el = document.getElementById('refresh-countdown');
-      if (el) el.textContent = `(${countdown}s)`;
-      if (countdown <= 0) {
-        countdown = AUTO_REFRESH_SECS;
-        loadDashboard();
-      }
-    }, 1000);
   }
 
   // ── DATA HELPERS ─────────────────────────────────────────────
@@ -1217,6 +1270,7 @@
     renderUsersTable(allChats, modLog, getBanned());
     const _acl = document.getElementById('archived-chats-list'); if (_acl) renderArchivedChats(_acl);
     const _adl = document.getElementById('archived-deals-list'); if (_adl) renderArchivedDeals(_adl);
+    initArchiveDateDefaults();
     renderHistoryList(document.getElementById('history-list'));
     renderDefaultersList(document.getElementById('defaulters-list'));
     renderModMetrics();
@@ -1354,11 +1408,13 @@
 
   // ── GATED DEAL PIPELINE ──────────────────────────────────────
   const PIPELINE = [
-    { key:'advance_payment', label:'Advance Payment',     sub:'Tick off advance payment received from both parties, then confirm.', gateType:'payment',  icon:'💳' },
-    { key:'meeting',         label:'Meeting Arrangement', sub:'Parties select dates via chat. Auto-confirms once both agree on a slot.',      gateType:'action',   icon:'📅' },
-    { key:'closure',         label:'Deal Closure',        sub:'Confirm once rent agreement / deal terms are finalised.',             gateType:'action',   icon:'📝' },
-    { key:'final_payment',   label:'Final Payment',       sub:'Tick off final payment received from both parties, then confirm.',    gateType:'payment',  icon:'✅' },
-    { key:'complete',        label:'Complete',             sub:'Deal is fully closed and will be archived.',                         gateType:'terminal', icon:'🏆' },
+    { key:'advance_select',   label:'Advance — Set Amount',    sub:'Select amount (default 6 days rent). On confirm, both parties receive a payment button in chat.',  gateType:'select',   icon:'💳' },
+    { key:'advance_received', label:'Advance — Payment Received', sub:'Tick off advance payment received from both parties, then confirm.',                             gateType:'payment',  icon:'✅' },
+    { key:'meeting',          label:'Meeting Arrangement',     sub:'Parties select dates via the calendar button in chat. Auto-confirms once both agree on a slot.',   gateType:'action',   icon:'📅' },
+    { key:'deal_done',        label:'Deal Done Confirmation',  sub:'Auto-ticked when both parties click the "✅ Deal Done" button in their chat after the meeting.',    gateType:'both_confirm', icon:'🤝' },
+    { key:'final_select',     label:'Final Payment — Set Amount', sub:'Select amount (default 6 days rent). On confirm, both parties receive a payment button in chat.', gateType:'select',  icon:'💰' },
+    { key:'final_received',   label:'Final Payment — Received', sub:'Tick off final payment received from both parties, then confirm.',                                 gateType:'payment',  icon:'✅' },
+    { key:'complete',         label:'Complete',                sub:'Deal is fully closed and will be archived.',                                                       gateType:'terminal', icon:'🏆' },
   ];
 
   function currentPipelineIdx(deal) {
@@ -1367,6 +1423,9 @@
     }
     return -1;
   }
+
+  // Track which deal accordions are currently open — persists across loadDashboard rebuilds
+  const _openDealIds = new Set();
 
   function renderDealsList(deals, container) {
     if (!deals.length) {
@@ -1384,28 +1443,65 @@
       const stageLabel = d.stage || 'Initiated';
       const ts = d.initiatedTs ? fmtTs(d.initiatedTs) : '—';
       const dealId = String(d.chatId).slice(-8).toUpperCase();
-      const acc = document.createElement('details');
+      const acc = document.createElement('div');
       acc.style.cssText = 'background:var(--card);border:1px solid rgba(16,185,129,0.25);border-radius:12px;margin-bottom:10px;overflow:hidden;';
-      acc.innerHTML = `
-        <summary style="display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;list-style:none;user-select:none;">
-          <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;">ID: ${dealId}</span>
-          <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${escH(d.listing||'—')}</span>
-          <span style="font-size:11px;color:var(--muted);">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
-          <span style="font-size:11px;font-weight:700;color:#34d399;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);">● ${escH(stageLabel)}</span>
-          <span style="font-size:11px;color:var(--muted);">${ts}</span>
-          <span style="color:var(--muted);font-size:16px;transition:transform 0.2s;" class="acc-chev">›</span>
-        </summary>
-        <div style="padding:0 18px 18px;border-top:1px solid rgba(16,185,129,0.15);" class="acc-body">
-          <div id="acc-active-${escH(d.chatId)}"></div>
-        </div>`;
-      acc.addEventListener('toggle', () => {
-        const chev = acc.querySelector('.acc-chev');
-        if (chev) chev.style.transform = acc.open ? 'rotate(90deg)' : '';
-        if (acc.open) {
-          const body = acc.querySelector(`#acc-active-${CSS.escape(d.chatId)}`);
-          if (body && !body.innerHTML) renderDealCard(d, body, false);
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none;';
+      hdr.innerHTML = `
+        <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;">ID: ${dealId}</span>
+        <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
+        <span style="font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escH(d.listing||'')}">${escH(d.listing||'—')}</span>
+        <span style="font-size:11px;font-weight:700;color:#34d399;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);">● ${escH(stageLabel)}</span>
+        <span style="font-size:11px;color:var(--muted);">${ts}</span>
+        <span style="color:var(--muted);font-size:16px;transition:transform 0.2s;" class="acc-chev">›</span>`;
+      const bdy = document.createElement('div');
+      bdy.id = safeId(d.chatId);
+      bdy.style.cssText = 'display:none;padding:0 18px 18px;border-top:1px solid rgba(16,185,129,0.15);';
+      // Add close button inside header (right side)
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '✕';
+      closeBtn.title = 'Close';
+      closeBtn.style.cssText = 'display:none;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 4px;margin-left:4px;line-height:1;flex-shrink:0;';
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        bdy.style.display = 'none';
+        closeBtn.style.display = 'none';
+        const chev = hdr.querySelector('.acc-chev');
+        if (chev) chev.style.transform = '';
+        _openDealIds.delete(d.chatId);
+      });
+      hdr.appendChild(closeBtn);
+
+      // Header click — toggles open/close; clicks inside bdy don't propagate here
+      hdr.addEventListener('click', () => {
+        const isOpen = bdy.style.display !== 'none';
+        const chev = hdr.querySelector('.acc-chev');
+        if (isOpen) {
+          bdy.style.display = 'none';
+          closeBtn.style.display = 'none';
+          if (chev) chev.style.transform = '';
+          _openDealIds.delete(d.chatId);
+        } else {
+          bdy.style.display = 'block';
+          closeBtn.style.display = 'inline';
+          if (chev) chev.style.transform = 'rotate(90deg)';
+          _openDealIds.add(d.chatId);
+          if (!bdy.innerHTML) renderDealCard(d, bdy, false);
         }
       });
+      // Stop all clicks inside body from bubbling to header
+      bdy.addEventListener('click', e => e.stopPropagation());
+      // Restore open state — always clear first to prevent duplicate content
+      if (_openDealIds.has(d.chatId)) {
+        bdy.style.display = 'block';
+        closeBtn.style.display = 'inline';
+        const chev = hdr.querySelector('.acc-chev');
+        if (chev) chev.style.transform = 'rotate(90deg)';
+        bdy.innerHTML = '';
+        renderDealCard(d, bdy, false);
+      }
+      acc.appendChild(hdr);
+      acc.appendChild(bdy);
       container.appendChild(acc);
     });
   }
@@ -1469,10 +1565,20 @@
           rightEl = `<span class="pipeline-done-tag">✓ Done${ts}</span>`;
         }
       } else if (isActive) {
-        if (stage.gateType === 'payment') {
+        if (stage.key === 'deal_done') {
+          const doneA = !!d.deal_done_A; const doneB = !!d.deal_done_B;
+          rightEl = `<span style="font-size:11px;line-height:1.6;text-align:right;color:var(--muted);">
+            ${doneA ? '✅' : '⏳'} ${escH(d.userA)}<br>
+            ${doneB ? '✅' : '⏳'} ${escH(d.userB)}
+          </span>`;
+        } else if (stage.gateType === 'select') {
+          const days = d[stage.key + '_days'] != null ? d[stage.key + '_days'] : 6;
+          rightEl = `<button class="pipeline-action-btn green" onclick="proceedSelectStage('${d.chatId}','${stage.key}')">Confirm & Notify →</button>`;
+        } else if (stage.gateType === 'payment') {
           const payA = d[`pay_${stage.key}_A`];
           const payB = d[`pay_${stage.key}_B`];
-          rightEl = `<button class="pipeline-action-btn green" onclick="proceedPaymentStage('${d.chatId}','${stage.key}')" ${payA && payB ? '' : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>Proceed →</button>`;
+          const canProceed = stage.key === 'final_received' ? (payA || payB) : (payA && payB);
+          rightEl = `<button class="pipeline-action-btn green" onclick="proceedPaymentStage('${d.chatId}','${stage.key}')" ${canProceed ? '' : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>Proceed →</button>`;
         } else if (stage.key === 'meeting') {
           rightEl = `<span style="font-size:11px;color:var(--gold);text-align:right;line-height:1.5;">⏳ Awaiting<br>date selection<br>by parties</span>`;
         } else if (stage.gateType === 'action') {
@@ -1487,6 +1593,26 @@
           <div class="pipeline-title">${stage.icon} ${stage.label}</div>
           <div class="pipeline-sub">${stage.sub}</div>
           ${isActive && stage.gateType === 'payment' ? buildPaymentToggles(d, stage.key) : ''}
+          ${isActive && stage.gateType === 'select' ? `
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;">Payment Amount (days of rent)</div>
+              <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:7px 10px;">
+                  <span style="font-size:12px;color:var(--text);font-weight:600;">👤 ${escH(d.userA)}</span>
+                  <select onchange="setAdvanceDays('${d.chatId}','${stage.key}','A',this.value)" style="padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--card2,#1a1a2e);color:var(--text);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;">
+                    ${[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>`<option value="${n}" ${((d[stage.key+'_days_A'] ?? 6))==n?'selected':''}>${n} day${n>1?'s':''}</option>`).join('')}
+                  </select>
+                  <span style="font-size:11px;color:#34d399;">rent</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:7px 10px;">
+                  <span style="font-size:12px;color:var(--text);font-weight:600;">👤 ${escH(d.userB)}</span>
+                  <select onchange="setAdvanceDays('${d.chatId}','${stage.key}','B',this.value)" style="padding:3px 7px;border-radius:6px;border:1px solid var(--border);background:var(--card2,#1a1a2e);color:var(--text);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;">
+                    ${[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>`<option value="${n}" ${((d[stage.key+'_days_B'] ?? 6))==n?'selected':''}>${n} day${n>1?'s':''}</option>`).join('')}
+                  </select>
+                  <span style="font-size:11px;color:#34d399;">rent</span>
+                </div>
+              </div>
+            </div>` : ''}
         </div>
         ${rightEl}`;
       pipeEl.appendChild(stageEl);
@@ -1500,7 +1626,9 @@
       </div>
       <div class="deal-card-actions">
         <button class="deal-save-notes-btn" onclick="saveDealNotes('${d.chatId}')">💾 Save Notes</button>
+        ${!isArchived ? `<button onclick="reverseLastStep('${d.chatId}')" style="padding:6px 14px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:rgba(251,146,60,0.1);color:#fb923c;border:1px solid rgba(251,146,60,0.3);">↩ Reverse Step</button>` : ''}
         <button class="btn-defaulter" onclick="openDefaulterModal('${d.chatId}')">🚫 Defaulter</button>
+
         ${isArchived
           ? `<button class="btn-reinstate" onclick="reinstateDeal('${d.chatId}')">↩ Reinstate Deal</button>
              <button onclick="permanentDeleteOneDeal('${d.chatId}')" style="padding:6px 14px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:rgba(239,68,68,0.08);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);">🗑 Delete</button>`
@@ -1509,6 +1637,57 @@
       </div>`;
     card.appendChild(footer);
     container.appendChild(card);
+  }
+
+  function setAdvanceDays(chatId, stageKey, party, days) {
+    const deals = getDeals();
+    const deal = deals.find(d => d.chatId === chatId);
+    if (!deal) return;
+    deal[stageKey + '_days_' + party] = parseInt(days) || 6;
+    // Keep a shared _days fallback = average of A and B for system messages
+    const dA = deal[stageKey + '_days_A'] ?? 6;
+    const dB = deal[stageKey + '_days_B'] ?? 6;
+    deal[stageKey + '_days'] = Math.round((dA + dB) / 2);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
+    _refreshDealCard(chatId, deal);
+  }
+
+  function safeId(chatId) {
+    // Convert any chatId to a safe DOM id (alphanumeric + hyphens only)
+    return 'did-' + chatId.replace(/[^a-zA-Z0-9]/g, c => '_' + c.charCodeAt(0) + '_');
+  }
+
+  function _removeDealAccordion(chatId) {
+    _openDealIds.delete(chatId);
+    // Remove this deal's accordion from the DOM, then do a lightweight stats update
+    const activeBody = document.getElementById(safeId(chatId));
+    if (activeBody) {
+      // Walk up to the <details> element and remove it
+      let el = activeBody;
+      while (el && el.tagName !== 'DETAILS') el = el.parentElement;
+      if (el) el.remove();
+    }
+    // Update tab counts and stat cards without full re-render
+    const activeDeals = getDeals().filter(d => d.stage !== 'Cancelled' && !d.stage_complete).length;
+    const el2 = document.getElementById('stat-deals'); if (el2) el2.textContent = activeDeals;
+    const te  = document.getElementById('tab-deals-count'); if (te) te.textContent = activeDeals;
+    // Re-render deals list and archived deals to reflect the change
+    const dealsList = document.getElementById('deals-list');
+    if (dealsList) renderDealsList(getDeals(), dealsList);
+    const archList = document.getElementById('archived-deals-list');
+    if (archList) renderArchivedDeals(archList);
+  }
+
+  function _refreshDealCard(chatId, deal) {
+    const bodyEl = document.getElementById(safeId(chatId));
+    if (bodyEl && bodyEl.style.display !== 'none') {
+      bodyEl.innerHTML = '';
+      renderDealCard(deal, bodyEl, false);
+    }
+    const activeDeals = getDeals().filter(d => d.stage !== 'Cancelled' && !d.stage_complete).length;
+    const el = document.getElementById('stat-deals'); if (el) el.textContent = activeDeals;
+    const tabEl = document.getElementById('tab-deals-count'); if (tabEl) tabEl.textContent = activeDeals;
   }
 
   function buildPaymentToggles(d, stageKey) {
@@ -1540,46 +1719,68 @@
     deal[`${field}_ts`] = deal[field] ? Date.now() : null;
     saveDeals(deals);
     syncDealToChat(chatId, deal);
-    loadDashboard();
+    _refreshDealCard(chatId, deal);
   }
 
-  function proceedPaymentStage(chatId, stageKey) {
+  function proceedSelectStage(chatId, stageKey) {
     const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
-    if (!confirm(`Confirm "${label}" stage as complete? This cannot be undone.`)) return;
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
-    if (!deal[`pay_${stageKey}_A`] || !deal[`pay_${stageKey}_B`]) {
-      showToast('Both payments must be ticked before proceeding.', 'error'); return;
-    }
+    const daysA = deal[stageKey + '_days_A'] ?? 6;
+    const daysB = deal[stageKey + '_days_B'] ?? 6;
+    deal[stageKey + '_days_A'] = daysA;
+    deal[stageKey + '_days_B'] = daysB;
+    deal[stageKey + '_days']   = Math.round((daysA + daysB) / 2);
+    const amtNote = daysA === daysB
+      ? `${daysA} day(s) rent each`
+      : `${daysA} day(s) rent (${deal.userA}), ${daysB} day(s) rent (${deal.userB})`;
+    askConfirm(`${amtNote}`, () => _doSelectStage(chatId, stageKey, daysA, daysB, amtNote, label), 'Confirm Payment Amounts'); return;
     deal[`stage_${stageKey}`]    = true;
     deal[`stage_${stageKey}_ts`] = Date.now();
     deal.lastActionTs = Date.now();
-    postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
+    postDealSystemMsg(chatId, `💳 ${label} confirmed. Amount: ${deal.userA}: ${daysA} day(s) rent · ${deal.userB}: ${daysB} day(s) rent. Please use the Pay Now button in chat to complete payment.`);
     saveDeals(deals);
     syncDealToChat(chatId, deal);
-    showToast(`✓ ${label} stage completed`, 'success');
-    loadDashboard();
+    showToast(`✓ ${label} confirmed — both parties notified`, 'success');
+    _refreshDealCard(chatId, deal);
+  }
+
+  function proceedPaymentStage(chatId, stageKey) {
+    const deals = getDeals(); const deal = deals.find(d => d.chatId === chatId); if (!deal) return;
+    const payA = deal[`pay_${stageKey}_A`]; const payB = deal[`pay_${stageKey}_B`];
+    const minPaid = stageKey === 'final_received' ? (payA || payB) : (payA && payB);
+    if (!minPaid) { showToast(stageKey === 'final_received' ? 'At least one payment must be ticked.' : 'Both payments must be ticked.', 'error'); return; }
+    const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
+    askConfirm(`Confirm "${label}" as complete?`, () => _doPaymentStage(chatId, stageKey, label), 'Confirm Payment Stage');
+  }
+  function _doPaymentStage(chatId, stageKey, label) {
+    const deals = getDeals(); const deal = deals.find(d => d.chatId === chatId); if (!deal) return;
+    deal[`stage_${stageKey}`] = true; deal[`stage_${stageKey}_ts`] = Date.now(); deal.lastActionTs = Date.now();
+    const daysNote = deal[stageKey+'_days'] ? ` Amount: ${deal[stageKey+'_days']} day(s) rent.` : '';
+    postDealSystemMsg(chatId, `✅ ${label} confirmed.${daysNote} Moving to next stage.`);
+    const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
+    saveDeals(deals); syncDealToChat(chatId, deal);
+    showToast(`✓ ${label} stage completed`, 'success'); _refreshDealCard(chatId, deal);
   }
 
   function proceedActionStage(chatId, stageKey) {
     const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
-    if (!confirm(`Confirm "${label}" for this deal? This cannot be undone.`)) return;
-    const deals = getDeals();
-    const deal  = deals.find(d => d.chatId === chatId);
-    if (!deal) return;
-    deal[`stage_${stageKey}`]    = true;
-    deal[`stage_${stageKey}_ts`] = Date.now();
-    deal.lastActionTs = Date.now();
+    askConfirm(`Confirm "${label}" for this deal?`, () => _doActionStage(chatId, stageKey, label), 'Confirm Stage');
+  }
+  function _doActionStage(chatId, stageKey, label) {
+    const deals = getDeals(); const deal = deals.find(d => d.chatId === chatId); if (!deal) return;
+    deal[`stage_${stageKey}`] = true; deal[`stage_${stageKey}_ts`] = Date.now(); deal.lastActionTs = Date.now();
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
-    showToast(`✓ ${label} confirmed`, 'success');
-    loadDashboard();
+    const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
+    saveDeals(deals); syncDealToChat(chatId, deal);
+    showToast(`✓ ${label} confirmed`, 'success'); _refreshDealCard(chatId, deal);
   }
 
   function completeAndArchive(chatId) {
-    if (!confirm('Mark this deal as fully complete and archive it? This cannot be undone.')) return;
+    askConfirm('Mark this deal as fully complete and archive it?', () => _doCompleteArchive(chatId), 'Complete & Archive Deal');
+  }
+  function _doCompleteArchive(chatId) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
@@ -1600,10 +1801,69 @@
     saveDeals(deals);
     syncDealToChat(chatId, deal);
     showToast('🏆 Deal archived successfully', 'success');
-    loadDashboard();
+    _removeDealAccordion(chatId);
   }
 
   let pendingCancelChatId = null;
+
+  function reverseLastStep(chatId) {
+    const deals = getDeals();
+    const deal  = deals.find(d => d.chatId === chatId);
+    if (!deal) return;
+    let lastDoneIdx = -1;
+    for (let i = 0; i < PIPELINE.length; i++) {
+      if (deal[`stage_${PIPELINE[i].key}`]) lastDoneIdx = i;
+    }
+    if (lastDoneIdx < 0) { showToast('No completed steps to reverse.', ''); return; }
+    const stage = PIPELINE[lastDoneIdx];
+    askConfirm(`Reverse "${stage.label}"? The deal returns to this step.`, () => _doReverseStep(chatId, deals, deal, stage, lastDoneIdx), 'Reverse Step');
+  }
+  function _doReverseStep(chatId, deals, deal, stage, lastDoneIdx) {
+    delete deal[`stage_${stage.key}`];
+    delete deal[`stage_${stage.key}_ts`];
+    if (stage.gateType === 'payment') {
+      delete deal[`pay_${stage.key}_A`]; delete deal[`pay_${stage.key}_A_ts`];
+      delete deal[`pay_${stage.key}_B`]; delete deal[`pay_${stage.key}_B_ts`];
+    }
+    if (stage.gateType === 'select') {
+      delete deal[`${stage.key}_days`];
+      delete deal[`${stage.key}_days_A`];
+      delete deal[`${stage.key}_days_B`];
+    }
+    if (stage.key === 'deal_done') {
+      delete deal.deal_done_A; delete deal.deal_done_B;
+    }
+    if (stage.key === 'meeting') {
+      delete deal.meeting; delete deal.stage_meeting; delete deal.stage_meeting_ts;
+      deal.meeting_reversed = true;
+      _meetingByChat[chatId] = null;
+      RF.updateChatMeta(chatId, { meeting: null }).catch(e => console.warn('[RF] clearMeeting', e));
+    }
+    // If reversing a step AFTER meeting, also un-confirm the meeting so parties can re-schedule
+    const _meetingIdx = PIPELINE.findIndex(p => p.key === 'meeting');
+    if (lastDoneIdx > _meetingIdx && stage.key !== 'meeting') {
+      delete deal.meeting; delete deal.stage_meeting; delete deal.stage_meeting_ts;
+      deal.meeting_reversed = true;
+      _meetingByChat[chatId] = null;
+      RF.updateChatMeta(chatId, { meeting: null }).catch(e => console.warn('[RF] clearMeetingPost', e));
+    }
+    deal.lastActionTs = Date.now();
+    // Recalculate stage label so accordion header shows correct current step
+    const newLastDoneIdx = (() => { let idx = -1; for (let i = 0; i < PIPELINE.length; i++) { if (deal[`stage_${PIPELINE[i].key}`]) idx = i; } return idx; })();
+    deal.stage = newLastDoneIdx >= 0 ? PIPELINE[newLastDoneIdx].label : 'Initiated';
+    postDealSystemMsg(chatId, `↩ "${stage.label}" has been reversed by RenterFinder. Returning to this step.`);
+    // Update in-memory _deals immediately so renderDealCard gets fresh data
+    const dealIdx = _deals.findIndex(x => x.chatId === chatId);
+    if (dealIdx !== -1) _deals[dealIdx] = deal;
+    saveDeals(deals);
+    // Strip undefined/deleted keys before writing to Firestore
+    const cleanDeal = JSON.parse(JSON.stringify(deal));
+    syncDealToChat(chatId, cleanDeal);
+    // Also explicitly update chatMeta so chat.html onChatMeta fires with clean data
+    RF.updateChatMeta(chatId, { deal: cleanDeal }).catch(e => console.warn('[RF] reversal meta', e));
+    showToast(`↩ "${stage.label}" reversed`, 'success');
+    _refreshDealCard(chatId, deal);
+  }
 
   function cancelDeal(chatId) {
     const deals = getDeals();
@@ -1637,7 +1897,7 @@
     syncDealToChat(chatId, deal);
     closeCancelDealConfirm();
     showToast('Deal cancelled', 'error');
-    loadDashboard();
+    _removeDealAccordion(chatId);
   }
 
 
@@ -1675,7 +1935,7 @@
     saveDeals(deals);
     syncDealToChat(chatId, deal);
     showToast('✓ Deal reinstated', 'success');
-    loadDashboard();
+    _refreshDealCard(chatId, deal);
   }
 
   function saveDealNotes(chatId) {
@@ -1692,13 +1952,19 @@
 
   function syncDealToChat(chatId, deal) {
     _dealByChat[chatId] = deal;
-    RF.saveDeal(chatId, deal).catch(e => console.warn('[RF] syncDealToChat', e));
+    // Strip undefined/deleted keys — Firestore update() fails on undefined values
+    const cleanDeal = JSON.parse(JSON.stringify(deal));
+    RF.saveDeal(chatId, cleanDeal).catch(e => console.warn('[RF] syncDealToChat', e));
+    // Also write deal into chatMeta so chat.html onChatMeta fires immediately
+    RF.updateChatMeta(chatId, { deal: cleanDeal }).catch(e => console.warn('[RF] syncDealMeta', e));
   }
 
   function postDealSystemMsg(chatId, text) {
     const msg = { id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true, chatId };
     RF.saveMessage(chatId, msg).catch(e => console.warn('[RF] postDealSystemMsg', e));
   }
+
+
 
   function fmtTs(ts) {
     return new Date(ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -1787,20 +2053,20 @@
       acc.innerHTML = `
         <summary style="display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;list-style:none;user-select:none;">
           <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;">ID: ${String(d.chatId||'').slice(-8).toUpperCase()}</span>
-          <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${escH(d.listing||'—')}</span>
-          <span style="font-size:11px;color:var(--muted);">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
+          <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
+          <span style="font-size:11px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escH(d.listing||'')}">${escH(d.listing||'—')}</span>
           <span style="font-size:11px;font-weight:700;color:${statusColor};padding:2px 8px;border-radius:20px;background:${statusColor}22;border:1px solid ${statusColor}44;">${statusLabel}</span>
           <span style="font-size:11px;color:var(--muted);">${ts}</span>
           <span style="color:var(--muted);font-size:14px;transition:transform 0.2s;" class="acc-chevron">›</span>
         </summary>
         <div style="padding:0 16px 16px;border-top:1px solid var(--border);" class="acc-body">
-          <div id="acc-deal-${escH(d.chatId)}"></div>
+          <div id="${safeId(d.chatId)+'a'}"></div>
         </div>`;
       acc.addEventListener('toggle', () => {
         const chevron = acc.querySelector('.acc-chevron');
         if (chevron) chevron.style.transform = acc.open ? 'rotate(90deg)' : '';
         if (acc.open) {
-          const body = acc.querySelector(`#acc-deal-${CSS.escape(d.chatId)}`);
+          const body = acc.querySelector(`#${CSS.escape(safeId(d.chatId)+'a')}`);
           if (body && !body.innerHTML) renderDealCard(d, body, true);
         }
       });
@@ -1809,7 +2075,7 @@
   }
 
   function permanentDeleteAllDeals() {
-    if (!confirm('Permanently delete ALL archived/cancelled deals? This cannot be undone.')) return;
+    askConfirm('Permanently delete ALL archived/cancelled deals?', _doDeleteAllDeals, 'Delete All Archived Deals'); return;
     const remaining = getDeals().filter(d => d.stage !== 'Cancelled' && !d.stage_complete && d.stage !== 'Complete');
     const toDelete  = getDeals().filter(d => d.stage === 'Cancelled' || d.stage_complete || d.stage === 'Complete');
     saveDeals(remaining);
@@ -1819,7 +2085,7 @@
   }
 
   function permanentDeleteOneDeal(chatId) {
-    if (!confirm('Permanently delete this deal? This cannot be undone.')) return;
+    askConfirm('Permanently delete this deal?', () => _doDeleteOneDeal(chatId), 'Delete Deal'); return;
     saveDeals(getDeals().filter(d => d.chatId !== chatId));
     db.collection('deals').doc(chatId).delete().catch(()=>{});
     showToast('🗑 Deal deleted', '');
@@ -1973,7 +2239,7 @@
       wrap.appendChild(bubble); wrap.appendChild(meta);
       box.appendChild(wrap);
     });
-    box.scrollTop = box.scrollHeight;
+    requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; });
   }
 
   function sendContactThreadReply() {
@@ -1984,7 +2250,13 @@
     input.value = '';
     // Re-render immediately from in-memory state
     const c = getContacts().find(x => x.id === _activeThreadContactId);
-    if (c) _renderThreadMessages(c);
+    if (c) {
+      _renderThreadMessages(c);
+      requestAnimationFrame(() => {
+        const b = document.getElementById('ctp-messages');
+        if (b) b.scrollTop = b.scrollHeight;
+      });
+    }
   }
 
   function renderModMetrics() {
@@ -2055,6 +2327,90 @@
         container.appendChild(tr);
       });
   }
+  function downloadArchive(days) {
+    const cutoff = days > 0 ? Date.now() - days * 86400000 : 0;
+    const label  = days === 0 ? 'All Time' : days === 7 ? '1 Week' : days === 30 ? '1 Month' : days === 90 ? '3 Months' : days === 180 ? '6 Months' : '1 Year';
+
+    const chats   = getChatsIndex().filter(c => (c.archived || c.autoArchived || c.manualArchived) && (c.archivedTs || 0) >= cutoff);
+    const deals   = getDeals().filter(d => (d.stage === 'Cancelled' || d.stage_complete) && (d.cancelledTs || d.completedTs || d.initiatedTs || 0) >= cutoff);
+
+    let csv = 'RENTERFINDER ARCHIVE EXPORT\n';
+    csv += `Period: ${label} · Generated: ${new Date().toLocaleString('en-IN')}\n\n`;
+    csv += '=== ARCHIVED CHATS ===\n';
+    csv += 'Chat ID,Landlord,Renter,Listing,Archived Date,Reason\n';
+    chats.forEach(c => {
+      const reason = c.autoArchived ? '7-day inactivity' : 'Manual';
+      csv += `"${c.chatId}","${c.userA||''}","${c.userB||''}","${c.listing||''}","${c.archivedTs ? new Date(c.archivedTs).toLocaleDateString('en-IN') : ''}","${reason}"\n`;
+    });
+    csv += '\n=== ARCHIVED DEALS ===\n';
+    csv += 'Chat ID,Listing,Party A,Party B,Stage,Initiated,Closed\n';
+    deals.forEach(d => {
+      const closedTs = d.cancelledTs || d.completedTs || '';
+      csv += `"${d.chatId}","${d.listing||''}","${d.userA||''}","${d.userB||''}","${d.stage||''}","${d.initiatedTs ? new Date(d.initiatedTs).toLocaleDateString('en-IN') : ''}","${closedTs ? new Date(closedTs).toLocaleDateString('en-IN') : ''}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `RenterFinder_Archive_${label.replace(' ','')}_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`📥 Downloaded archive (${chats.length} chats, ${deals.length} deals)`, 'success');
+  }
+
+  function downloadArchiveRange() {
+    const fromVal = document.getElementById('archive-date-from')?.value;
+    const toVal   = document.getElementById('archive-date-to')?.value;
+    if (!fromVal || !toVal) { showToast('Please select both From and To dates.', 'error'); return; }
+    const fromTs = new Date(fromVal).setHours(0,0,0,0);
+    const toTs   = new Date(toVal).setHours(23,59,59,999);
+    if (fromTs > toTs) { showToast('From date must be before To date.', 'error'); return; }
+
+    const chats = getChatsIndex().filter(c =>
+      (c.archived || c.autoArchived || c.manualArchived) &&
+      (c.archivedTs || 0) >= fromTs && (c.archivedTs || 0) <= toTs
+    );
+    const deals = getDeals().filter(d => {
+      const ts = d.cancelledTs || d.completedTs || d.initiatedTs || 0;
+      return (d.stage === 'Cancelled' || d.stage_complete) && ts >= fromTs && ts <= toTs;
+    });
+    if (!chats.length && !deals.length) {
+      showToast('No archived data found for that date range.', ''); return;
+    }
+    const label = `${fromVal} to ${toVal}`;
+    let csv = 'RENTERFINDER ARCHIVE EXPORT\n';
+    csv += `Period: ${label} · Generated: ${new Date().toLocaleString('en-IN')}\n\n`;
+    csv += '=== ARCHIVED CHATS ===\n';
+    csv += 'Chat ID,Landlord,Renter,Listing,Archived Date,Reason\n';
+    chats.forEach(c => {
+      const reason = c.autoArchived ? '7-day inactivity' : 'Manual';
+      csv += `"${c.chatId}","${c.userA||''}","${c.userB||''}","${c.listing||''}","${c.archivedTs ? new Date(c.archivedTs).toLocaleDateString('en-IN') : ''}","${reason}"\n`;
+    });
+    csv += '\n=== ARCHIVED DEALS ===\n';
+    csv += 'Chat ID,Listing,Party A,Party B,Stage,Initiated,Closed\n';
+    deals.forEach(d => {
+      const closedTs = d.cancelledTs || d.completedTs || '';
+      csv += `"${d.chatId}","${d.listing||''}","${d.userA||''}","${d.userB||''}","${d.stage||''}","${d.initiatedTs ? new Date(d.initiatedTs).toLocaleDateString('en-IN') : ''}","${closedTs ? new Date(closedTs).toLocaleDateString('en-IN') : ''}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `RenterFinder_Archive_${fromVal}_to_${toVal}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`📥 Downloaded (${chats.length} chats, ${deals.length} deals) · ${label}`, 'success');
+  }
+
+  function initArchiveDateDefaults() {
+    const toEl   = document.getElementById('archive-date-to');
+    const fromEl = document.getElementById('archive-date-from');
+    if (!toEl || !fromEl || toEl.value) return;
+    const today = new Date();
+    const prior = new Date(today); prior.setDate(prior.getDate() - 30);
+    toEl.value   = today.toISOString().slice(0,10);
+    fromEl.value = prior.toISOString().slice(0,10);
+  }
+
   function filterArchivedChats() {
     const q = document.getElementById('search-archived-chats')?.value.trim().toLowerCase()||'';
     const rows = document.querySelectorAll('#archived-chats-list .archived-card');
@@ -2236,6 +2592,19 @@
   let pendingBanId = null, pendingBanName = null;
   function confirmBan(userId, userName) { pendingBanId = userId; pendingBanName = userName; document.getElementById('confirm-msg').textContent = `Ban ${userName}? They will be unable to send further messages.`; document.getElementById('confirm-box').classList.add('show'); }
   function closeConfirm() { document.getElementById('confirm-box').classList.remove('show'); }
+
+  let _askConfirmCb = null;
+  function askConfirm(msg, onYes, title) {
+    _askConfirmCb = onYes;
+    const box = document.getElementById('ask-confirm-box');
+    document.getElementById('ask-confirm-title').textContent = title || 'Confirm';
+    document.getElementById('ask-confirm-msg').textContent   = msg;
+    box.classList.add('show');
+  }
+  function closeAskConfirm() {
+    document.getElementById('ask-confirm-box').classList.remove('show');
+    _askConfirmCb = null;
+  }
   function executeBan() {
     if (!pendingBanId) return;
     const banned = getBanned(); banned[pendingBanId] = { name: pendingBanName, ts: Date.now() }; saveBanned(banned);
@@ -2683,29 +3052,61 @@
       return;
     }
     const sorted = [...defaulters].sort((a,b) => (b.ts||0)-(a.ts||0));
-    container.innerHTML = '';
-    sorted.forEach(d => {
-      const card = document.createElement('div');
-      card.className = 'defaulter-card';
-      card.innerHTML = `
-        <div class="defaulter-card-header">
-          <div class="defaulter-icon">🚫</div>
-          <div class="defaulter-meta">
-            <div class="defaulter-title">${escH(d.name)}</div>
-            <div class="defaulter-sub">${escH(d.role)} · ${escH(d.listing)}</div>
-            <div class="defaulter-parties"><span class="defaulter-party-tag">${escH(d.name)}</span><span style="font-size:11px;color:var(--muted);align-self:center;">defaulted on deal with</span><span class="defaulter-party-tag" style="background:rgba(255,255,255,0.06);color:var(--muted);border-color:rgba(255,255,255,0.1);">${escH(d.otherParty)}</span></div>
-          </div>
-          <button class="btn-remove-defaulter" onclick="removeDefaulter('${d.id}')">✕ Remove</button>
+
+    // Compact list with expandable notes
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;';
+
+    // Header row
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:grid;grid-template-columns:1fr 100px 140px 110px 80px;gap:0;padding:9px 16px;border-bottom:1px solid var(--border);';
+    hdr.innerHTML = `
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.4px;text-transform:uppercase;">Party</div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.4px;text-transform:uppercase;">Role</div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.4px;text-transform:uppercase;">Defaulted With</div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.4px;text-transform:uppercase;">Added</div>
+      <div></div>`;
+    wrap.appendChild(hdr);
+
+    sorted.forEach((d, idx) => {
+      const row = document.createElement('div');
+      row.style.cssText = `border-bottom:${idx < sorted.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none'};`;
+
+      const mainRow = document.createElement('div');
+      mainRow.style.cssText = 'display:grid;grid-template-columns:1fr 100px 140px 110px 80px;gap:0;padding:11px 16px;align-items:center;';
+      mainRow.innerHTML = `
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);">${escH(d.name)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(d.listing)}</div>
         </div>
-        ${d.notes ? `<div class="defaulter-notes">${escH(d.notes)}</div>` : ''}
-        <div class="defaulter-ts">Added ${fmtTs(d.ts)}</div>`;
-      container.appendChild(card);
+        <div><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.25);">${escH(d.role)}</span></div>
+        <div style="font-size:12px;color:var(--muted);">${escH(d.otherParty)}</div>
+        <div style="font-size:11px;color:var(--muted);">${d.ts ? new Date(d.ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'}</div>
+        <div style="display:flex;gap:6px;justify-content:flex-end;">
+          ${d.notes ? `<button onclick="var p=document.getElementById('defnotes-'+${d.id});if(p)p.classList.toggle('hidden');" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--muted);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">📋 Notes</button>` : ''}
+          <button onclick="removeDefaulter('${d.id}')" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#fca5a5;font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;">Remove</button>
+        </div>`;
+      row.setAttribute('data-drow', d.id);
+      row.appendChild(mainRow);
+
+      if (d.notes) {
+        const notesPanel = document.createElement('div');
+        notesPanel.id = 'defnotes-' + d.id;
+        notesPanel.className = 'def-notes-panel hidden';
+        notesPanel.style.cssText = 'padding:0 16px 12px;';
+        notesPanel.innerHTML = `<div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.18);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text);line-height:1.5;">${escH(d.notes)}</div>`;
+        row.appendChild(notesPanel);
+      }
+      wrap.appendChild(row);
     });
+
+    container.innerHTML = '';
+    container.appendChild(wrap);
   }
 
   function filterDefaulters() {
     const q    = document.getElementById('search-defaulters')?.value.trim().toLowerCase() || '';
-    const rows = document.querySelectorAll('#defaulters-list .defaulter-card');
+    const rows = document.querySelectorAll('#defaulters-list [data-drow]');
     let shown  = 0;
     rows.forEach(r => {
       const match = !q || r.textContent.toLowerCase().includes(q);
@@ -2799,6 +3200,26 @@
     });
 
     saveAssignments(assignments);
+
+    // Update contacts to follow new mod assignments
+    const contacts = getContacts();
+    let cChanged = false;
+    contacts.forEach(c => {
+      const newModId = assignments[c.chatId];
+      if (newModId && chatIds.includes(c.chatId)) {
+        const newModName = MODS.find(m => m.id === newModId)?.name || newModId;
+        c.assignedModId   = newModId;
+        c.assignedModName = newModName;
+        RF.updateContact(c.id, { assignedModId: newModId, assignedModName: newModName })
+          .catch(e => console.warn('[RF] bulk contact reassign', e));
+        cChanged = true;
+      }
+    });
+    if (cChanged) {
+      _contacts = contacts;
+      try { localStorage.setItem('rf_mod_contacts', JSON.stringify(contacts)); } catch {}
+    }
+
     closeReassignModal();
     const targetNames = selected.map(id => MODS.find(m => m.id === id)?.name || id).join(', ');
     showToast(`↺ ${chatIds.length} chat${chatIds.length!==1?'s':''} reassigned to ${targetNames}`, 'success');

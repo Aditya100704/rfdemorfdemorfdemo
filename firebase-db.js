@@ -61,7 +61,9 @@ const RF = (function() {
 
   async function saveDeal(chatId, deal) {
     try {
-      await chatDoc(chatId).set({ deal }, { merge: true });
+      // Strip undefined values so Firestore doesn't keep stale fields
+      // Use update() on chatMeta so other fields aren't wiped, and set() on deals/
+      await chatDoc(chatId).update({ deal });
       await db.collection('deals').doc(chatId).set(deal);
     } catch(e) { console.error('[RF] saveDeal', e); }
   }

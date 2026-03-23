@@ -494,8 +494,8 @@
     <div class="dash-logo">RenterFinder</div>
     <div class="dash-badge">MOD 9</div>
     <div class="dash-topbar-right">
-      <div class="auto-refresh-badge"><div class="auto-refresh-dot"></div> Auto-refresh <span class="refresh-countdown" id="refresh-countdown"></span></div>
-      <button class="refresh-btn" onclick="loadDashboard()">↻ Now</button>
+      <div class="auto-refresh-badge"><div class="auto-refresh-dot"></div> <span class="refresh-countdown" id="refresh-countdown"></span></div>
+      <button class="refresh-btn" onclick="loadDashboard()">↻ Refresh</button>
       <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
   </div>
@@ -504,7 +504,7 @@
     <div class="dash-tab active" data-tab="overview" onclick="switchTab('overview')">📊 Overview</div>
     <div class="dash-tab" data-tab="flagged" onclick="switchTab('flagged')">🚩 Flagged <span class="tab-count" id="tab-flagged-count">0</span></div>
     <div class="dash-tab" data-tab="deals" onclick="switchTab('deals')">🤝 Deal Tracker <span class="tab-count green" id="tab-deals-count">0</span></div>
-    <div class="dash-tab" data-tab="contacts" onclick="switchTab('contacts')">📩 Contacts <span class="tab-count purple" id="tab-contacts-count">0</span></div>
+    <div class="dash-tab" data-tab="contacts" onclick="switchTab('contacts')">📩 Query <span class="tab-count purple" id="tab-contacts-count">0</span></div>
     <div class="dash-tab" data-tab="chats" onclick="switchTab('chats')">💬 Active Chats <span class="tab-count green" id="tab-chats-count">0</span></div>
     <div class="dash-tab" data-tab="archived" onclick="switchTab('archived')">📁 Archived <span class="tab-count" id="tab-archived-count" style="background:rgba(255,255,255,0.06);color:var(--muted);">0</span></div>
     <div class="dash-tab" data-tab="users" onclick="switchTab('users')">👥 Users</div>
@@ -616,7 +616,7 @@
 
   <div class="tab-panel" id="panel-contacts">
       <div class="section-header">
-        <div><div class="section-title">User Contacts</div><div class="section-sub">Messages sent by users to their assigned moderator</div></div>
+        <div><div class="section-title">User Queries</div><div class="section-sub">Messages sent by users to their assigned moderator</div></div>
         <div style="display:flex;gap:8px;">
           <button class="perf-period-btn active" onclick="filterContacts('all')" id="contacts-filter-all">All</button>
           <button class="perf-period-btn" onclick="filterContacts('open')" id="contacts-filter-open">Open</button>
@@ -643,6 +643,18 @@
     <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
       <textarea id="ctp-reply-input" placeholder="Type a reply…" maxlength="500" style="flex:1;resize:none;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);background:rgba(255,255,255,0.04);outline:none;min-height:50px;max-height:100px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendContactThreadReply();}"></textarea>
       <button onclick="sendContactThreadReply()" style="padding:10px 20px;border:none;border-radius:8px;background:rgba(16,185,129,0.2);color:#6ee7b7;border:1px solid rgba(16,185,129,0.4);font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- General Confirm Dialog -->
+<div class="confirm-box" id="ask-confirm-box" style="z-index:1100;">
+  <div class="confirm-inner" style="border-color:rgba(212,160,23,0.3);max-width:420px;text-align:left;">
+    <h3 id="ask-confirm-title" style="font-size:16px;">Confirm</h3>
+    <p id="ask-confirm-msg" style="font-size:13px;color:var(--muted);line-height:1.6;"></p>
+    <div class="confirm-btns" style="justify-content:flex-end;">
+      <button class="confirm-no" onclick="closeAskConfirm()">Cancel</button>
+      <button class="confirm-yes" style="background:rgba(16,185,129,0.2);color:#6ee7b7;border:1px solid rgba(16,185,129,0.4);" onclick="closeAskConfirm();_askConfirmCb&&_askConfirmCb()">Confirm</button>
     </div>
   </div>
 </div>
@@ -733,17 +745,10 @@
   let countdown    = AUTO_REFRESH_SECS;
 
   function startAutoRefresh() {
+    // Auto-refresh disabled — Firestore real-time listeners handle all updates instantly
+    const el = document.getElementById('refresh-countdown');
+    if (el) el.textContent = '(live)';
     clearInterval(refreshTimer);
-    countdown = AUTO_REFRESH_SECS;
-    refreshTimer = setInterval(() => {
-      countdown--;
-      const el = document.getElementById('refresh-countdown');
-      if (el) el.textContent = `(${countdown}s)`;
-      if (countdown <= 0) {
-        countdown = AUTO_REFRESH_SECS;
-        loadDashboard();
-      }
-    }, 1000);
   }
 
   // ── DATA HELPERS ─────────────────────────────────────────────
@@ -816,6 +821,18 @@
     const t = document.getElementById('toast');
     t.textContent = msg; t.className = `toast ${type} show`;
     setTimeout(() => t.className = 'toast', 3500);
+  }
+
+  let _askConfirmCb = null;
+  function askConfirm(msg, onYes, title) {
+    _askConfirmCb = onYes;
+    document.getElementById('ask-confirm-title').textContent = title || 'Confirm';
+    document.getElementById('ask-confirm-msg').textContent   = msg;
+    document.getElementById('ask-confirm-box').classList.add('show');
+  }
+  function closeAskConfirm() {
+    document.getElementById('ask-confirm-box').classList.remove('show');
+    _askConfirmCb = null;
   }
 
   function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -999,11 +1016,13 @@
 
   // ── GATED DEAL PIPELINE ──────────────────────────────────────
   const PIPELINE = [
-    { key:'advance_payment', label:'Advance Payment',     sub:'Tick off advance payment received from both parties, then confirm.', gateType:'payment',  icon:'💳' },
-    { key:'meeting',         label:'Meeting Arrangement', sub:'Parties select dates via chat. Auto-confirms once both agree on a slot.',      gateType:'action',   icon:'📅' },
-    { key:'closure',         label:'Deal Closure',        sub:'Confirm once rent agreement / deal terms are finalised.',             gateType:'action',   icon:'📝' },
-    { key:'final_payment',   label:'Final Payment',       sub:'Tick off final payment received from both parties, then confirm.',    gateType:'payment',  icon:'✅' },
-    { key:'complete',        label:'Complete',             sub:'Deal is fully closed and will be archived.',                         gateType:'terminal', icon:'🏆' },
+    { key:'advance_select',   label:'Advance — Set Amount',       sub:'Select amount (default 6 days rent). On confirm, both parties receive a payment button.',  gateType:'select',   icon:'💳' },
+    { key:'advance_received', label:'Advance — Payment Received',  sub:'Tick off advance payment received from both parties, then confirm.',                       gateType:'payment',  icon:'✅' },
+    { key:'meeting',          label:'Meeting Arrangement',         sub:'Parties select dates via the calendar button in chat.',                                   gateType:'action',   icon:'📅' },
+    { key:'deal_done',        label:'Deal Done Confirmation',      sub:'Auto-ticked when both parties click Deal Done in chat after the meeting.',                gateType:'both_confirm', icon:'🤝' },
+    { key:'final_select',     label:'Final Payment — Set Amount',  sub:'Select amount (default 6 days rent). On confirm, both parties receive a payment button.',  gateType:'select',   icon:'💰' },
+    { key:'final_received',   label:'Final Payment — Received',    sub:'Tick off final payment received from both parties, then confirm.',                         gateType:'payment',  icon:'✅' },
+    { key:'complete',         label:'Complete',                    sub:'Deal is fully closed and will be archived.',                                               gateType:'terminal', icon:'🏆' },
   ];
 
   function currentPipelineIdx(deal) {
@@ -1029,27 +1048,58 @@
       const stageLabel = d.stage || 'Initiated';
       const ts = d.initiatedTs ? fmtTs(d.initiatedTs) : '—';
       const dealId = String(d.chatId||'').slice(-8).toUpperCase();
-      const acc = document.createElement('details');
+      const acc = document.createElement('div');
       acc.style.cssText = 'background:var(--card);border:1px solid rgba(16,185,129,0.25);border-radius:12px;margin-bottom:10px;overflow:hidden;';
-      acc.innerHTML = `
-        <summary style="display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;list-style:none;user-select:none;">
-          <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;">ID: ${dealId}</span>
-          <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(d.listing||'—')}</span>
-          <span style="font-size:11px;color:var(--muted);white-space:nowrap;">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
-          <span style="font-size:11px;font-weight:700;color:#34d399;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);white-space:nowrap;">● ${escH(stageLabel)}</span>
-          <span style="color:var(--muted);font-size:16px;transition:transform 0.2s;" class="acc-chev">›</span>
-        </summary>
-        <div style="padding:0 16px 16px;border-top:1px solid rgba(16,185,129,0.15);" class="acc-body">
-          <div id="acc-active-${escH(d.chatId)}"></div>
-        </div>`;
-      acc.addEventListener('toggle', () => {
-        const chev = acc.querySelector('.acc-chev');
-        if (chev) chev.style.transform = acc.open ? 'rotate(90deg)' : '';
-        if (acc.open) {
-          const body = acc.querySelector(`#acc-active-${CSS.escape(d.chatId)}`);
-          if (body && !body.innerHTML) renderDealCard(d, body, false);
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;user-select:none;';
+      hdr.innerHTML = `
+        <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;">ID: ${dealId}</span>
+        <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
+        <span style="font-size:11px;color:var(--muted);white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="${escH(d.listing||'')}">${escH(d.listing||'—')}</span>
+        <span style="font-size:11px;font-weight:700;color:#34d399;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);white-space:nowrap;">● ${escH(stageLabel)}</span>
+        <span style="color:var(--muted);font-size:16px;transition:transform 0.2s;" class="acc-chev">›</span>`;
+      const bdy = document.createElement('div');
+      bdy.id = safeId(d.chatId);
+      bdy.style.cssText = 'display:none;padding:0 16px 16px;border-top:1px solid rgba(16,185,129,0.15);';
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '✕';
+      closeBtn.style.cssText = 'display:none;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 4px;margin-left:4px;flex-shrink:0;';
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        bdy.style.display = 'none';
+        closeBtn.style.display = 'none';
+        const chev = hdr.querySelector('.acc-chev');
+        if (chev) chev.style.transform = '';
+      });
+      hdr.appendChild(closeBtn);
+      hdr.addEventListener('click', () => {
+        const isOpen = bdy.style.display !== 'none';
+        const chev = hdr.querySelector('.acc-chev');
+        if (isOpen) {
+          bdy.style.display = 'none';
+          closeBtn.style.display = 'none';
+          if (chev) chev.style.transform = '';
+          _openDealIds.delete(d.chatId);
+        } else {
+          bdy.style.display = 'block';
+          closeBtn.style.display = 'inline';
+          if (chev) chev.style.transform = 'rotate(90deg)';
+          _openDealIds.add(d.chatId);
+          if (!bdy.innerHTML) renderDealCard(d, bdy, false);
         }
       });
+      bdy.addEventListener('click', e => e.stopPropagation());
+      // Restore open state — clear first to prevent duplicates
+      if (_openDealIds.has(d.chatId)) {
+        bdy.style.display = 'block';
+        closeBtn.style.display = 'inline';
+        const chev = hdr.querySelector('.acc-chev');
+        if (chev) chev.style.transform = 'rotate(90deg)';
+        bdy.innerHTML = '';
+        renderDealCard(d, bdy, false);
+      }
+      acc.appendChild(hdr);
+      acc.appendChild(bdy);
       container.appendChild(acc);
     });
   }
@@ -1082,7 +1132,7 @@
     pipeEl.className = 'deal-pipeline';
     PIPELINE.forEach((stage, i) => {
       // Auto-tick meeting stage if parties have confirmed a date
-      if (stage.key === 'meeting' && !d.stage_meeting) {
+      if (stage.key === 'meeting' && !d.stage_meeting && !d.meeting_reversed) {
         try {
           const meeting = _meetingByChat[d.chatId] || null;
           if (meeting?.status === 'confirmed') {
@@ -1113,10 +1163,12 @@
           rightEl = `<span class="pipeline-done-tag">✓ Done${ts}</span>`;
         }
       } else if (isActive) {
-        if (stage.gateType === 'payment') {
-          const payA = d[`pay_${stage.key}_A`];
-          const payB = d[`pay_${stage.key}_B`];
-          rightEl = `<button class="pipeline-action-btn green" onclick="proceedPaymentStage('${d.chatId}','${stage.key}')" ${payA && payB ? '' : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>Proceed →</button>`;
+        if (stage.gateType === 'select') {
+          rightEl = `<button class="pipeline-action-btn green" onclick="proceedSelectStage('${d.chatId}','${stage.key}')">Confirm & Notify →</button>`;
+        } else if (stage.gateType === 'payment') {
+          const payA = d[`pay_${stage.key}_A`]; const payB = d[`pay_${stage.key}_B`];
+          const canProceed = stage.key === 'final_received' ? (payA || payB) : (payA && payB);
+          rightEl = `<button class="pipeline-action-btn green" onclick="proceedPaymentStage('${d.chatId}','${stage.key}')" ${canProceed ? '' : 'disabled style="opacity:0.4;cursor:not-allowed;"'}>Proceed →</button>`;
         } else if (stage.key === 'meeting') {
           rightEl = `<span style="font-size:11px;color:var(--gold);text-align:right;line-height:1.5;">⏳ Awaiting<br>date selection<br>by parties</span>`;
         } else if (stage.gateType === 'action') {
@@ -1131,6 +1183,21 @@
           <div class="pipeline-title">${stage.icon} ${stage.label}</div>
           <div class="pipeline-sub">${stage.sub}</div>
           ${isActive && stage.gateType === 'payment' ? buildPaymentToggles(d, stage.key) : ''}
+          ${isActive && stage.gateType === 'select' ? `
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;">Payment Amount</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:7px 12px;">
+                  <span style="font-size:12px;color:var(--text);font-weight:600;">👤 ${escH(d.userA)}</span>
+                  <span style="font-size:13px;font-weight:700;color:#34d399;">${d[stage.key+'_days_A'] ?? 6} days rent</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:7px 12px;">
+                  <span style="font-size:12px;color:var(--text);font-weight:600;">👤 ${escH(d.userB)}</span>
+                  <span style="font-size:13px;font-weight:700;color:#34d399;">${d[stage.key+'_days_B'] ?? 6} days rent</span>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">Amount set by Admin. Click Confirm &amp; Notify to proceed.</div>
+            </div>` : ''}
         </div>
         ${rightEl}`;
       pipeEl.appendChild(stageEl);
@@ -1148,6 +1215,19 @@
       </div>`;
     card.appendChild(footer);
     container.appendChild(card);
+  }
+
+  function setAdvanceDays(chatId, stageKey, party, days) {
+    const deals = getDeals();
+    const deal = deals.find(d => d.chatId === chatId);
+    if (!deal) return;
+    deal[stageKey + '_days_' + party] = parseInt(days) || 6;
+    const dA = deal[stageKey + '_days_A'] ?? 6;
+    const dB = deal[stageKey + '_days_B'] ?? 6;
+    deal[stageKey + '_days'] = Math.round((dA + dB) / 2);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
+    _refreshDealCard(chatId, deal);
   }
 
   function buildPaymentToggles(d, stageKey) {
@@ -1179,16 +1259,51 @@
     deal[`${field}_ts`] = deal[field] ? Date.now() : null;
     saveDeals(deals);
     syncDealToChat(chatId, deal);
-    loadDashboard();
+    _refreshDealCard(chatId, deal);
+  }
+
+  const _openDealIds = new Set();
+
+  function safeId(chatId) {
+    return 'did-' + chatId.replace(/[^a-zA-Z0-9]/g, c => '_' + c.charCodeAt(0) + '_');
+  }
+
+  function _refreshDealCard(chatId, deal) {
+    const bodyEl = document.getElementById(safeId(chatId));
+    if (bodyEl && bodyEl.style.display !== 'none') {
+      bodyEl.innerHTML = '';
+      renderDealCard(deal, bodyEl, false);
+    }
+  }
+
+  function proceedSelectStage(chatId, stageKey) {
+    const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
+    const deals = getDeals();
+    const deal  = deals.find(d => d.chatId === chatId);
+    if (!deal) return;
+    const daysA = deal[stageKey + '_days_A'] ?? 6;
+    const daysB = deal[stageKey + '_days_B'] ?? 6;
+    deal[stageKey + '_days_A'] = daysA; deal[stageKey + '_days_B'] = daysB;
+    deal[stageKey + '_days'] = Math.round((daysA + daysB) / 2);
+    const amtNote = daysA === daysB ? `${daysA} day(s) rent each` : `${daysA} days (${deal.userA}), ${daysB} days (${deal.userB})`;
+    askConfirm(`Confirm amounts: ${amtNote}?`, () => _doModSelectStage(chatId, stageKey), 'Confirm Payment Amounts'); return;
+    deal[`stage_${stageKey}`]    = true;
+    deal[`stage_${stageKey}_ts`] = Date.now();
+    deal.lastActionTs = Date.now();
+    postDealSystemMsg(chatId, `💳 ${label}: ${deal.userA}: ${daysA} day(s) rent · ${deal.userB}: ${daysB} day(s) rent. Use the Pay Now button in chat.`);
+    saveDeals(deals);
+    syncDealToChat(chatId, deal);
+    showToast(`✓ ${label} confirmed — parties notified`, 'success');
+    _refreshDealCard(chatId, deal);
   }
 
   function proceedPaymentStage(chatId, stageKey) {
     const deals = getDeals();
     const deal  = deals.find(d => d.chatId === chatId);
     if (!deal) return;
-    if (!deal[`pay_${stageKey}_A`] || !deal[`pay_${stageKey}_B`]) {
-      showToast('Both payments must be ticked before proceeding.', 'error'); return;
-    }
+    const payA = deal[`pay_${stageKey}_A`]; const payB = deal[`pay_${stageKey}_B`];
+    const minPaid = stageKey === 'final_received' ? (payA || payB) : (payA && payB);
+    if (!minPaid) { showToast(stageKey === 'final_received' ? 'At least one payment must be ticked.' : 'Both payments must be ticked.', 'error'); return; }
     deal[`stage_${stageKey}`]    = true;
     deal[`stage_${stageKey}_ts`] = Date.now();
     const label = PIPELINE.find(p => p.key === stageKey)?.label || stageKey;
@@ -1196,7 +1311,7 @@
     saveDeals(deals);
     syncDealToChat(chatId, deal);
     showToast(`✓ ${label} stage completed`, 'success');
-    loadDashboard();
+    _refreshDealCard(chatId, deal);
   }
 
   function proceedActionStage(chatId, stageKey) {
@@ -1210,7 +1325,7 @@
     saveDeals(deals);
     syncDealToChat(chatId, deal);
     showToast(`✓ ${label} confirmed`, 'success');
-    loadDashboard();
+    _refreshDealCard(chatId, deal);
   }
 
   function completeAndArchive(chatId) {
@@ -1231,7 +1346,7 @@
     saveDeals(deals);
     syncDealToChat(chatId, deal);
     showToast('🏆 Deal archived successfully', 'success');
-    loadDashboard();
+    _removeDealAccordion(chatId);
   }
 
   let pendingCancelChatId = null;
@@ -1263,7 +1378,7 @@
     syncDealToChat(chatId, deal);
     closeCancelDealConfirm();
     showToast('Deal cancelled', 'error');
-    loadDashboard();
+    _removeDealAccordion(chatId);
   }
 
   function reinstateDeal(chatId) {
@@ -1277,7 +1392,7 @@
     saveDeals(deals);
     syncDealToChat(chatId, deal);
     showToast('✓ Deal reinstated', 'success');
-    loadDashboard();
+    _refreshDealCard(chatId, deal);
   }
 
   function saveDealNotes(chatId) {
@@ -1294,12 +1409,53 @@
 
   function syncDealToChat(chatId, deal) {
     _dealByChat[chatId] = deal;
-    RF.saveDeal(chatId, deal).catch(e => console.warn('[RF] syncDealToChat', e));
+    const cleanDeal = JSON.parse(JSON.stringify(deal));
+    RF.saveDeal(chatId, cleanDeal).catch(e => console.warn('[RF] syncDealToChat', e));
+    RF.updateChatMeta(chatId, { deal: cleanDeal }).catch(e => console.warn('[RF] syncDealMeta', e));
   }
 
   function postDealSystemMsg(chatId, text) {
     const msg = { id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true, chatId };
     RF.saveMessage(chatId, msg).catch(e => console.warn('[RF] postDealSystemMsg', e));
+  }
+
+  function reverseLastStep(chatId) {
+    askConfirm('Reverse the last completed step?', () => _doModReverse(chatId, deals, deal, last), 'Reverse Step'); return;
+    const deals = getDeals();
+    const deal  = deals.find(d => d.chatId === chatId);
+    if (!deal) return;
+    const doneStages = PIPELINE.filter(s => deal[`stage_${s.key}`] && s.gateType !== 'terminal');
+    if (!doneStages.length) { showToast('No completed steps to reverse.', ''); return; }
+    const last = doneStages[doneStages.length - 1];
+    delete deal[`stage_${last.key}`]; delete deal[`stage_${last.key}_ts`];
+    if (last.gateType === 'payment') {
+      delete deal[`pay_${last.key}_A`]; delete deal[`pay_${last.key}_A_ts`];
+      delete deal[`pay_${last.key}_B`]; delete deal[`pay_${last.key}_B_ts`];
+    }
+    if (last.gateType === 'select') postDealSystemMsg(chatId, `↩ ${last.label} reversed. Awaiting updated instructions.`);
+    if (last.key === 'deal_done') { delete deal.deal_done_A; delete deal.deal_done_B; }
+    // Clear meeting if reversing meeting step or any step after it
+    if (last.key === 'meeting') {
+      delete deal.meeting; delete deal.stage_meeting; delete deal.stage_meeting_ts;
+      deal.meeting_reversed = true;
+      if (typeof _meetingByChat !== 'undefined') _meetingByChat[chatId] = null;
+      RF.updateChatMeta(chatId, { meeting: null }).catch(e => console.warn('[RF] clearMeeting', e));
+    } else {
+      const _mIdx = PIPELINE.findIndex(p => p.key === 'meeting');
+      const _lIdx = PIPELINE.findIndex(p => p.key === last.key);
+      if (_lIdx > _mIdx) {
+        delete deal.meeting; delete deal.stage_meeting; delete deal.stage_meeting_ts;
+        deal.meeting_reversed = true;
+        if (typeof _meetingByChat !== 'undefined') _meetingByChat[chatId] = null;
+        RF.updateChatMeta(chatId, { meeting: null }).catch(e => console.warn('[RF] clearMeetingPost', e));
+      }
+    }
+    deal.lastActionTs = Date.now(); deal.stage = 'Initiated';
+    const didx = _deals.findIndex(x => x.chatId === chatId);
+    if (didx !== -1) _deals[didx] = deal;
+    saveDeals(deals); syncDealToChat(chatId, deal);
+    showToast(`↩ Reversed: ${last.label}`, 'success');
+    _refreshDealCard(chatId, deal);
   }
 
   function fmtTs(ts) {
@@ -1947,9 +2103,11 @@ if (_sess) {
     if (!c) return;
     document.getElementById('ctp-title').textContent = c.subject || 'Support Thread';
     document.getElementById('ctp-sub').textContent = `${c.userName} · ${c.listing||''}`;
-    _renderThreadMessages(c);
     document.getElementById('contact-thread-overlay').style.display = 'flex';
-    setTimeout(() => document.getElementById('ctp-reply-input').focus(), 100);
+    requestAnimationFrame(() => {
+      _renderThreadMessages(c);
+      setTimeout(() => document.getElementById('ctp-reply-input')?.focus(), 100);
+    });
   }
 
   function closeContactThreadPopup() {
@@ -1989,7 +2147,7 @@ if (_sess) {
       wrap.appendChild(bubble); wrap.appendChild(meta);
       box.appendChild(wrap);
     });
-    box.scrollTop = box.scrollHeight;
+    requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; });
   }
 
   function sendContactThreadReply() {

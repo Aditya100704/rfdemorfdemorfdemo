@@ -43,6 +43,10 @@
   .topbar-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .topbar-sub{font-size:11px;color:rgba(212,160,23,0.75);letter-spacing:0.3px;}
   .topbar-shield{background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.3);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:600;color:var(--gold-lt);letter-spacing:0.5px;display:flex;align-items:center;gap:5px;}
+  .topbar-contact-btn{padding:5px 12px;border-radius:20px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;letter-spacing:0.3px;}
+  .topbar-contact-btn:hover{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.85);}
+  .topbar-contact-btn.has-thread{background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.4);color:#6ee7b7;}
+  .topbar-contact-btn.blink{animation:fabBlink 0.7s ease-in-out infinite;}
 
   /* IDENTITY BAR */
   .identity-bar{background:var(--dark);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid rgba(212,160,23,0.15);flex-shrink:0;}
@@ -150,11 +154,6 @@
 
   /* INPUT BAR */
   .chat-inputbar{background:linear-gradient(135deg,var(--dark),var(--dark2));border-top:1px solid rgba(212,160,23,0.2);padding:10px 16px;display:flex;gap:8px;align-items:flex-end;flex-shrink:0;box-shadow:0 -2px 16px rgba(0,0,0,0.4);}
-  .attach-btn{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(212,160,23,0.3);background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;color:rgba(255,255,255,0.6);font-size:17px;}
-  .attach-btn:hover{background:rgba(212,160,23,0.12);border-color:rgba(212,160,23,0.5);}
-  .attach-btn:hover{border-color:var(--gold);color:var(--gold);}
-  .attach-btn:disabled{opacity:0.35;cursor:not-allowed;}
-  #img-file-input{display:none;}
   .chat-textarea{flex:1;resize:none;border:1.5px solid rgba(212,160,23,0.25);border-radius:22px;padding:10px 16px;font-family:'Outfit',sans-serif;font-size:14px;line-height:1.5;outline:none;max-height:100px;overflow-y:auto;transition:border-color 0.2s;color:#e8e8ff;background:rgba(255,255,255,0.07);}
   .chat-textarea::placeholder{color:rgba(255,255,255,0.3);}
   .chat-textarea:focus{border-color:rgba(212,160,23,0.55);}
@@ -168,10 +167,6 @@
   .send-btn svg{width:18px;height:18px;fill:white;}
 
   /* Image preview */
-  .img-preview-bar{background:var(--white);border-top:1px solid var(--border);padding:8px 16px;display:none;align-items:center;gap:10px;flex-shrink:0;}
-  .img-preview-bar.show{display:flex;}
-  .img-preview-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;border:1.5px solid var(--border);}
-  .img-preview-name{font-size:12px;color:var(--mid);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .img-preview-remove{width:24px;height:24px;border-radius:50%;border:none;background:var(--danger);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
   /* Calendar button */
@@ -328,14 +323,10 @@
     .date-divider{font-size:10px;}
 
     .chat-inputbar{padding:8px 10px;gap:6px;}
-    .attach-btn{width:34px;height:34px;font-size:15px;}
     .chat-textarea{font-size:13px;padding:9px 13px;border-radius:20px;}
     .send-btn{width:36px;height:36px;}
     .chat-disclaimer{font-size:9.5px;padding:5px 12px;}
 
-    .img-preview-bar{padding:6px 12px;}
-    .img-preview-thumb{width:40px;height:40px;}
-    .img-preview-name{font-size:11px;}
 
     .violation-banner{margin:0 10px 6px;font-size:11px;padding:8px 12px;}
     .blocked-overlay{margin:0 10px 6px;font-size:12px;padding:12px;}
@@ -435,8 +426,10 @@
       </div>
     </div>
   </div>
+  <button id="deal-done-btn" onclick="confirmDealDone()" style="display:none;padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#8b5cf6);border:none;color:#fff;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(124,58,237,0.4);">✅ Deal Done</button>
+  <button id="pay-now-btn" onclick="openPaymentGateway()" style="display:none;padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,#1d4ed8,#2563eb);border:none;color:#fff;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(37,99,235,0.4);">💳 Pay Now</button>
   <button class="topbar-calendar-btn" id="calendar-btn" onclick="openCalendarModal()">📅 Schedule</button>
-  <div class="topbar-shield">🛡️ AI Moderated</div>
+  <button class="topbar-contact-btn" id="topbar-contact-btn" onclick="openContactMod()" title="Contact your moderator">🛡️ Contact Moderator</button>
 </div>
 
 <div class="identity-bar">
@@ -462,24 +455,19 @@
 
 <div class="mod-status" id="mod-status"></div>
 <div class="cooldown-bar" id="cooldown-bar"></div>
-    <div style="font-size:10px;color:var(--mid,#666);text-align:right;padding:0 4px 2px;">Enter to send · Shift+Enter for new line</div>
+    <div style="font-size:10px;color:var(--mid,#666);text-align:right;padding:0 4px 2px;"></div>
 
 <!-- Image preview -->
-<div class="img-preview-bar" id="img-preview-bar">
-  <img class="img-preview-thumb" id="img-preview-thumb" src="" alt="preview">
-  <span class="img-preview-name" id="img-preview-name"></span>
-  <button class="img-preview-remove" onclick="clearImagePreview()">×</button>
-</div>
+<!-- image preview removed -->
 
 <div class="chat-inputbar">
-  <button class="attach-btn" id="attach-btn" title="Send image" onclick="document.getElementById('img-file-input').click()">📎</button>
-  <input type="file" id="img-file-input" accept="image/*">
+<!-- attachment removed -->
   <textarea class="chat-textarea" id="msg-input" rows="1" placeholder="Type a message…" maxlength="1000"></textarea>
   <button class="send-btn" id="send-btn" disabled>
     <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
   </button>
 </div>
-<div class="chat-disclaimer">🛡️ AI-moderated · No phone numbers, emails, addresses or meeting details allowed · Images are scanned before delivery</div>
+<div class="chat-disclaimer">Sharing of phone/mobile numbers, emails, addresses, social handles or meeting details is not allowed · No abusive language · All messages are monitored</div>
 
 <!-- Calendar Modal (Party 1: Propose dates) -->
 <div class="modal-overlay" id="cal-modal" onclick="if(event.target===this)closeCalendarModal()">
@@ -559,6 +547,18 @@
   </div>
 </div>
 
+<!-- Inline Confirm Dialog -->
+<div class="modal-overlay" id="chat-confirm-overlay" style="z-index:600;" onclick="if(event.target===this)_chatConfirmNo()">
+  <div class="modal-card" style="max-width:360px;background:#1a2030;border:1px solid rgba(255,255,255,0.1);color:#d4dde8;">
+    <div style="font-size:15px;font-weight:700;color:#d4dde8;" id="chat-confirm-title">Confirm</div>
+    <div style="font-size:13px;color:#8899aa;line-height:1.6;" id="chat-confirm-msg"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+      <button onclick="_chatConfirmNo()" style="padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:#8899aa;font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;">Cancel</button>
+      <button onclick="_chatConfirmYes()" style="padding:8px 18px;border-radius:8px;border:none;background:#2c4a6e;color:#a8c5e0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <!-- Deal Confirm Modal -->
 <div class="modal-overlay" id="deal-modal" onclick="if(event.target===this)closeDealConfirm()">
   <div class="modal-card">
@@ -575,6 +575,15 @@
       <div class="deal-modal-title">⏳ Confirmation Recorded</div>
       <div class="deal-modal-sub">Your confirmation has been saved. The deal will be officially initiated once the other party also confirms. You can close this and continue chatting.</div>
       <div class="deal-modal-btns"><button class="deal-confirm-btn" onclick="closeDealConfirm()">Got it</button></div>
+    </div>
+    <div id="deal-reject-view" style="display:none;flex-direction:column;gap:14px;">
+      <div class="deal-modal-title">🤔 Deal Offer Received</div>
+      <div class="deal-modal-sub" id="deal-reject-sub">The other party has expressed interest in moving forward with this deal. Do you want to proceed?</div>
+      <div class="deal-modal-listing" id="deal-reject-listing">Loading…</div>
+      <div class="deal-modal-btns">
+        <button class="deal-cancel-btn" onclick="rejectDeal()" style="background:#fff1f2;color:#ef4444;border:1px solid #fecaca;">✕ Decline</button>
+        <button class="deal-confirm-btn" onclick="confirmDeal()">✓ Accept &amp; Confirm</button>
+      </div>
     </div>
     <div id="deal-done-view" style="display:none;flex-direction:column;gap:14px;text-align:center;">
       <div class="deal-modal-title">🎉 Deal Initiated!</div>
@@ -614,9 +623,7 @@
 </div>
 
 <!-- Contact Mod FAB + Thread Modal -->
-<button class="contact-mod-fab" id="contact-mod-fab" onclick="openContactMod()" title="Contact your moderator">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-</button>
+<!-- contact-mod-fab removed - moved to topbar -->
 
 <div class="modal-overlay" id="contact-modal" onclick="if(event.target===this)closeContactMod()">
   <div class="modal-card" style="max-width:420px;gap:0;padding:0;overflow:hidden;background:#1a2030;border:1px solid rgba(255,255,255,0.08);">
@@ -693,8 +700,6 @@
   };
 
   let currentIdentity = 'A';
-  let pendingImageB64 = null;
-  let pendingImageName = '';
   let isSending = false;
   let lastSendTime = 0;
   // _isLocal declared in firebase-config.js
@@ -813,8 +818,7 @@
         banner.classList.add('show');
         document.getElementById('msg-input').disabled = true;
         document.getElementById('send-btn').disabled = true;
-        document.getElementById('attach-btn').disabled = true;
-      }
+        }
     } catch {}
   }
 
@@ -998,7 +1002,6 @@
       document.getElementById('blocked-overlay').classList.add('show');
       document.getElementById('msg-input').disabled = true;
       document.getElementById('send-btn').disabled = true;
-      document.getElementById('attach-btn').disabled = true;
     } else {
       document.getElementById('blocked-overlay').classList.remove('show');
       document.getElementById('msg-input').disabled = false;
@@ -1112,9 +1115,8 @@ Message: ${JSON.stringify(text)}`;
     const input   = document.getElementById('msg-input');
     const sendBtn = document.getElementById('send-btn');
     const text    = input.value.trim();
-    const hasImg  = !!pendingImageB64;
 
-    if (!text && !hasImg) return;
+    if (!text) return;
     if (isSending) return;
 
     // #9 Rate limiting
@@ -1145,8 +1147,6 @@ Message: ${JSON.stringify(text)}`;
       cooldownBar.classList.add('active');
     }
 
-    const imageB64 = pendingImageB64;
-    clearImagePreview();
 
     // Moderator bypass
     if (currentIdentity === 'MOD') {
@@ -1231,7 +1231,7 @@ Message: ${JSON.stringify(text)}`;
     }
 
     isSending = false;
-    sendBtn.disabled = input.value.trim() === '' && !pendingImageB64;
+    sendBtn.disabled = input.value.trim() === '';
   }
 
   // ── #13 FLAG FOR MONITORING ───────────────────────────────────
@@ -1240,32 +1240,6 @@ Message: ${JSON.stringify(text)}`;
   }
 
   // ── #7 IMAGE HANDLING ─────────────────────────────────────────
-  document.getElementById('img-file-input').addEventListener('change', function() {
-    const file = this.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('Image must be under 5MB.'); this.value = ''; return; }
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      pendingImageB64 = e.target.result;
-      pendingImageName = file.name;
-      document.getElementById('img-preview-thumb').src = pendingImageB64;
-      document.getElementById('img-preview-name').textContent = file.name;
-      document.getElementById('img-preview-bar').classList.add('show');
-      document.getElementById('send-btn').disabled = false;
-    };
-    reader.readAsDataURL(file);
-    this.value = '';
-  });
-
-  function clearImagePreview() {
-    pendingImageB64 = null; pendingImageName = '';
-    document.getElementById('img-preview-bar').classList.remove('show');
-    document.getElementById('img-preview-thumb').src = '';
-    document.getElementById('img-preview-name').textContent = '';
-    const input = document.getElementById('msg-input');
-    document.getElementById('send-btn').disabled = input.value.trim() === '';
-  }
-
   // ── LIGHTBOX ──────────────────────────────────────────────────
   function openLightbox(src) { document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').classList.add('show'); }
   function closeLightbox()   { document.getElementById('lightbox').classList.remove('show'); }
@@ -1318,8 +1292,8 @@ Message: ${JSON.stringify(text)}`;
     // Merge everything into in-memory state
     _chatMeta = data;
     if (data.violations !== undefined) _violations = data.violations;
-    if (data.deal       !== undefined) { _deal    = data.deal;    updateDealBar();    checkDealCancelledBanner(); }
-    if (data.meeting    !== undefined) { _meeting = data.meeting; updateCalendarBtn(); }
+    if (data.deal       !== undefined) { _deal    = data.deal;    updateDealBar();    checkDealCancelledBanner(); updatePayBtn(); updateCalendarBtn(); }
+    if (data.meeting    !== undefined) { _meeting = data.meeting; updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn(); }
     if (data.joinSlots  !== undefined) {
       const wasJoined = isModJoined();
       _joinSlots = data.joinSlots;
@@ -1404,7 +1378,7 @@ Message: ${JSON.stringify(text)}`;
     }
     markRead();
     updateDealBar();
-    updateCalendarBtn();
+    updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn();
     checkWelcome();
     renderMessages();
   }
@@ -1413,7 +1387,7 @@ Message: ${JSON.stringify(text)}`;
   document.getElementById('msg-input').addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-    document.getElementById('send-btn').disabled = this.value.trim() === '' && !pendingImageB64;
+    document.getElementById('send-btn').disabled = this.value.trim() === '';
 
     // #12 broadcast typing
     if (currentIdentity !== 'MOD') {
@@ -1436,8 +1410,7 @@ Message: ${JSON.stringify(text)}`;
       if (_chatMeta && _chatMeta.archived) {
         document.getElementById('msg-input').disabled = true;
         document.getElementById('send-btn').disabled  = true;
-        document.getElementById('attach-btn').disabled = true;
-        document.getElementById('deal-btn').disabled   = true;
+          document.getElementById('deal-btn').disabled   = true;
         var banner = document.getElementById('expiry-banner');
         document.getElementById('expiry-text').textContent = 'This chat has been ended and archived. You can read the history but cannot send new messages.';
         banner.classList.add('show');
@@ -1475,7 +1448,13 @@ Message: ${JSON.stringify(text)}`;
 
     const myConfirmed = deal?.[`confirmed${currentIdentity}`];
 
-    if (deal?.confirmedA && deal?.confirmedB) {
+    if (deal?.stage === 'Cancelled') {
+      // Deal cancelled by mod — reset to default state so user can start a new deal
+      btn.textContent = '🤝 Deal';
+      btn.disabled    = false;
+      btn.classList.remove('deal-live');
+      if (dealBadge) dealBadge.classList.remove('show');
+    } else if (deal?.confirmedA && deal?.confirmedB) {
       btn.textContent = '🤝 Deal Active';
       btn.disabled    = true;
       btn.classList.add('deal-live');
@@ -1494,15 +1473,58 @@ Message: ${JSON.stringify(text)}`;
   }
 
   function openDealConfirm() {
+    const deal = loadDeal();
+    const otherIdentity  = currentIdentity === 'A' ? 'B' : 'A';
+    const otherConfirmed = deal?.[`confirmed${otherIdentity}`];
+    const myConfirmed    = deal?.[`confirmed${currentIdentity}`];
+    const bothConfirmed  = deal?.confirmedA && deal?.confirmedB;
+
     document.getElementById('deal-modal-listing').textContent = LISTING;
-    document.getElementById('deal-form-view').style.display    = 'flex';
+    const rejectListing = document.getElementById('deal-reject-listing');
+    if (rejectListing) rejectListing.textContent = LISTING;
+    // Hide all views first
+    document.getElementById('deal-form-view').style.display    = 'none';
     document.getElementById('deal-waiting-view').style.display = 'none';
     document.getElementById('deal-done-view').style.display    = 'none';
+    const rv = document.getElementById('deal-reject-view');
+    if (rv) rv.style.display = 'none';
+
+    if (bothConfirmed) {
+      // Deal already active — button is disabled so this shouldn't fire,
+      // but if it does just do nothing (no popup)
+      return;
+    } else if (myConfirmed && !otherConfirmed) {
+      // Already confirmed, waiting for other party
+      document.getElementById('deal-waiting-view').style.display = 'flex';
+    } else if (!myConfirmed && otherConfirmed) {
+      // Other party confirmed — show accept/decline
+      if (rv) rv.style.display = 'flex';
+    } else {
+      // Neither confirmed — show the proposal form
+      document.getElementById('deal-form-view').style.display = 'flex';
+    }
     document.getElementById('deal-modal').classList.add('show');
   }
 
   function closeDealConfirm() {
     document.getElementById('deal-modal').classList.remove('show');
+  }
+
+  function rejectDeal() {
+    const deal = loadDeal();
+    if (!deal) { closeDealConfirm(); return; }
+    // Clear the other party's confirmation — reset to no deal
+    const otherIdentity = currentIdentity === 'A' ? 'B' : 'A';
+    deal[`confirmed${otherIdentity}`] = false;
+    saveDeal(deal);
+    const msgs = loadMessages();
+    msgs.push({ id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System',
+      text: '❌ Deal offer was declined. Either party can start a new deal discussion.',
+      ts: Date.now(), isSystem: true });
+    saveMessages(msgs);
+    closeDealConfirm();
+    updateDealBar();
+    renderMessages();
   }
 
   function confirmDeal() {
@@ -1537,8 +1559,8 @@ Message: ${JSON.stringify(text)}`;
       msgs.push({ id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System', text: '🤝 Both parties have agreed to move forward with this deal. RenterFinder has been notified.', ts: Date.now(), isSystem: true });
       saveMessages(msgs);
       saveDeal(deal);
-      document.getElementById('deal-form-view').style.display    = 'none';
-      document.getElementById('deal-done-view').style.display    = 'flex';
+      // Close modal immediately — no extra popup when deal activates
+      closeDealConfirm();
     } else {
       saveDeal(deal);
       document.getElementById('deal-form-view').style.display    = 'none';
@@ -1546,7 +1568,7 @@ Message: ${JSON.stringify(text)}`;
     }
 
     updateDealBar();
-    updateCalendarBtn();
+    updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn();
     renderMessages();
   }
 
@@ -1606,6 +1628,95 @@ Message: ${JSON.stringify(text)}`;
   }
 
   // Update the calendar button visibility for the current identity
+  function updatePayBtn() {
+    const btn = document.getElementById('pay-now-btn');
+    if (!btn || currentIdentity === 'MOD') { if (btn) btn.style.display = 'none'; return; }
+    const deal = loadDeal();
+    if (!deal || !(deal.confirmedA && deal.confirmedB)) { btn.style.display = 'none'; return; }
+    const showAdvance = deal.stage_advance_select  && !deal.stage_advance_received;
+    const showFinal   = deal.stage_final_select    && !deal.stage_final_received;
+    if (showAdvance || showFinal) {
+      btn.style.display = '';
+      btn.textContent = showFinal ? '💰 Final Payment' : '💳 Advance Payment';
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+
+  let _chatConfirmCb = null;
+  function chatConfirm(msg, onYes, title) {
+    _chatConfirmCb = onYes;
+    document.getElementById('chat-confirm-title').textContent = title || 'Confirm';
+    document.getElementById('chat-confirm-msg').textContent   = msg;
+    document.getElementById('chat-confirm-overlay').classList.add('show');
+  }
+  function _chatConfirmYes() {
+    document.getElementById('chat-confirm-overlay').classList.remove('show');
+    if (_chatConfirmCb) { const cb = _chatConfirmCb; _chatConfirmCb = null; cb(); }
+  }
+  function _chatConfirmNo() {
+    document.getElementById('chat-confirm-overlay').classList.remove('show');
+    _chatConfirmCb = null;
+  }
+
+  function openPaymentGateway() {
+    chatConfirm('Payment gateway coming soon. Please use the secure payment link sent to your registered contact.', null, 'Payment Gateway');
+  }
+  function _openPaymentGateway_old() {
+    alert('Payment gateway coming soon. Please use the secure payment link sent to your registered contact.');
+  }
+
+  function updateDealDoneBtn() {
+    const btn = document.getElementById('deal-done-btn');
+    if (!btn || currentIdentity === 'MOD') { if (btn) btn.style.display = 'none'; return; }
+    const deal = loadDeal();
+    if (!deal || !(deal.confirmedA && deal.confirmedB)) { btn.style.display = 'none'; return; }
+    // Show only after meeting is confirmed AND deal_done step is not yet complete
+    const meetingDone = deal.stage_meeting === true;
+    const dealDoneDone = deal.stage_deal_done === true;
+    const myDone = deal[`deal_done_${currentIdentity}`];
+    if (meetingDone && !dealDoneDone) {
+      btn.style.display = '';
+      btn.textContent = myDone ? '⏳ Waiting for other party…' : '✅ Deal Done';
+      btn.disabled = !!myDone;
+      btn.style.opacity = myDone ? '0.6' : '1';
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+
+  function confirmDealDone() {
+    const deal = loadDeal();
+    if (!deal) return;
+    chatConfirm('Confirm the deal is done after your meeting? This will notify RenterFinder.', _doDealDone, 'Deal Done');
+  }
+  function _doDealDone() {
+    const deal = loadDeal();
+    if (!deal) return;
+    deal[`deal_done_${currentIdentity}`] = true;
+    deal[`deal_done_${currentIdentity}_ts`] = Date.now();
+    // If both parties confirmed → auto-tick deal_done stage
+    if (deal.deal_done_A && deal.deal_done_B) {
+      deal.stage_deal_done    = true;
+      deal.stage_deal_done_ts = Date.now();
+      deal.lastActionTs = Date.now();
+      const msgs = loadMessages();
+      msgs.push({ id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System',
+        text: '✅ Both parties have confirmed the deal is done. Moving to closure stage.',
+        ts: Date.now(), isSystem: true });
+      saveMessages(msgs);
+    } else {
+      const msgs = loadMessages();
+      msgs.push({ id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System',
+        text: `✅ ${USERS[currentIdentity].name} has confirmed the deal is done. Awaiting the other party.`,
+        ts: Date.now(), isSystem: true });
+      saveMessages(msgs);
+    }
+    saveDeal(deal);
+    RF.updateChatMeta(CHAT_ID, { deal }).catch(e => console.warn('[RF] dealDone', e));
+    updateDealDoneBtn(); updatePayBtn(); renderMessages();
+  }
+
   function updateCalendarBtn() {
     const btn  = document.getElementById('calendar-btn');
     if (!btn) return;
@@ -1615,11 +1726,12 @@ Message: ${JSON.stringify(text)}`;
 
     if (currentIdentity === 'MOD') { btn.classList.remove('show'); return; }
 
-    const advanceDone   = deal?.stage_advance_payment === true;
+    const advanceDone   = deal?.stage_advance_received === true;
     const bothConfirmed = deal?.confirmedA && deal?.confirmedB;
     if (!bothConfirmed || !advanceDone) { btn.classList.remove('show'); return; }
 
-    if (meeting?.status === 'confirmed') { btn.classList.remove('show'); return; }
+    // If meeting was reversed by admin, allow re-scheduling even if meeting object says confirmed
+    if (meeting?.status === 'confirmed' && !deal?.meeting_reversed) { btn.classList.remove('show'); return; }
 
     const originalProposer = deal.initiatedBy;   // Party 1 always starts
     const isOriginalProposer = currentIdentity === originalProposer;
@@ -1800,9 +1912,13 @@ Message: ${JSON.stringify(text)}`;
     if (keys.length === 0) return;
 
     const proposals = keys.map(k => ({ date: k, ...calSelected[k] }));
+
     const meeting = { status: 'proposed', proposals, proposedTs: Date.now(), proposedBy: currentIdentity };
     saveMeeting(meeting);
     syncMeetingToDeal(meeting);
+    // Clear meeting_reversed flag now that parties have rescheduled
+    const _curDeal = loadDeal();
+    if (_curDeal?.meeting_reversed) { _curDeal.meeting_reversed = false; saveDeal(_curDeal); }
 
     // Post system message in chat
     const msgs = loadMessages();
@@ -1814,7 +1930,7 @@ Message: ${JSON.stringify(text)}`;
     saveMessages(msgs);
 
     closeCalendarModal();
-    updateCalendarBtn();
+    updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn();
     renderMessages();
   }
 
@@ -1825,7 +1941,18 @@ Message: ${JSON.stringify(text)}`;
     calPickedKey = null;
     document.getElementById('cal-pick-confirm').disabled = true;
 
-    sub.textContent = 'The other party has proposed these dates. Choose one that works for you.';
+    // Collect all slot keys to detect single-slot case
+    const allSlotKeys = [];
+    meeting.proposals.forEach(p => {
+      if (p.morning) allSlotKeys.push(`${p.date}|morning`);
+      if (p.evening) allSlotKeys.push(`${p.date}|evening`);
+    });
+    const isSingle = allSlotKeys.length === 1;
+
+    sub.textContent = isSingle
+      ? 'One date has been proposed — pre-selected below. Confirm or choose a different date.'
+      : 'The other party has proposed these dates. Choose one that works for you.';
+
     wrap.innerHTML = meeting.proposals.map(p => {
       const d = new Date(p.date + 'T00:00:00');
       const dateLabel = d.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' });
@@ -1839,6 +1966,11 @@ Message: ${JSON.stringify(text)}`;
         </div>`;
       }).join('');
     }).join('');
+
+    // Auto-select the only slot if there's just one
+    if (isSingle) {
+      pickSlot(allSlotKeys[0]);
+    }
   }
 
   function pickSlot(key) {
@@ -1867,7 +1999,12 @@ Message: ${JSON.stringify(text)}`;
     saveMeeting(meeting);
     syncMeetingToDeal(meeting);
 
-    // Auto-tick meeting stage in deals registry
+    // Auto-tick meeting stage in deals registry AND in chatMeta so deal-done btn shows immediately
+    deal.stage_meeting    = true;
+    deal.stage_meeting_ts = Date.now();
+    deal.meeting          = meeting;
+    saveDeal(deal);
+    RF.updateChatMeta(CHAT_ID, { deal }).catch(e => console.warn('[RF] chatMetaMeeting', e));
     autoTickMeetingStage(meeting, deal);
 
     // Post system message
@@ -1882,7 +2019,7 @@ Message: ${JSON.stringify(text)}`;
     document.getElementById('cal-done-sub').textContent = `Meeting confirmed: ${dateLabel}, ${slotLabel}`;
     document.getElementById('cal-pick-view').style.display = 'none';
     document.getElementById('cal-done-view').style.display = 'flex';
-    updateCalendarBtn();
+    updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn();
     renderMessages();
   }
 
@@ -1925,7 +2062,7 @@ Message: ${JSON.stringify(text)}`;
     saveMessages(msgs);
 
     closeCalendarModal();
-    updateCalendarBtn();
+    updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn();
     renderMessages();
   }
 
@@ -1964,7 +2101,7 @@ Message: ${JSON.stringify(text)}`;
     // UI will be populated by the Firebase onMessages + onChatMeta listeners above.
     // Call lightweight UI setup that doesn't depend on Firestore data.
     updateDealBar();
-    updateCalendarBtn();
+    updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn();
     renderMessages();   // renders empty state initially; listeners will re-render with data
     checkWelcome();
 
@@ -1990,12 +2127,15 @@ Message: ${JSON.stringify(text)}`;
   function openContactMod() {
     if (currentIdentity === 'MOD') return;
     // Stop blinking
-    const fab = document.getElementById('contact-mod-fab');
+    const fab = document.getElementById('topbar-contact-btn');
     if (fab) fab.classList.remove('blink');
     clearInterval(_blinkInterval);
     const existing = _getMyActiveContact();
     if (existing) {
-      _renderContactThread(existing);
+      // Open modal first so layout exists, then render + scroll
+      document.getElementById('contact-modal').classList.add('show');
+      requestAnimationFrame(() => _renderContactThread(existing));
+      return;
     } else {
       document.getElementById('contact-form-view').style.display = 'flex';
       document.getElementById('contact-form-view').style.flexDirection = 'column';
@@ -2005,7 +2145,7 @@ Message: ${JSON.stringify(text)}`;
       document.getElementById('contact-counter').textContent = '0 / 600';
       document.getElementById('contact-modal-sub').textContent = 'Reach out to your assigned moderator';
     }
-    document.getElementById('contact-modal').classList.add('show');
+    if (!existing) document.getElementById('contact-modal').classList.add('show');
   }
 
   function closeContactMod() {
@@ -2014,8 +2154,9 @@ Message: ${JSON.stringify(text)}`;
 
   function _renderContactThread(contact) {
     document.getElementById('contact-form-view').style.display = 'none';
-    document.getElementById('contact-thread-view').style.display = 'flex';
-    document.getElementById('contact-thread-view').style.flexDirection = 'column';
+    const threadView = document.getElementById('contact-thread-view');
+    threadView.style.display = 'flex';
+    threadView.style.flexDirection = 'column';
     const statusText = contact.status === 'answered' ? '✓ Replied by moderator' : '⏳ Awaiting moderator reply';
     document.getElementById('contact-modal-sub').textContent = statusText;
     const msgBox = document.getElementById('contact-thread-messages');
@@ -2039,7 +2180,7 @@ Message: ${JSON.stringify(text)}`;
         <div style="font-size:10px;color:${isMe ? 'rgba(255,255,255,0.35)' : 'var(--mid)'};margin-top:2px;">${time}</div>`;
       msgBox.appendChild(wrap);
     });
-    msgBox.scrollTop = msgBox.scrollHeight;
+    requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
   }
 
   function submitContactMod() {
@@ -2085,7 +2226,7 @@ Message: ${JSON.stringify(text)}`;
     if (!_isLocal) RF.saveContact(contact).catch(e => console.warn('[RF] saveContact', e));
 
     // Update FAB to thread mode
-    const fab = document.getElementById('contact-mod-fab');
+    const fab = document.getElementById('topbar-contact-btn');
     if (fab) fab.classList.add('has-thread');
 
     // Show thread view immediately
@@ -2118,20 +2259,24 @@ Message: ${JSON.stringify(text)}`;
     if (!_isLocal) RF.updateContact(contact.id, { followups: contact.followups, status: 'open' }).catch(e => console.warn('[RF] followup', e));
     textarea.value = '';
     _renderContactThread(contact);
+    requestAnimationFrame(() => {
+      const mb = document.getElementById('contact-thread-messages');
+      if (mb) mb.scrollTop = mb.scrollHeight;
+    });
   }
 
   // Listen for mod replies via Firestore onChatMeta / contacts
   function _checkForContactReplies() {
     const existing = _getMyActiveContact();
     if (existing) {
-      const fab = document.getElementById('contact-mod-fab');
+      const fab = document.getElementById('topbar-contact-btn');
       if (fab) fab.classList.add('has-thread');
     }
   }
 
   let _blinkInterval = null;
   function _blinkContactFab() {
-    const fab = document.getElementById('contact-mod-fab');
+    const fab = document.getElementById('topbar-contact-btn');
     if (!fab) return;
     fab.classList.add('blink');
     // Stop blinking when user opens the thread
@@ -2149,8 +2294,8 @@ Message: ${JSON.stringify(text)}`;
   const _origSwitchIdentity = switchIdentity;
   switchIdentity = function(id) {
     _origSwitchIdentity(id);
-    const fab = document.getElementById('contact-mod-fab');
-    if (fab) fab.classList.toggle('hidden', id === 'MOD');
+    const fab = document.getElementById('topbar-contact-btn');
+    if (fab) fab.style.display = (id === 'MOD') ? 'none' : '';
   };
 
   init();

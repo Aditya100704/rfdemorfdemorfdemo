@@ -831,8 +831,11 @@ window.addEventListener('pageshow',function(){
           <button id="db-tab-list" onclick="dbSwitchTab('list')" style="padding:14px 28px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.55);border:none;border-radius:0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-top-left-radius:6px;border-top-right-radius:6px;margin-right:4px;">
             <span id="db-tab-list-label">🏠 Properties List</span>
           </button>
-          <button id="db-tab-chats" onclick="dbSwitchTab('chats')" style="padding:14px 28px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.55);border:none;border-radius:0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-top-left-radius:6px;border-top-right-radius:6px;position:relative;">
-            💬 My Chats <span id="db-chat-badge" style="display:none;position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span>
+          <button id="db-tab-chats" onclick="dbSwitchTab('chats')" style="padding:14px 28px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.55);border:none;border-radius:0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-top-left-radius:6px;border-top-right-radius:6px;position:relative;margin-right:4px;">
+            💬 My Chats <span id="db-chat-badge" style="display:none;position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#22c55e;"></span>
+          </button>
+          <button id="db-tab-notifications" onclick="dbSwitchTab('notifications')" style="padding:14px 28px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.55);border:none;border-radius:0;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-top-left-radius:6px;border-top-right-radius:6px;position:relative;">
+            🔔 Notifications <span id="db-notif-badge" style="display:none;position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#ef4444;"></span>
           </button>
         </div>
       </div>
@@ -998,12 +1001,16 @@ window.addEventListener('pageshow',function(){
         ];
 
         var SAMPLE_PROPERTIES = [
-          { id:'prop-001', landlordId:'landlord-001', landlordName:'Anita Singh', title:'Spacious 2BHK — Semi Furnished', bhk:'2 BHK', bath:'2', sqft:'980', rent:'18,500', deposit:'55,500', area:'Koramangala 5th Block', city:'Bengaluru', furnishing:'Semi Furnished', available:'Immediate', badge:'New' },
-          { id:'prop-002', landlordId:'landlord-002', landlordName:'Ramesh Gupta', title:'Modern 3BHK — Fully Furnished', bhk:'3 BHK', bath:'3', sqft:'1400', rent:'38,000', deposit:'1,14,000', area:'Andheri West', city:'Mumbai', furnishing:'Fully Furnished', available:'Immediate', badge:'Featured' },
-          { id:'prop-003', landlordId:'landlord-003', landlordName:'Kavya Reddy', title:'Cosy 1BHK — Near IT Park', bhk:'1 BHK', bath:'1', sqft:'550', rent:'11,000', deposit:'33,000', area:'Kothrud', city:'Pune', furnishing:'Unfurnished', available:'15 Apr 2025', badge:'New' },
-          { id:'prop-004', landlordId:'landlord-004', landlordName:'Suresh Iyer', title:'Premium 2BHK — Society Flat', bhk:'2 BHK', bath:'2', sqft:'1100', rent:'24,000', deposit:'72,000', area:'Banjara Hills', city:'Hyderabad', furnishing:'Semi Furnished', available:'1 May 2025', badge:'' },
-          { id:'prop-005', landlordId:'landlord-005', landlordName:'Meena Shah', title:'Affordable 2BHK — Ground Floor', bhk:'2 BHK', bath:'1', sqft:'820', rent:'13,500', deposit:'40,500', area:'Satellite', city:'Ahmedabad', furnishing:'Unfurnished', available:'Immediate', badge:'New' },
-          { id:'prop-006', landlordId:'landlord-006', landlordName:'Arun Kumar', title:'Studio Apartment — Metro Nearby', bhk:'1 RK', bath:'1', sqft:'350', rent:'9,500', deposit:'28,500', area:'Lajpat Nagar', city:'Delhi', furnishing:'Furnished', available:'Immediate', badge:'' }
+          { id:'test-001', landlordId:'landlord-t01', landlordName:'Ravi Sharma',     title:'2BHK Test Flat — Sector 12',          bhk:'2 BHK', bath:'2', sqft:'1020', rent:'20,000', deposit:'60,000',  area:'Sector 12',           city:'Bengaluru',  furnishing:'Semi Furnished',  available:'Immediate',   badge:'New' },
+          { id:'test-002', landlordId:'landlord-t02', landlordName:'Neha Kapoor',    title:'1BHK Test Unit — Lake View',          bhk:'1 BHK', bath:'1', sqft:'600',  rent:'14,000', deposit:'42,000',  area:'Powai',               city:'Mumbai',     furnishing:'Furnished',       available:'Immediate',   badge:'Featured' },
+          { id:'test-003', landlordId:'landlord-t03', landlordName:'Kiran Desai',    title:'3BHK Test Suite — Green Valley',      bhk:'3 BHK', bath:'3', sqft:'1500', rent:'40,000', deposit:'1,20,000', area:'Baner',               city:'Pune',       furnishing:'Fully Furnished', available:'Immediate',   badge:'' },
+          { id:'test-004', landlordId:'landlord-t04', landlordName:'Amit Jain',      title:'Studio Test Pod — Tech Park',         bhk:'1 RK',  bath:'1', sqft:'400',  rent:'11,000', deposit:'33,000',  area:'Electronic City',     city:'Bengaluru',  furnishing:'Furnished',       available:'Immediate',   badge:'New' },
+          { id:'test-005', landlordId:'landlord-t05', landlordName:'Sunita Rao',     title:'2BHK Test Home — Metro Walk',         bhk:'2 BHK', bath:'2', sqft:'1100', rent:'26,000', deposit:'78,000',  area:'Madhapur',            city:'Hyderabad',  furnishing:'Semi Furnished',  available:'Immediate',   badge:'Featured' },
+          { id:'test-006', landlordId:'landlord-t06', landlordName:'Pradeep Nair',   title:'1BHK Test Room — Old Town',           bhk:'1 BHK', bath:'1', sqft:'550',  rent:'12,500', deposit:'37,500',  area:'Alwarpet',            city:'Chennai',    furnishing:'Unfurnished',     available:'Immediate',   badge:'' },
+          { id:'test-007', landlordId:'landlord-t07', landlordName:'Geeta Singh',    title:'4BHK Test Villa — Heritage Block',    bhk:'4 BHK', bath:'3', sqft:'2200', rent:'58,000', deposit:'1,74,000', area:'C-Scheme',            city:'Jaipur',     furnishing:'Semi Furnished',  available:'Immediate',   badge:'New' },
+          { id:'test-008', landlordId:'landlord-t08', landlordName:'Mohan Das',      title:'2BHK Test Duplex — Lake Side',        bhk:'2 BHK', bath:'2', sqft:'1250', rent:'22,000', deposit:'66,000',  area:'Ballygunge',          city:'Kolkata',    furnishing:'Unfurnished',     available:'Immediate',   badge:'' },
+          { id:'test-009', landlordId:'landlord-t09', landlordName:'Pooja Mehta',    title:'3BHK Test Corner — River View',       bhk:'3 BHK', bath:'2', sqft:'1400', rent:'35,000', deposit:'1,05,000', area:'Navrangpura',         city:'Ahmedabad',  furnishing:'Semi Furnished',  available:'Immediate',   badge:'Featured' },
+          { id:'test-010', landlordId:'landlord-t10', landlordName:'Vikash Kumar',   title:'1BHK Test Nest — City Centre',        bhk:'1 BHK', bath:'1', sqft:'680',  rent:'16,000', deposit:'48,000',  area:'Karol Bagh',          city:'Delhi',      furnishing:'Furnished',       available:'Immediate',   badge:'New' }
         ];
 
         // Current logged-in user (demo — in production set from auth)
@@ -1409,5 +1416,23 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
   <script src="./chatbot.js" defer></script>
+
+      <!-- NOTIFICATIONS PANEL -->
+      <div id="db-panel-notifications" class="db-content-area" style="display:none;padding:40px 60px 80px;max-width:1100px;margin:0 auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;">
+          <div>
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--gold);">🔔 Notifications</h2>
+            <p style="font-size:14px;color:rgba(255,255,255,0.5);margin-top:4px;">Stay updated on your chats, deals and account activity</p>
+          </div>
+        </div>
+        <div id="db-notif-list" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:40px;text-align:center;">
+            <div style="font-size:32px;margin-bottom:12px;">🔔</div>
+            <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.6);">No notifications yet</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.3);margin-top:6px;">Updates about your deals, messages and account will appear here</div>
+          </div>
+        </div>
+      </div>
+
 </body>
 </html>
