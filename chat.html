@@ -702,6 +702,7 @@
   let currentIdentity = 'A';
   let isSending = false;
   let lastSendTime = 0;
+  let imageB64 = null; // image upload UI removed; kept as null so sendMessage references don't throw
   // _isLocal declared in firebase-config.js
   const SEND_COOLDOWN_MS = 2000;    // #9 rate limit
   const CHAT_EXPIRY_DAYS = 60;      // #11 chat expiry
