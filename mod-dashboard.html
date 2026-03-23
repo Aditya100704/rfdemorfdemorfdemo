@@ -391,10 +391,20 @@
     .section-header { flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .section-title { font-size: 14px; }
 
-    /* Pipeline */
-    .pipeline-stage { padding: 10px 12px; gap: 10px; }
+    /* Pipeline — stack action button below body on mobile */
+    .pipeline-stage { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
     .pipeline-title { font-size: 12px; }
     .pipeline-sub { font-size: 10px; }
+    .pipeline-body { min-width: 0; width: calc(100% - 40px); }
+    .pipeline-action-btn { width: 100%; text-align: center; padding: 10px 12px; font-size: 13px; margin-top: 6px; }
+    .pipeline-done-tag { font-size: 10px; }
+    .pipeline-num { flex-shrink: 0; }
+    /* Payment toggles: stack vertically */
+    .payment-toggles { flex-direction: column; }
+    .pay-toggle { width: 100%; box-sizing: border-box; }
+    /* Accordion headers: show only key info on mobile */
+    .acc-deal-hdr-listing { display: none; }
+    .acc-deal-hdr-ts { display: none; }
 
     /* Appeal cards */
     .appeal-actions { justify-content: flex-start; }
@@ -414,6 +424,8 @@
     .flag-card { padding: 12px 12px; }
     .mod-grid { grid-template-columns: 1fr; }
     .deal-card-icon { width: 36px; height: 36px; font-size: 16px; }
+    .pipeline-action-btn { font-size: 12px; padding: 9px 10px; }
+    .pipeline-stage { padding: 8px 10px; }
   }
 
   /* User Profile Modal */
@@ -1448,12 +1460,12 @@
       const hdr = document.createElement('div');
       hdr.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none;';
       hdr.innerHTML = `
-        <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;">ID: ${dealId}</span>
-        <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
-        <span style="font-size:11px;color:var(--muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escH(d.listing||'')}">${escH(d.listing||'—')}</span>
-        <span style="font-size:11px;font-weight:700;color:#34d399;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);">● ${escH(stageLabel)}</span>
-        <span style="font-size:11px;color:var(--muted);">${ts}</span>
-        <span style="color:var(--muted);font-size:16px;transition:transform 0.2s;" class="acc-chev">›</span>`;
+        <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;white-space:nowrap;">ID: ${dealId}</span>
+        <span style="flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
+        <span class="acc-deal-hdr-listing" style="font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escH(d.listing||'')}">${escH(d.listing||'—')}</span>
+        <span style="font-size:11px;font-weight:700;color:#34d399;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);white-space:nowrap;flex-shrink:0;">● ${escH(stageLabel)}</span>
+        <span class="acc-deal-hdr-ts" style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;">${ts}</span>
+        <span style="color:var(--muted);font-size:16px;transition:transform 0.2s;flex-shrink:0;" class="acc-chev">›</span>`;
       const bdy = document.createElement('div');
       bdy.id = safeId(d.chatId);
       bdy.style.cssText = 'display:none;padding:0 18px 18px;border-top:1px solid rgba(16,185,129,0.15);';
@@ -1473,7 +1485,9 @@
       hdr.appendChild(closeBtn);
 
       // Header click — toggles open/close; clicks inside bdy don't propagate here
-      hdr.addEventListener('click', () => {
+      hdr.addEventListener('click', (e) => {
+        // Only toggle if click is directly on header or its non-button children (not close button)
+        if (e.target === closeBtn) return;
         const isOpen = bdy.style.display !== 'none';
         const chev = hdr.querySelector('.acc-chev');
         if (isOpen) {
@@ -1489,8 +1503,7 @@
           if (!bdy.innerHTML) renderDealCard(d, bdy, false);
         }
       });
-      // Stop all clicks inside body from bubbling to header
-      bdy.addEventListener('click', e => e.stopPropagation());
+      // No stopPropagation needed — hdr listener is on hdr element, not parent acc
       // Restore open state — always clear first to prevent duplicate content
       if (_openDealIds.has(d.chatId)) {
         bdy.style.display = 'block';
@@ -1589,7 +1602,7 @@
       }
       stageEl.innerHTML = `
         <div class="pipeline-num">${isDone ? '✓' : (i + 1)}</div>
-        <div class="pipeline-body">
+        <div class="pipeline-body" style="min-width:0;overflow:hidden;">
           <div class="pipeline-title">${stage.icon} ${stage.label}</div>
           <div class="pipeline-sub">${stage.sub}</div>
           ${isActive && stage.gateType === 'payment' ? buildPaymentToggles(d, stage.key) : ''}
@@ -3318,7 +3331,13 @@ if (_sess) {
     RF.onDeals(deals => {
       const sorted = [...deals].sort((a,b) => (b.initiatedTs||0)-(a.initiatedTs||0));
       _deals = sorted;
-      deals.forEach(d => { if (d.chatId) _dealByChat[d.chatId] = d; });
+      deals.forEach(d => {
+        if (d.chatId) {
+          _dealByChat[d.chatId] = d;
+          // If this deal's card is open, refresh it in-place immediately
+          _refreshDealCard(d.chatId, d);
+        }
+      });
     });
 
     // Appeals → write to rf_appeals localStorage

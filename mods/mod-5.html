@@ -390,10 +390,17 @@
     .section-header { flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .section-title { font-size: 14px; }
 
-    /* Pipeline */
-    .pipeline-stage { padding: 10px 12px; gap: 10px; }
+    /* Pipeline — stack action button below body on mobile */
+    .pipeline-stage { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
     .pipeline-title { font-size: 12px; }
     .pipeline-sub { font-size: 10px; }
+    .pipeline-body { min-width: 0; width: calc(100% - 40px); }
+    .pipeline-action-btn { width: 100%; text-align: center; padding: 10px 12px; font-size: 13px; margin-top: 6px; }
+    .pipeline-done-tag { font-size: 10px; }
+    .payment-toggles { flex-direction: column; }
+    .pay-toggle { width: 100%; box-sizing: border-box; }
+    .acc-deal-hdr-listing { display: none; }
+    .acc-deal-hdr-ts { display: none; }
 
     /* Appeal cards */
     .appeal-actions { justify-content: flex-start; }
@@ -413,6 +420,8 @@
     .flag-card { padding: 12px 12px; }
     .mod-grid { grid-template-columns: 1fr; }
     .deal-card-icon { width: 36px; height: 36px; font-size: 16px; }
+    .pipeline-action-btn { font-size: 12px; padding: 9px 10px; }
+    .pipeline-stage { padding: 8px 10px; }
   }
 
   /* User Profile Modal */
@@ -1053,9 +1062,9 @@
       const hdr = document.createElement('div');
       hdr.style.cssText = 'display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;user-select:none;';
       hdr.innerHTML = `
-        <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;">ID: ${dealId}</span>
-        <span style="flex:1;font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
-        <span style="font-size:11px;color:var(--muted);white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="${escH(d.listing||'')}">${escH(d.listing||'—')}</span>
+        <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;white-space:nowrap;">ID: ${dealId}</span>
+        <span style="flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
+        <span class="acc-deal-hdr-listing" style="font-size:11px;color:var(--muted);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="${escH(d.listing||'')}">${escH(d.listing||'—')}</span>
         <span style="font-size:11px;font-weight:700;color:#34d399;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);white-space:nowrap;">● ${escH(stageLabel)}</span>
         <span style="color:var(--muted);font-size:16px;transition:transform 0.2s;" class="acc-chev">›</span>`;
       const bdy = document.createElement('div');
@@ -1072,7 +1081,8 @@
         if (chev) chev.style.transform = '';
       });
       hdr.appendChild(closeBtn);
-      hdr.addEventListener('click', () => {
+      hdr.addEventListener('click', (e) => {
+        if (e.target === closeBtn) return;
         const isOpen = bdy.style.display !== 'none';
         const chev = hdr.querySelector('.acc-chev');
         if (isOpen) {
@@ -1088,7 +1098,7 @@
           if (!bdy.innerHTML) renderDealCard(d, bdy, false);
         }
       });
-      bdy.addEventListener('click', e => e.stopPropagation());
+      // No stopPropagation — hdr listener is on hdr, not on parent
       // Restore open state — clear first to prevent duplicates
       if (_openDealIds.has(d.chatId)) {
         bdy.style.display = 'block';
@@ -1179,7 +1189,7 @@
       }
       stageEl.innerHTML = `
         <div class="pipeline-num">${isDone ? '✓' : (i + 1)}</div>
-        <div class="pipeline-body">
+        <div class="pipeline-body" style="min-width:0;overflow:hidden;">
           <div class="pipeline-title">${stage.icon} ${stage.label}</div>
           <div class="pipeline-sub">${stage.sub}</div>
           ${isActive && stage.gateType === 'payment' ? buildPaymentToggles(d, stage.key) : ''}
@@ -1995,7 +2005,12 @@ if (_sess) {
     RF.onDeals(deals => {
       const sorted = [...deals].sort((a,b) => (b.initiatedTs||0)-(a.initiatedTs||0));
       _deals = sorted;
-      deals.forEach(d => { if (d.chatId) _dealByChat[d.chatId] = d; });
+      deals.forEach(d => {
+        if (d.chatId) {
+          _dealByChat[d.chatId] = d;
+          _refreshDealCard(d.chatId, d);
+        }
+      });
     });
 
     // Appeals → write to rf_appeals localStorage

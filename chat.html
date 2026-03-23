@@ -1728,9 +1728,11 @@ Message: ${JSON.stringify(text)}`;
 
     const advanceDone   = deal?.stage_advance_received === true;
     const bothConfirmed = deal?.confirmedA && deal?.confirmedB;
+    // Hide if deal basics not met
     if (!bothConfirmed || !advanceDone) { btn.classList.remove('show'); return; }
-
-    // If meeting was reversed by admin, allow re-scheduling even if meeting object says confirmed
+    // Hide once deal_done is confirmed (no more scheduling needed)
+    if (deal?.stage_deal_done) { btn.classList.remove('show'); return; }
+    // Hide if meeting is confirmed and NOT reversed (meeting already done)
     if (meeting?.status === 'confirmed' && !deal?.meeting_reversed) { btn.classList.remove('show'); return; }
 
     const originalProposer = deal.initiatedBy;   // Party 1 always starts
