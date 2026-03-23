@@ -835,7 +835,15 @@
   const isModSlotJoined = chatId => !!getJoinSlots(chatId).mod;
 
   const saveBanned = b => { _banned = b; Object.entries(b).forEach(([uid, data]) => RF.banUser(uid, data).catch(e => console.warn('[RF]', e))); };
-  const saveDeals  = d => { _deals = Array.isArray(d) ? d : [d]; _deals.forEach(deal => { if (deal.chatId) RF.saveDeal(deal.chatId, deal).catch(e => console.warn('[RF]', e)); }); };
+  function saveDeals(d, changedChatId) {
+    _deals = Array.isArray(d) ? d : [d];
+    if (changedChatId) {
+      const changed = _deals.find(deal => deal.chatId === changedChatId);
+      if (changed) RF.saveDeal(changedChatId, changed).catch(e => console.warn('[RF]', e));
+    } else {
+      _deals.forEach(deal => { if (deal.chatId) RF.saveDeal(deal.chatId, deal).catch(e => console.warn('[RF]', e)); });
+    }
+  }
   const saveAppeals = a => { _appeals = Array.isArray(a) ? a : [a]; _appeals.forEach(appeal => RF.saveAppeal(appeal).catch(e => console.warn('[RF]', e))); };
   const saveModeActive = v => { _modsActive = v; Object.entries(v).forEach(([modId, active]) => RF.setModActive(modId, active).catch(e => console.warn('[RF]', e))); };
   const saveAssignments = v => { _assignments = v; Object.entries(v).forEach(([chatId, modId]) => RF.saveAssignment(chatId, modId).catch(e => console.warn('[RF]', e))); };
@@ -1321,8 +1329,7 @@
     const dA = deal[stageKey + '_days_A'] ?? 6;
     const dB = deal[stageKey + '_days_B'] ?? 6;
     deal[stageKey + '_days'] = Math.round((dA + dB) / 2);
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     _refreshDealCard(chatId, deal);
   }
 
@@ -1353,8 +1360,7 @@
     const field = `pay_${stageKey}_${party}`;
     deal[field] = !deal[field];
     deal[`${field}_ts`] = deal[field] ? Date.now() : null;
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     _refreshDealCard(chatId, deal);
   }
 
@@ -1400,8 +1406,7 @@
     deal.stage = newIdx >= 0 ? PIPELINE[newIdx].label : 'Initiated';
     postDealSystemMsg(chatId, `💳 ${label}: ${deal.userA}: ${daysA} day(s) rent · ${deal.userB}: ${daysB} day(s) rent. Use the Pay Now button in chat.`);
     const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast(`✓ ${label} confirmed — parties notified`, 'success');
     _refreshDealCard(chatId, deal);
   }
@@ -1428,8 +1433,7 @@
     deal.stage = newIdx >= 0 ? PIPELINE[newIdx].label : 'Initiated';
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
     const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast(`✓ ${label} stage completed`, 'success');
     _refreshDealCard(chatId, deal);
   }
@@ -1450,8 +1454,7 @@
     deal.stage = newIdx >= 0 ? PIPELINE[newIdx].label : 'Initiated';
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
     const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast(`✓ ${label} confirmed`, 'success');
     _refreshDealCard(chatId, deal);
   }
@@ -1474,8 +1477,7 @@
       const chat = _chatsIndex.find(c => c.chatId === chatId);
       if (chat) { chat.archived = true; chat.archivedTs = Date.now(); chat.dealComplete = true; }
     } catch {}
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast('🏆 Deal archived successfully', 'success');
     _removeDealAccordion(chatId);
   }
@@ -1505,8 +1507,7 @@
     if (!deal) { closeCancelDealConfirm(); return; }
     deal.stage = 'Cancelled'; deal.cancelledTs = Date.now();
     postDealSystemMsg(chatId, '❌ This deal has been cancelled by RenterFinder moderation.');
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     closeCancelDealConfirm();
     showToast('Deal cancelled', 'error');
     _removeDealAccordion(chatId);
@@ -1520,8 +1521,7 @@
     deal.cancelledTs = null;
     delete deal.stage_complete;
     postDealSystemMsg(chatId, '✅ This deal has been reinstated by RenterFinder moderation. Both parties may continue.');
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast('✓ Deal reinstated', 'success');
     _refreshDealCard(chatId, deal);
   }
@@ -1533,8 +1533,7 @@
     const el = document.getElementById(`notes-${chatId}`);
     if (!el) return;
     deal.notes = el.value;
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast('Notes saved ✓', 'success');
   }
 
@@ -1610,7 +1609,7 @@
     const didx = _deals.findIndex(x => x.chatId === chatId);
     if (didx !== -1) _deals[didx] = deal;
     const cleanDeal = JSON.parse(JSON.stringify(deal));
-    saveDeals(deals); syncDealToChat(chatId, cleanDeal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, cleanDeal);
     RF.updateChatMeta(chatId, { deal: cleanDeal }).catch(e => console.warn('[RF] reversal meta', e));
     postDealSystemMsg(chatId, `↩ "${last.label}" has been reversed by RenterFinder. Returning to this step.`);
     showToast(`↩ Reversed: ${last.label}`, 'success');
@@ -2118,7 +2117,20 @@ if (_sess) {
       const existing = {};
       _chatsIndex.forEach(c => { existing[c.chatId] = c; });
       // Store ALL chats in _chatsIndex; loadDashboard filters to assigned ones via myChats
-      _chatsIndex = chats.map(c => ({ ...existing[c.chatId], ...c }));
+      const merged = chats.map(c => ({ ...existing[c.chatId], ...c }));
+      // S7: Auto-reopen archived chats assigned to this mod when a new message arrives
+      const assignments = getAssignments();
+      merged.forEach(c => {
+        if (assignments[c.chatId] === MOD_ID &&
+            (c.archived || c.autoArchived || c.manualArchived) &&
+            c.lastTs && c.archivedTs && c.lastTs > c.archivedTs) {
+          c.archived = false; c.autoArchived = false; c.manualArchived = false;
+          RF.updateChatMeta(c.chatId, { archived: false, autoArchived: false, manualArchived: false })
+            .catch(e => console.warn('[RF] auto-reopen', e));
+          showToast(`📩 Archived chat has a new message — reopened`, 'success');
+        }
+      });
+      _chatsIndex = merged;
       _chatsIndex.forEach(c => {
         if (c.violations) _vioByChat[c.chatId]      = c.violations;
         if (c.deal)       _dealByChat[c.chatId]     = c.deal;
@@ -2164,11 +2176,13 @@ if (_sess) {
           _refreshDealCard(d.chatId, d);
         }
       });
+      loadDashboard();
     });
 
     // Appeals → write to rf_appeals localStorage
     RF.onAppeals(appeals => {
       _appeals = appeals;
+      loadDashboard();
     });
 
     // Banned → write to rf_banned_users localStorage
@@ -2197,6 +2211,20 @@ if (_sess) {
     });
   }
 
+  // S4: Mod presence heartbeat — write to modPresence/{MOD_ID} every 60s
+  function _startModPresenceHeartbeat() {
+    function beat() {
+      db.collection('modPresence').doc(MOD_ID).set({ ts: Date.now(), modId: MOD_ID }).catch(()=>{});
+    }
+    beat();
+    const timer = setInterval(beat, 60000);
+    window.addEventListener('beforeunload', () => {
+      clearInterval(timer);
+      db.collection('modPresence').doc(MOD_ID).delete().catch(()=>{});
+    });
+  }
+  _startModPresenceHeartbeat();
+
   // ── CONTACTS ─────────────────────────────────────────────────
 
   function filterContacts(filter) {
@@ -2210,6 +2238,7 @@ if (_sess) {
 
   function renderContactsList(contacts, container) {
     if (!container) return;
+    const SLA_MS = 24 * 60 * 60 * 1000; // 24 hours
     const filtered = _contactsFilter === 'all' ? contacts : contacts.filter(c => c.status === _contactsFilter);
     if (!filtered.length) {
       container.innerHTML = `<div class="empty-state"><div class="empty-icon">📩</div><h3>No ${_contactsFilter === 'all' ? '' : _contactsFilter + ' '}contacts yet</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Users can reach out to their moderator from the chat.</p></div>`;
@@ -2219,8 +2248,10 @@ if (_sess) {
     filtered.forEach(c => {
       const ts = c.ts ? new Date(c.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
       const isOpen = c.status === 'open';
+      // S9: SLA warning — open contact not replied in 24h
+      const isSlaBreached = isOpen && c.ts && (Date.now() - c.ts) > SLA_MS;
       const card = document.createElement('div');
-      card.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:12px;';
+      card.style.cssText = `background:var(--card);border:1px solid ${isSlaBreached ? 'rgba(239,68,68,0.35)' : 'var(--border)'};border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:12px;`;
       card.innerHTML = `
         <div style="display:flex;align-items:center;gap:12px;">
           <div style="flex:1;min-width:0;">
@@ -2228,10 +2259,11 @@ if (_sess) {
               <span style="font-size:13px;font-weight:700;color:var(--text);">${escH(c.userName)}</span>
               <span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:20px;padding:1px 8px;">${escH(c.userRole)}</span>
               <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;${isOpen?'background:rgba(251,146,60,0.15);color:#fb923c;border:1px solid rgba(251,146,60,0.3);':'background:rgba(16,185,129,0.12);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);'}">${isOpen?'Open':'✓ Answered'}</span>
+              ${isSlaBreached ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);">🔴 24h+ unanswered</span>' : ''}
             </div>
             <div style="font-size:12px;color:var(--muted);">${escH(c.subject)} · ${ts}</div>
           </div>
-          <button onclick="openContactThreadPopup(${c.id})" style="padding:7px 16px;border:1px solid rgba(99,102,241,0.4);border-radius:8px;background:rgba(99,102,241,0.1);color:#a5b4fc;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">💬 Thread</button>
+          <button onclick="openContactThreadPopup(${c.id})" style="padding:7px 16px;border:1px solid ${isSlaBreached ? 'rgba(239,68,68,0.4)' : 'rgba(99,102,241,0.4)'};border-radius:8px;background:${isSlaBreached ? 'rgba(239,68,68,0.1)' : 'rgba(99,102,241,0.1)'};color:${isSlaBreached ? '#fca5a5' : '#a5b4fc'};font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">💬 Reply${isSlaBreached ? ' ⚠' : ''}</button>
         </div>`;
       container.appendChild(card);
     });

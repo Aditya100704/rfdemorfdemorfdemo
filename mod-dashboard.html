@@ -719,7 +719,10 @@
 
     <!-- FLAGGED -->
     <div class="tab-panel" id="panel-flagged">
-      <div class="section-header"><div class="section-title">All Flagged Messages</div><div class="section-sub">Complete history of AI-blocked messages</div></div>
+      <div class="section-header">
+        <div><div class="section-title">All Flagged Messages</div><div class="section-sub">Complete history of AI-blocked messages</div></div>
+        <button id="bulk-dismiss-btn" onclick="bulkDismissFlags()" style="display:none;padding:7px 16px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid rgba(255,255,255,0.1);transition:all 0.2s;white-space:nowrap;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">✓ Dismiss All Pending</button>
+      </div>
       <div class="tab-search-bar">
         <div class="tab-search-wrap"><span class="search-icon">🔍</span><input class="tab-search-input" id="search-flagged" type="text" placeholder="Search by user name or chat ID…" oninput="filterFlagged()"></div>
         <span class="tab-search-count" id="search-flagged-count"></span>
@@ -1217,7 +1220,17 @@
   const isModSlotJoined = chatId => !!getJoinSlots(chatId).mod;
 
   const saveBanned = b => { _banned = b; Object.entries(b).forEach(([uid, data]) => RF.banUser(uid, data).catch(e => console.warn('[RF]', e))); };
-  const saveDeals  = d => { _deals = Array.isArray(d) ? d : [d]; _deals.forEach(deal => { if (deal.chatId) RF.saveDeal(deal.chatId, deal).catch(e => console.warn('[RF]', e)); }); };
+  // saveDeals(dealsArray, changedChatId?) — if changedChatId provided, only write that one deal to Firestore
+  function saveDeals(d, changedChatId) {
+    _deals = Array.isArray(d) ? d : [d];
+    if (changedChatId) {
+      const changed = _deals.find(deal => deal.chatId === changedChatId);
+      if (changed) RF.saveDeal(changedChatId, changed).catch(e => console.warn('[RF]', e));
+    } else {
+      // No hint — write all (rare, only on bulk operations)
+      _deals.forEach(deal => { if (deal.chatId) RF.saveDeal(deal.chatId, deal).catch(e => console.warn('[RF]', e)); });
+    }
+  }
   const saveAppeals = a => { _appeals = Array.isArray(a) ? a : [a]; _appeals.forEach(appeal => RF.saveAppeal(appeal).catch(e => console.warn('[RF]', e))); };
   const saveModeActive = v => { _modsActive = v; Object.entries(v).forEach(([modId, active]) => RF.setModActive(modId, active).catch(e => console.warn('[RF]', e))); };
   const saveAssignments = v => { _assignments = v; Object.entries(v).forEach(([chatId, modId]) => RF.saveAssignment(chatId, modId).catch(e => console.warn('[RF]', e))); };
@@ -1399,6 +1412,9 @@
   // ── FLAGGED LIST ─────────────────────────────────────────────
   function renderFlaggedList(entries, container, resolvedCount) {
     resolvedCount = resolvedCount || 0;
+    // S8: Show/hide bulk dismiss button based on pending count
+    const bulkBtn = document.getElementById('bulk-dismiss-btn');
+    if (bulkBtn) bulkBtn.style.display = entries.length ? '' : 'none';
     if (!entries.length) {
       const msg = resolvedCount
         ? `<div class="empty-state"><div class="empty-icon">✅</div><h3>All caught up</h3><p>${resolvedCount} flagged item${resolvedCount!==1?'s have':' has'} already been resolved.</p></div>`
@@ -1631,8 +1647,7 @@
     const dA = deal[stageKey + '_days_A'] ?? 6;
     const dB = deal[stageKey + '_days_B'] ?? 6;
     deal[stageKey + '_days'] = Math.round((dA + dB) / 2);
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     _refreshDealCard(chatId, deal);
   }
 
@@ -1711,8 +1726,7 @@
     const field = `pay_${stageKey}_${party}`;
     deal[field] = !deal[field];
     deal[`${field}_ts`] = deal[field] ? Date.now() : null;
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     _refreshDealCard(chatId, deal);
   }
 
@@ -1744,8 +1758,7 @@
     deal.stage = newIdx >= 0 ? PIPELINE[newIdx].label : 'Initiated';
     postDealSystemMsg(chatId, `💳 ${label} confirmed. Amount: ${deal.userA}: ${daysA} day(s) rent · ${deal.userB}: ${daysB} day(s) rent. Please use the Pay Now button in chat to complete payment.`);
     const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast(`✓ ${label} confirmed — both parties notified`, 'success');
     _refreshDealCard(chatId, deal);
   }
@@ -1767,7 +1780,7 @@
     const daysNote = deal[stageKey+'_days'] ? ` Amount: ${deal[stageKey+'_days']} day(s) rent.` : '';
     postDealSystemMsg(chatId, `✅ ${label} confirmed.${daysNote} Moving to next stage.`);
     const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
-    saveDeals(deals); syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast(`✓ ${label} stage completed`, 'success'); _refreshDealCard(chatId, deal);
   }
 
@@ -1783,7 +1796,7 @@
     deal.stage = newIdx >= 0 ? PIPELINE[newIdx].label : 'Initiated';
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
     const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
-    saveDeals(deals); syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast(`✓ ${label} confirmed`, 'success'); _refreshDealCard(chatId, deal);
   }
 
@@ -1808,8 +1821,7 @@
       const chat = _chatsIndex.find(c => c.chatId === chatId);
       if (chat) { chat.archived = true; chat.archivedTs = Date.now(); chat.dealComplete = true; }
     } catch {}
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast('🏆 Deal archived successfully', 'success');
     _removeDealAccordion(chatId);
   }
@@ -1916,8 +1928,7 @@
       ? `❌ Deal cancelled by RenterFinder. Reason: ${cancelNotes}`
       : '❌ This deal has been cancelled by RenterFinder moderation.';
     postDealSystemMsg(chatId, cancelMsg);
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     closeCancelDealConfirm();
     showToast('Deal cancelled', 'error');
     _removeDealAccordion(chatId);
@@ -1955,8 +1966,7 @@
     deal.cancelledTs = null;
     delete deal.stage_complete;
     postDealSystemMsg(chatId, '✅ This deal has been reinstated by RenterFinder moderation. Both parties may continue.');
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast('✓ Deal reinstated', 'success');
     _refreshDealCard(chatId, deal);
   }
@@ -1968,8 +1978,7 @@
     const el = document.getElementById(`notes-${chatId}`);
     if (!el) return;
     deal.notes = el.value;
-    saveDeals(deals);
-    syncDealToChat(chatId, deal);
+    saveDeals(deals, chatId); syncDealToChat(chatId, deal);
     showToast('Notes saved ✓', 'success');
   }
 
@@ -2282,6 +2291,7 @@
 
   function renderContactsList(contacts, container) {
     if (!container) return;
+    const SLA_MS = 24 * 60 * 60 * 1000; // 24 hours
     const filtered = _contactsFilter === 'all' ? contacts : contacts.filter(c => c.status === _contactsFilter);
     if (!filtered.length) {
       container.innerHTML = `<div class="empty-state"><div class="empty-icon">📩</div><h3>No ${_contactsFilter === 'all' ? '' : _contactsFilter + ' '}contacts yet</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">Users can reach out to their moderator from the chat.</p></div>`;
@@ -2291,18 +2301,21 @@
     filtered.forEach(c => {
       const ts = c.ts ? new Date(c.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
       const isOpen = c.status === 'open';
+      // S9: SLA warning — open contact not replied in 24h
+      const isSlaBreached = isOpen && c.ts && (Date.now() - c.ts) > SLA_MS;
       const card = document.createElement('div');
-      card.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px;';
+      card.style.cssText = `background:var(--card);border:1px solid ${isSlaBreached ? 'rgba(239,68,68,0.35)' : 'var(--border)'};border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px;`;
       card.innerHTML = `
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
             <span style="font-size:13px;font-weight:700;color:var(--text);">${escH(c.userName)}</span>
             <span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:20px;padding:1px 8px;">${escH(c.userRole)}</span>
             <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;${isOpen ? 'background:rgba(251,146,60,0.15);color:#fb923c;border:1px solid rgba(251,146,60,0.3);' : 'background:rgba(16,185,129,0.12);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);'}">${isOpen ? 'Open' : '✓ Answered'}</span>
+            ${isSlaBreached ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);">🔴 24h+ unanswered</span>' : ''}
           </div>
           <div style="font-size:12px;color:var(--muted);">${escH(c.subject)} · ${ts}</div>
         </div>
-        <button onclick="openContactThreadPopup(${c.id})" style="padding:7px 16px;border:1px solid rgba(99,102,241,0.4);border-radius:8px;background:rgba(99,102,241,0.1);color:#a5b4fc;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">💬 Thread</button>`;
+        <button onclick="openContactThreadPopup(${c.id})" style="padding:7px 16px;border:1px solid ${isSlaBreached ? 'rgba(239,68,68,0.4)' : 'rgba(99,102,241,0.4)'};border-radius:8px;background:${isSlaBreached ? 'rgba(239,68,68,0.1)' : 'rgba(99,102,241,0.1)'};color:${isSlaBreached ? '#fca5a5' : '#a5b4fc'};font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">💬 Reply${isSlaBreached ? ' ⚠' : ''}</button>`;
       container.appendChild(card);
     });
   }
@@ -2591,23 +2604,24 @@
     }
     container.innerHTML = '';
     pending.forEach(a => {
-      const initials = String(a.userName||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      const time     = new Date(a.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-      const card     = document.createElement('div');
-      card.className = 'appeal-card';
-      card.innerHTML = `
+      const initials  = String(a.userName||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const time      = new Date(a.ts).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      const isEndChat = a.appealType === 'end_chat';
+      const card      = document.createElement('div');
+      card.className  = 'appeal-card';
+      card.innerHTML  = `
         <div class="appeal-header">
-          <div class="appeal-avatar">${initials}</div>
+          <div class="appeal-avatar" ${isEndChat ? 'style="background:rgba(239,68,68,0.2);color:#fca5a5;"' : ''}>${initials}</div>
           <div class="flag-info">
             <div class="flag-who">${escH(a.userName)} <span style="color:var(--muted);font-weight:400;font-size:12px;">(${a.userRole})</span></div>
             <div class="flag-when">${escH(a.listing)} · ${time}</div>
           </div>
-          <span class="flag-count" style="background:rgba(124,58,237,0.15);color:#c4b5fd;border-color:rgba(124,58,237,0.3);">Pending Review</span>
+          <span class="flag-count" style="background:${isEndChat ? 'rgba(239,68,68,0.15);color:#fca5a5;border-color:rgba(239,68,68,0.3)' : 'rgba(124,58,237,0.15);color:#c4b5fd;border-color:rgba(124,58,237,0.3)'};">${isEndChat ? '⚠ End Chat Request' : 'Pending Review'}</span>
         </div>
-        <div class="appeal-msg-box"><div class="appeal-msg-label">User\'s Appeal</div><div class="appeal-msg-text">${escH(a.text)}</div></div>
+        <div class="appeal-msg-box"><div class="appeal-msg-label">${isEndChat ? 'Reason to End Chat' : 'User\'s Appeal'}</div><div class="appeal-msg-text">${escH(a.text)}</div></div>
         <div class="appeal-actions">
-          <button class="btn-deny" onclick="resolveAppeal(${a.id},'denied')">Deny</button>
-          <button class="btn-reinstate" onclick="resolveAppeal(${a.id},'reinstated')">✓ Reinstate Chat</button>
+          <button class="btn-deny" onclick="resolveAppeal(${a.id},'denied')">${isEndChat ? 'Keep Active' : 'Deny'}</button>
+          <button class="${isEndChat ? 'btn-ban' : 'btn-reinstate'}" onclick="resolveAppeal(${a.id},'${isEndChat ? 'end_chat_approved' : 'reinstated'}')">${isEndChat ? '✓ Approve End' : '✓ Reinstate Chat'}</button>
         </div>`;
       container.appendChild(card);
     });
@@ -2633,6 +2647,15 @@
         RF.saveViolations(a.chatId, vio).catch(e => console.warn("[RF] ban vio", e));
       } catch {}
       showToast('✓ Chat reinstated — violations cleared', 'success');
+    } else if (status === 'end_chat_approved') {
+      // Archive the chat — same as manual archive
+      RF.updateChatMeta(a.chatId, { archived: true, archivedTs: Date.now(), manualArchived: true })
+        .catch(e => console.warn('[RF] end_chat archive', e));
+      const chat = _chatsIndex.find(c => c.chatId === a.chatId);
+      if (chat) { chat.archived = true; chat.archivedTs = Date.now(); chat.manualArchived = true; }
+      // Notify both parties via system message
+      RF.postSystemMsg(a.chatId, `📁 This chat has been closed by RenterFinder moderation at the user's request.`).catch(()=>{});
+      showToast('✓ Chat ended and archived', 'success');
     } else {
       showToast('Appeal denied', '');
     }
@@ -2659,6 +2682,17 @@
   }
 
   function dismissFlag(logId) { updateLogEntry(logId, { status: 'dismissed', actorName: 'Admin', actorTs: Date.now() }); showToast('Flag dismissed', ''); loadDashboard(); }
+
+  // S8: Bulk dismiss all pending flags
+  function bulkDismissFlags() {
+    const pending = getModLog().filter(e => e.status === 'pending');
+    if (!pending.length) { showToast('No pending flags to dismiss.', ''); return; }
+    askConfirm(`Dismiss all ${pending.length} pending flag${pending.length !== 1 ? 's' : ''}?`, () => {
+      pending.forEach(e => updateLogEntry(e.id, { status: 'dismissed', actorName: 'Admin', actorTs: Date.now() }));
+      showToast(`✓ ${pending.length} flag${pending.length !== 1 ? 's' : ''} dismissed`, 'success');
+      loadDashboard();
+    }, 'Dismiss All');
+  }
 
   // ── JOIN CHAT ────────────────────────────────────────────────
   function joinChat(chatId) {
@@ -3443,6 +3477,18 @@ if (_sess) {
       const existing = {};
       _chatsIndex.forEach(c => { existing[c.chatId] = c; });
       const merged = chats.map(c => ({ ...existing[c.chatId], ...c }));
+
+      // S7: Auto-reopen archived chats when a new message arrives
+      // If a chat is archived and its lastTs is newer than its archivedTs, un-archive it
+      merged.forEach(c => {
+        if ((c.archived || c.autoArchived || c.manualArchived) && c.lastTs && c.archivedTs && c.lastTs > c.archivedTs) {
+          c.archived = false; c.autoArchived = false; c.manualArchived = false;
+          RF.updateChatMeta(c.chatId, { archived: false, autoArchived: false, manualArchived: false })
+            .catch(e => console.warn('[RF] auto-reopen', e));
+          showToast(`📩 Archived chat from ${c.userA || c.userB || 'user'} has a new message — reopened`, 'success');
+        }
+      });
+
       _chatsIndex = merged;
       chats.forEach(c => {
         if (c.violations) _vioByChat[c.chatId]      = c.violations;
@@ -3479,15 +3525,17 @@ if (_sess) {
       deals.forEach(d => {
         if (d.chatId) {
           _dealByChat[d.chatId] = d;
-          // If this deal's card is open, refresh it in-place immediately
           _refreshDealCard(d.chatId, d);
         }
       });
+      // Re-render counts, Needs Action tab, and deal lists
+      loadDashboard();
     });
 
     // Appeals → write to rf_appeals localStorage
     RF.onAppeals(appeals => {
       _appeals = appeals;
+      loadDashboard();
     });
 
     // Defaulters
@@ -3523,6 +3571,20 @@ if (_sess) {
 
   // Firestore real-time listeners are the authoritative source of truth.
   // syncDealToChat and postDealSystemMsg write to Firestore directly.
+
+  // S4: Mod presence heartbeat — write to modPresence/admin every 60s
+  function _startAdminPresenceHeartbeat() {
+    function beat() {
+      db.collection('modPresence').doc('admin').set({ ts: Date.now(), modId: 'admin' }).catch(()=>{});
+    }
+    beat();
+    const timer = setInterval(beat, 60000);
+    window.addEventListener('beforeunload', () => {
+      clearInterval(timer);
+      db.collection('modPresence').doc('admin').delete().catch(()=>{});
+    });
+  }
+  _startAdminPresenceHeartbeat();
 
 </script>
 </body>

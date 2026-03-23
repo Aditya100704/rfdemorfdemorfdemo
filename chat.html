@@ -393,6 +393,38 @@
   @media(min-width:3200px){
     #chat-wrap { zoom: 2.2; height: calc(100vh / 2.2); height: calc(100dvh / 2.2); }
   }
+
+  /* ── S3: Deal Stage Dropdown ────────────────────────────────── */
+  .deal-stage-dropdown{position:relative;display:none;flex-shrink:0;}
+  .deal-stage-dropdown.show{display:block;}
+  .deal-stage-trigger{padding:4px 10px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;transition:background 0.2s;}
+  .deal-stage-trigger:hover{background:rgba(16,185,129,0.22);}
+  .deal-stage-trigger .ds-chevron{font-size:8px;transition:transform 0.2s;}
+  .deal-stage-trigger.open .ds-chevron{transform:rotate(180deg);}
+  .deal-stage-panel{position:absolute;top:calc(100% + 6px);right:0;background:linear-gradient(160deg,#0d0d3a,#10103a);border:1px solid rgba(212,160,23,0.22);border-radius:14px;padding:12px 14px;width:230px;z-index:700;box-shadow:0 12px 40px rgba(0,0,0,0.55);display:none;animation:dropIn 0.18s ease;}
+  @keyframes dropIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+  .deal-stage-panel.open{display:block;}
+  .deal-stage-panel-title{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(212,160,23,0.15);}
+  .dsp-row{display:flex;align-items:center;gap:8px;padding:5px 0;}
+  .dsp-dot{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;}
+  .dsp-dot.done{background:rgba(16,185,129,0.2);color:#6ee7b7;border:1.5px solid rgba(16,185,129,0.45);}
+  .dsp-dot.active{background:rgba(212,160,23,0.18);color:var(--gold);border:1.5px solid rgba(212,160,23,0.5);}
+  .dsp-dot.locked{background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.08);}
+  .dsp-label{font-size:11px;flex:1;line-height:1.3;}
+  .dsp-label.done{color:#6ee7b7;}
+  .dsp-label.active{color:var(--gold);font-weight:700;}
+  .dsp-label.locked{color:rgba(255,255,255,0.3);}
+  .dsp-next-hint{font-size:10px;color:rgba(255,255,255,0.4);margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.05);line-height:1.4;}
+
+  /* ── S4: Mod Online Indicator ───────────────────────────────── */
+  .topbar-contact-btn.mod-online{background:rgba(16,185,129,0.14);border-color:rgba(16,185,129,0.4);color:#6ee7b7;}
+  .mod-online-dot{width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;margin-right:3px;vertical-align:middle;animation:pulse 2s infinite;}
+
+  /* ── S10: Deal Stage Notification Strip ─────────────────────── */
+  .deal-notif-strip{background:linear-gradient(135deg,rgba(212,160,23,0.14),rgba(212,160,23,0.07));border-bottom:1px solid rgba(212,160,23,0.22);padding:7px 18px;font-size:12px;font-weight:600;color:var(--gold-lt);display:none;align-items:center;gap:8px;flex-shrink:0;}
+  .deal-notif-strip.show{display:flex;}
+  .deal-notif-close{margin-left:auto;background:none;border:none;color:rgba(212,160,23,0.5);cursor:pointer;font-size:14px;padding:0;line-height:1;}
+  .deal-notif-close:hover{color:var(--gold);}
 </style>
 </head>
 <body>
@@ -430,6 +462,23 @@
   <button id="pay-now-btn" onclick="openPaymentGateway()" style="display:none;padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,#1d4ed8,#2563eb);border:none;color:#fff;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(37,99,235,0.4);">💳 Pay Now</button>
   <button class="topbar-calendar-btn" id="calendar-btn" onclick="openCalendarModal()">📅 Schedule</button>
   <button class="topbar-contact-btn" id="topbar-contact-btn" onclick="openContactMod()" title="Contact your moderator">🛡️ Contact Moderator</button>
+  <!-- S3: Deal stage dropdown — zero space when deal not active -->
+  <div class="deal-stage-dropdown" id="deal-stage-dropdown">
+    <button class="deal-stage-trigger" id="deal-stage-trigger" onclick="toggleDealStagePanel(event)">
+      📋 <span id="deal-stage-trigger-label">Stage</span> <span class="ds-chevron">▾</span>
+    </button>
+    <div class="deal-stage-panel" id="deal-stage-panel">
+      <div class="deal-stage-panel-title">🤝 Deal Progress</div>
+      <div id="deal-stage-rows"></div>
+      <div class="dsp-next-hint" id="deal-stage-next-hint"></div>
+    </div>
+  </div>
+</div>
+
+<!-- S10: Deal stage notification strip — above messages, zero height by default -->
+<div class="deal-notif-strip" id="deal-notif-strip">
+  <span id="deal-notif-text"></span>
+  <button class="deal-notif-close" onclick="document.getElementById('deal-notif-strip').classList.remove('show')">✕</button>
 </div>
 
 <div class="identity-bar">
@@ -795,7 +844,7 @@
       banner.style.display = 'flex';
       document.getElementById('msg-input').disabled = true;
       document.getElementById('send-btn').disabled = true;
-      setTimeout(() => { banner.style.display = 'none'; }, 5000);
+      // Banner stays permanently — explains why input is locked
     } else {
       banner.style.display = 'none';
     }
@@ -899,28 +948,44 @@
     sysEl.textContent = `Chat opened for: ${LISTING}`;
     container.appendChild(sysEl);
 
-    const dateSep = document.createElement('div');
-    dateSep.className = 'date-divider';
-    dateSep.textContent = 'Today';
-    container.appendChild(dateSep);
-
-    if (isModJoined()) {
-      const modJoinEl = document.createElement('div');
-      modJoinEl.className = 'sys-msg mod-sys';
-      modJoinEl.textContent = '🛡️ RenterFinder Moderator has joined this chat';
-      container.appendChild(modJoinEl);
-      const _mjBanner = document.getElementById('mod-joined-banner');
-      _mjBanner.classList.add('show');
-      setTimeout(() => _mjBanner.classList.remove('show'), 4000);
+    // ── S1: Real date separators ─────────────────────────────────
+    function _dateDividerLabel(ts) {
+      const d   = new Date(ts);
+      const now = new Date();
+      d.setHours(0,0,0,0); now.setHours(0,0,0,0);
+      const diff = (now - d) / 86400000;
+      if (diff === 0) return 'Today';
+      if (diff === 1) return 'Yesterday';
+      return new Date(ts).toLocaleDateString('en-IN', { day:'numeric', month:'short', year: diff > 365 ? 'numeric' : undefined });
     }
+    let _lastDateLabel = null;
 
     msgs.forEach((m, idx) => {
+      // Insert date separator when date changes
+      if (m.ts) {
+        const label = _dateDividerLabel(m.ts);
+        if (label !== _lastDateLabel) {
+          const sep = document.createElement('div');
+          sep.className = 'date-divider';
+          sep.textContent = label;
+          container.appendChild(sep);
+          _lastDateLabel = label;
+        }
+      }
       // #6: determine read receipt for this message
       const otherSide = m.senderIdentity === 'A' ? 'B' : 'A';
       const otherReadId = reads[otherSide];
       const isSeen = otherReadId && msgs.findIndex(x => x.id === otherReadId) >= idx;
       renderSingleMessage(m, container, isSeen);
     });
+
+    // If no messages yet, show Today divider as placeholder
+    if (!msgs.length) {
+      const sep = document.createElement('div');
+      sep.className = 'date-divider';
+      sep.textContent = 'Today';
+      container.appendChild(sep);
+    }
 
     if (currentIdentity !== 'MOD') {
       const myV = loadViolations()[currentIdentity] || 0;
@@ -1293,7 +1358,7 @@ Message: ${JSON.stringify(text)}`;
     // Merge everything into in-memory state
     _chatMeta = data;
     if (data.violations !== undefined) _violations = data.violations;
-    if (data.deal       !== undefined) { _deal    = data.deal;    updateDealBar();    checkDealCancelledBanner(); updatePayBtn(); updateCalendarBtn(); }
+    if (data.deal       !== undefined) { _deal    = data.deal;    updateDealBar();    checkDealCancelledBanner(); updatePayBtn(); updateCalendarBtn(); updateDealStageDropdown(); checkDealStageNotification(data.deal); }
     if (data.meeting    !== undefined) { _meeting = data.meeting; updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn(); }
     if (data.joinSlots  !== undefined) {
       const wasJoined = isModJoined();
@@ -1379,7 +1444,7 @@ Message: ${JSON.stringify(text)}`;
     }
     markRead();
     updateDealBar();
-    updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn();
+    updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn(); updateDealStageDropdown();
     checkWelcome();
     renderMessages();
   }
@@ -1514,9 +1579,12 @@ Message: ${JSON.stringify(text)}`;
   function rejectDeal() {
     const deal = loadDeal();
     if (!deal) { closeDealConfirm(); return; }
-    // Clear the other party's confirmation — reset to no deal
-    const otherIdentity = currentIdentity === 'A' ? 'B' : 'A';
-    deal[`confirmed${otherIdentity}`] = false;
+    // Reset BOTH confirmations so deal returns to neutral state
+    deal.confirmedA    = false;
+    deal.confirmedB    = false;
+    deal.initiatedBy   = null;
+    deal.initiatedTs   = null;
+    deal.stage         = 'Interested';
     saveDeal(deal);
     const msgs = loadMessages();
     msgs.push({ id: Date.now(), senderIdentity: 'SYS', senderId: 'system', senderName: 'System',
@@ -1692,6 +1760,175 @@ Message: ${JSON.stringify(text)}`;
     const deal = loadDeal();
     if (!deal) return;
     chatConfirm('Confirm the deal is done after your meeting? This will notify RenterFinder.', _doDealDone, 'Deal Done');
+  }
+
+  // ── S3: Deal Stage Dropdown ──────────────────────────────────
+  const _PIPELINE_LABELS = [
+    { key:'advance_select',   label:'Advance — Set Amount',   icon:'💳' },
+    { key:'advance_received', label:'Advance Payment Received',icon:'✅' },
+    { key:'meeting',          label:'Meeting Arrangement',    icon:'📅' },
+    { key:'deal_done',        label:'Deal Done Confirmation', icon:'🤝' },
+    { key:'final_select',     label:'Final Payment — Set Amount', icon:'💰' },
+    { key:'final_received',   label:'Final Payment Received', icon:'✅' },
+    { key:'complete',         label:'Complete',               icon:'🏆' },
+  ];
+
+  function toggleDealStagePanel(e) {
+    e.stopPropagation();
+    const panel   = document.getElementById('deal-stage-panel');
+    const trigger = document.getElementById('deal-stage-trigger');
+    const isOpen  = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    trigger.classList.toggle('open', !isOpen);
+    if (!isOpen) _renderDealStagePanel();
+  }
+
+  function _renderDealStagePanel() {
+    const deal = loadDeal();
+    const rows = document.getElementById('deal-stage-rows');
+    const hint = document.getElementById('deal-stage-next-hint');
+    if (!rows || !deal) return;
+    let activeLabel = '';
+    let nextHint = '';
+    rows.innerHTML = '';
+    let foundActive = false;
+    _PIPELINE_LABELS.forEach((s, i) => {
+      const isDone   = !!deal[`stage_${s.key}`];
+      const isActive = !foundActive && !isDone && (deal.confirmedA && deal.confirmedB);
+      if (isActive) { foundActive = true; activeLabel = s.label; }
+      const stateClass = isDone ? 'done' : isActive ? 'active' : 'locked';
+      const dotContent = isDone ? '✓' : (i + 1);
+      const row = document.createElement('div');
+      row.className = 'dsp-row';
+      row.innerHTML = `<div class="dsp-dot ${stateClass}">${dotContent}</div><div class="dsp-label ${stateClass}">${s.icon} ${s.label}</div>`;
+      rows.appendChild(row);
+    });
+    if (activeLabel) {
+      nextHint = `Next: ${activeLabel}`;
+    } else if (deal.stage_complete) {
+      nextHint = '🏆 Deal completed!';
+    } else if (!deal.confirmedA || !deal.confirmedB) {
+      nextHint = 'Awaiting both parties to confirm deal.';
+    }
+    hint.textContent = nextHint;
+  }
+
+  function updateDealStageDropdown() {
+    const dropdown = document.getElementById('deal-stage-dropdown');
+    const trigger  = document.getElementById('deal-stage-trigger-label');
+    if (!dropdown) return;
+    const deal = loadDeal();
+    if (!deal || !(deal.confirmedA && deal.confirmedB) || currentIdentity === 'MOD') {
+      dropdown.classList.remove('show');
+      return;
+    }
+    dropdown.classList.add('show');
+    // Find current active stage label for trigger text
+    let curLabel = 'Initiated';
+    for (let i = _PIPELINE_LABELS.length - 1; i >= 0; i--) {
+      if (deal[`stage_${_PIPELINE_LABELS[i].key}`]) {
+        curLabel = i < _PIPELINE_LABELS.length - 1
+          ? _PIPELINE_LABELS[i + 1].label
+          : 'Complete';
+        break;
+      }
+    }
+    if (trigger) trigger.textContent = curLabel.length > 18 ? curLabel.slice(0, 16) + '…' : curLabel;
+  }
+
+  // Close panel when clicking outside
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('deal-stage-panel');
+    const trigger = document.getElementById('deal-stage-trigger');
+    if (panel && panel.classList.contains('open') &&
+        !panel.contains(e.target) && e.target !== trigger && !trigger?.contains(e.target)) {
+      panel.classList.remove('open');
+      trigger?.classList.remove('open');
+    }
+  });
+
+  // ── S4: Mod Online Indicator ──────────────────────────────────
+  const _MOD_PRESENCE_TTL = 90000; // 90 seconds
+  let   _modPresenceUnsub  = null;
+  let   _modHeartbeatTimer = null;
+
+  function startModPresenceHeartbeat() {
+    // Only send heartbeat when we are the mod/admin in this chat
+    if (URL_ROLE !== 'mod' && URL_ROLE !== 'admin') return;
+    const modId = URL_MOD_ID || 'admin';
+    function beat() {
+      if (!_isLocal) {
+        db.collection('modPresence').doc(modId).set({ ts: Date.now(), modId }).catch(()=>{});
+      }
+    }
+    beat();
+    _modHeartbeatTimer = setInterval(beat, 60000);
+    window.addEventListener('beforeunload', () => {
+      clearInterval(_modHeartbeatTimer);
+      db.collection('modPresence').doc(modId).delete().catch(()=>{});
+    });
+  }
+
+  function watchModOnlineStatus() {
+    if (_isLocal) return;
+    // Get assignment for this chat, then watch that mod's presence
+    RF.getAssignment(CHAT_ID).then(modId => {
+      if (!modId) return;
+      _modPresenceUnsub = db.collection('modPresence').doc(modId)
+        .onSnapshot(snap => {
+          const btn = document.getElementById('topbar-contact-btn');
+          if (!btn) return;
+          if (snap.exists && (Date.now() - (snap.data().ts || 0)) < _MOD_PRESENCE_TTL) {
+            btn.classList.add('mod-online');
+            btn.title = 'Your moderator is online now';
+            // Add green dot if not already there
+            if (!btn.querySelector('.mod-online-dot')) {
+              const dot = document.createElement('span');
+              dot.className = 'mod-online-dot';
+              btn.prepend(dot);
+            }
+          } else {
+            btn.classList.remove('mod-online');
+            btn.title = 'Contact your moderator';
+            const dot = btn.querySelector('.mod-online-dot');
+            if (dot) dot.remove();
+          }
+        }, () => {});
+    }).catch(() => {});
+  }
+
+  // ── S10: Deal Stage Notification Strip ───────────────────────
+  let _lastNotifiedDealStage = null;
+
+  function checkDealStageNotification(deal) {
+    if (!deal || !(deal.confirmedA && deal.confirmedB) || currentIdentity === 'MOD') return;
+    // Find the latest completed stage
+    let latestStage = null;
+    for (let i = _PIPELINE_LABELS.length - 1; i >= 0; i--) {
+      if (deal[`stage_${_PIPELINE_LABELS[i].key}`]) { latestStage = _PIPELINE_LABELS[i].key; break; }
+    }
+    if (!latestStage || latestStage === _lastNotifiedDealStage) return;
+    _lastNotifiedDealStage = latestStage;
+    const stage = _PIPELINE_LABELS.find(s => s.key === latestStage);
+    if (!stage) return;
+    const strip = document.getElementById('deal-notif-strip');
+    const text  = document.getElementById('deal-notif-text');
+    if (!strip || !text) return;
+    // Message for each stage transition
+    const msgs = {
+      advance_select:   `💳 Payment amount set — check your Pay Now button`,
+      advance_received: `✅ Advance payment confirmed — schedule your meeting`,
+      meeting:          `📅 Meeting confirmed! Check the details above`,
+      deal_done:        `🤝 Deal done confirmed — final payment stage starting`,
+      final_select:     `💰 Final payment amount set — use the Pay Now button`,
+      final_received:   `✅ Final payment received — deal is closing`,
+      complete:         `🏆 Deal complete! Congratulations`,
+    };
+    text.textContent = msgs[latestStage] || `${stage.icon} ${stage.label} — deal progressing`;
+    strip.classList.add('show');
+    // Auto-hide after 8 seconds
+    clearTimeout(strip._hideTimer);
+    strip._hideTimer = setTimeout(() => strip.classList.remove('show'), 8000);
   }
   function _doDealDone() {
     const deal = loadDeal();
@@ -2078,10 +2315,14 @@ Message: ${JSON.stringify(text)}`;
   }
 
   function autoTickMeetingStage(meeting, deal) {
-    // Patch the deal in Firestore so the mod dashboard sees the meeting stage ticked
-    if (deal && deal.chatId) {
-      RF.saveDeal(deal.chatId, { ...deal, stage_meeting: true, stage_meeting_ts: Date.now(), meeting }).catch(e => console.warn('[RF] autoTick', e));
+    // Only auto-tick if meeting has NOT been reversed by a mod
+    // (meeting_reversed = true means mod reversed the step; new meeting was arranged)
+    if (!deal || !deal.chatId) return;
+    if (deal.meeting_reversed) {
+      // Clear the reversed flag now that parties confirmed a new meeting
+      deal.meeting_reversed = false;
     }
+    RF.saveDeal(deal.chatId, { ...deal, stage_meeting: true, stage_meeting_ts: Date.now(), meeting, meeting_reversed: false }).catch(e => console.warn('[RF] autoTick', e));
   }
 
   function dateKey(date) {
@@ -2112,9 +2353,11 @@ Message: ${JSON.stringify(text)}`;
     // UI will be populated by the Firebase onMessages + onChatMeta listeners above.
     // Call lightweight UI setup that doesn't depend on Firestore data.
     updateDealBar();
-    updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn();
+    updateCalendarBtn(); updatePayBtn(); updateDealDoneBtn(); updateDealStageDropdown();
     renderMessages();   // renders empty state initially; listeners will re-render with data
     checkWelcome();
+    startModPresenceHeartbeat();
+    watchModOnlineStatus();
 
     setTimeout(() => {
       const ls = document.getElementById('loading-screen');
