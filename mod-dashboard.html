@@ -3508,14 +3508,16 @@ if (_sess) {
       loadDashboard();
     });
 
-    // Assignments → write to rf_chat_assignments localStorage
+    // Assignments
     RF.onAssignments(map => {
       _assignments = map;
+      loadDashboard();
     });
 
-    // Modlog → write to rf_modlog localStorage
+    // Modlog — re-render flagged tab immediately when new flags arrive
     RF.onModLog(log => {
       _modLog = log;
+      loadDashboard();
     });
 
     // Deals → write to rf_deals localStorage + per-chat rf_deal_*

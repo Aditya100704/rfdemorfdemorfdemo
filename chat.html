@@ -242,8 +242,11 @@
   .deal-confirmed-tag{font-size:10px;font-weight:700;color:#6ee7b7;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:2px 8px;display:inline-block;width:fit-content;}
 
   /* Deal in-progress badge next to name */
-  .deal-topbar-badge{display:none;align-items:center;gap:4px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;color:#6ee7b7;letter-spacing:0.3px;white-space:nowrap;margin-top:3px;}
+  .deal-topbar-badge{display:none;align-items:center;gap:4px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;color:#6ee7b7;letter-spacing:0.3px;white-space:nowrap;margin-top:3px;position:relative;user-select:none;}
   .deal-topbar-badge.show{display:inline-flex;}
+  .deal-topbar-badge:hover{background:rgba(16,185,129,0.22);}
+  /* Panel anchors to badge when embedded inside it */
+  .deal-topbar-badge .deal-stage-panel{top:calc(100% + 6px);left:0;right:auto;min-width:230px;}
   @media(max-width:768px){.deal-topbar-badge{font-size:9px;padding:1px 6px;}}
 
   /* Cooldown indicator */
@@ -394,14 +397,8 @@
     #chat-wrap { zoom: 2.2; height: calc(100vh / 2.2); height: calc(100dvh / 2.2); }
   }
 
-  /* ── S3: Deal Stage Dropdown ────────────────────────────────── */
-  .deal-stage-dropdown{position:relative;display:none;flex-shrink:0;}
-  .deal-stage-dropdown.show{display:block;}
-  .deal-stage-trigger{padding:4px 10px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;transition:background 0.2s;}
-  .deal-stage-trigger:hover{background:rgba(16,185,129,0.22);}
-  .deal-stage-trigger .ds-chevron{font-size:8px;transition:transform 0.2s;}
-  .deal-stage-trigger.open .ds-chevron{transform:rotate(180deg);}
-  .deal-stage-panel{position:absolute;top:calc(100% + 6px);right:0;background:linear-gradient(160deg,#0d0d3a,#10103a);border:1px solid rgba(212,160,23,0.22);border-radius:14px;padding:12px 14px;width:230px;z-index:700;box-shadow:0 12px 40px rgba(0,0,0,0.55);display:none;animation:dropIn 0.18s ease;}
+  /* ── S3: Deal Stage Panel (embedded in Deal In Progress badge) ─ */
+  .deal-stage-panel{position:absolute;top:calc(100% + 6px);left:0;background:linear-gradient(160deg,#0d0d3a,#10103a);border:1px solid rgba(212,160,23,0.22);border-radius:14px;padding:12px 14px;width:230px;z-index:700;box-shadow:0 12px 40px rgba(0,0,0,0.55);display:none;animation:dropIn 0.18s ease;}
   @keyframes dropIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
   .deal-stage-panel.open{display:block;}
   .deal-stage-panel-title{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(212,160,23,0.15);}
@@ -442,7 +439,15 @@
   <div class="topbar-info">
     <div class="topbar-name" id="other-name">Loading…</div>
     <div class="topbar-sub" id="chat-context">RenterFinder Chat</div>
-    <div class="deal-topbar-badge" id="deal-topbar-badge">🤝 Deal In Progress</div>
+    <!-- Deal In Progress badge — doubles as stage dropdown trigger when deal is active -->
+    <div class="deal-topbar-badge" id="deal-topbar-badge" onclick="toggleDealStagePanel(event)" style="cursor:pointer;" title="View deal progress">
+      🤝 Deal In Progress <span class="ds-chevron" style="font-size:8px;margin-left:2px;">▾</span>
+      <div class="deal-stage-panel" id="deal-stage-panel" style="top:calc(100% + 6px);left:0;right:auto;">
+        <div class="deal-stage-panel-title">🤝 Deal Progress</div>
+        <div id="deal-stage-rows"></div>
+        <div class="dsp-next-hint" id="deal-stage-next-hint"></div>
+      </div>
+    </div>
   </div>
   <!-- Deal button lives in topbar — no extra bar needed -->
   <div class="topbar-deal-wrap" id="topbar-deal-wrap">
@@ -462,17 +467,6 @@
   <button id="pay-now-btn" onclick="openPaymentGateway()" style="display:none;padding:5px 12px;border-radius:20px;background:linear-gradient(135deg,#1d4ed8,#2563eb);border:none;color:#fff;font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(37,99,235,0.4);">💳 Pay Now</button>
   <button class="topbar-calendar-btn" id="calendar-btn" onclick="openCalendarModal()">📅 Schedule</button>
   <button class="topbar-contact-btn" id="topbar-contact-btn" onclick="openContactMod()" title="Contact your moderator">🛡️ Contact Moderator</button>
-  <!-- S3: Deal stage dropdown — zero space when deal not active -->
-  <div class="deal-stage-dropdown" id="deal-stage-dropdown">
-    <button class="deal-stage-trigger" id="deal-stage-trigger" onclick="toggleDealStagePanel(event)">
-      📋 <span id="deal-stage-trigger-label">Stage</span> <span class="ds-chevron">▾</span>
-    </button>
-    <div class="deal-stage-panel" id="deal-stage-panel">
-      <div class="deal-stage-panel-title">🤝 Deal Progress</div>
-      <div id="deal-stage-rows"></div>
-      <div class="dsp-next-hint" id="deal-stage-next-hint"></div>
-    </div>
-  </div>
 </div>
 
 <!-- S10: Deal stage notification strip — above messages, zero height by default -->
@@ -490,12 +484,12 @@
   </div>
 </div>
 
-<div class="mod-joined-banner" id="mod-joined-banner">🛡️ <strong style="margin-right:4px;" id="mod-joined-name">RenterFinder Moderator</strong> has joined this chat.</div>
-<div class="expiry-banner" id="expiry-banner">⏳ <span id="expiry-text"></span></div>
-<div class="expiry-banner" id="deal-cancelled-banner" style="background:#fff1f2;border-bottom-color:#fecdd3;display:none;">❌ <span id="deal-cancelled-text">This deal has been cancelled by RenterFinder moderation.</span></div>
+<div class="mod-joined-banner" id="mod-joined-banner">🛡️ <strong style="margin-right:4px;" id="mod-joined-name">RenterFinder Moderator</strong> has joined this chat.<button onclick="this.closest('[id]').classList.remove('show')" style="margin-left:auto;background:none;border:none;color:rgba(167,139,250,0.6);font-size:15px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;" title="Dismiss">✕</button></div>
+<div class="expiry-banner" id="expiry-banner">⏳ <span id="expiry-text"></span><button onclick="this.closest('[id]').classList.remove('show')" style="margin-left:auto;background:none;border:none;color:rgba(154,58,18,0.5);font-size:15px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;" title="Dismiss">✕</button></div>
+<div class="expiry-banner" id="deal-cancelled-banner" style="background:#fff1f2;border-bottom-color:#fecdd3;display:none;">❌ <span id="deal-cancelled-text">This deal has been cancelled by RenterFinder moderation.</span><button onclick="this.parentElement.style.display='none'" style="margin-left:auto;background:none;border:none;color:rgba(220,38,38,0.5);font-size:15px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;" title="Dismiss">✕</button></div>
 <div class="chat-messages" id="chat-messages"></div>
 
-<div class="violation-banner" id="violation-banner"><span>⚠️</span><span id="violation-text"></span></div>
+<div class="violation-banner" id="violation-banner"><span>⚠️</span><span id="violation-text"></span><button onclick="this.closest('[id]').classList.remove('show')" style="margin-left:auto;background:none;border:none;color:rgba(146,64,14,0.5);font-size:15px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;" title="Dismiss">✕</button></div>
 <div class="blocked-overlay" id="blocked-overlay">
   <strong>🚫 This chat has been suspended</strong>
   <span>You have exceeded the maximum number of policy violations.</span>
@@ -1373,6 +1367,7 @@ Message: ${JSON.stringify(text)}`;
       }
     }
     checkExpiry();
+    checkArchivedState();
     renderMessages();
   });
 
@@ -1775,11 +1770,14 @@ Message: ${JSON.stringify(text)}`;
 
   function toggleDealStagePanel(e) {
     e.stopPropagation();
-    const panel   = document.getElementById('deal-stage-panel');
-    const trigger = document.getElementById('deal-stage-trigger');
-    const isOpen  = panel.classList.contains('open');
-    panel.classList.toggle('open', !isOpen);
-    trigger.classList.toggle('open', !isOpen);
+    const panel  = document.getElementById('deal-stage-panel');
+    const badge  = document.getElementById('deal-topbar-badge');
+    const isOpen = panel && panel.classList.contains('open');
+    if (panel) panel.classList.toggle('open', !isOpen);
+    if (badge) {
+      const chev = badge.querySelector('.ds-chevron');
+      if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+    }
     if (!isOpen) _renderDealStagePanel();
   }
 
@@ -1810,40 +1808,32 @@ Message: ${JSON.stringify(text)}`;
     } else if (!deal.confirmedA || !deal.confirmedB) {
       nextHint = 'Awaiting both parties to confirm deal.';
     }
-    hint.textContent = nextHint;
+    if (hint) hint.textContent = nextHint;
   }
 
   function updateDealStageDropdown() {
-    const dropdown = document.getElementById('deal-stage-dropdown');
-    const trigger  = document.getElementById('deal-stage-trigger-label');
-    if (!dropdown) return;
+    const badge = document.getElementById('deal-topbar-badge');
+    if (!badge) return;
     const deal = loadDeal();
+    // Badge is already shown/hidden by updateDealBar — just ensure
+    // the panel closes if the deal is no longer active
     if (!deal || !(deal.confirmedA && deal.confirmedB) || currentIdentity === 'MOD') {
-      dropdown.classList.remove('show');
-      return;
+      const panel = document.getElementById('deal-stage-panel');
+      if (panel) panel.classList.remove('open');
+      const chev = badge.querySelector('.ds-chevron');
+      if (chev) chev.style.transform = '';
     }
-    dropdown.classList.add('show');
-    // Find current active stage label for trigger text
-    let curLabel = 'Initiated';
-    for (let i = _PIPELINE_LABELS.length - 1; i >= 0; i--) {
-      if (deal[`stage_${_PIPELINE_LABELS[i].key}`]) {
-        curLabel = i < _PIPELINE_LABELS.length - 1
-          ? _PIPELINE_LABELS[i + 1].label
-          : 'Complete';
-        break;
-      }
-    }
-    if (trigger) trigger.textContent = curLabel.length > 18 ? curLabel.slice(0, 16) + '…' : curLabel;
   }
 
   // Close panel when clicking outside
   document.addEventListener('click', (e) => {
     const panel = document.getElementById('deal-stage-panel');
-    const trigger = document.getElementById('deal-stage-trigger');
+    const badge = document.getElementById('deal-topbar-badge');
     if (panel && panel.classList.contains('open') &&
-        !panel.contains(e.target) && e.target !== trigger && !trigger?.contains(e.target)) {
+        !badge?.contains(e.target)) {
       panel.classList.remove('open');
-      trigger?.classList.remove('open');
+      const chev = badge?.querySelector('.ds-chevron');
+      if (chev) chev.style.transform = '';
     }
   });
 
