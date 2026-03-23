@@ -269,6 +269,14 @@
   .pipeline-action-btn.gold:hover{background:rgba(212,160,23,0.2);}
   .pipeline-done-tag{font-size:11px;font-weight:700;color:#6ee7b7;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:20px;padding:3px 10px;flex-shrink:0;}
 
+  /* Deal sub-tabs */
+  .deal-subtabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:0;}
+  .deal-subtab{padding:9px 18px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--muted);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px;margin-bottom:-1px;}
+  .deal-subtab:hover{color:var(--text);}
+  .deal-subtab.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .deal-subtab-count{background:rgba(239,68,68,0.2);color:#fca5a5;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700;}
+  .deal-subtab.active .deal-subtab-count{background:rgba(212,160,23,0.2);color:var(--gold-lt);}
+
   /* Archived tab */
   .archived-card{background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px 22px;display:flex;flex-direction:column;gap:14px;opacity:0.85;}
   .archived-card:hover{opacity:1;}
@@ -392,13 +400,16 @@
     .section-title { font-size: 14px; }
 
     /* Pipeline — stack action button below body on mobile */
-    .pipeline-stage { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
+    .pipeline-stage { padding: 10px 12px; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
     .pipeline-title { font-size: 12px; }
     .pipeline-sub { font-size: 10px; }
-    .pipeline-body { min-width: 0; width: calc(100% - 40px); }
-    .pipeline-action-btn { width: 100%; text-align: center; padding: 10px 12px; font-size: 13px; margin-top: 6px; }
-    .pipeline-done-tag { font-size: 10px; }
-    .pipeline-num { flex-shrink: 0; }
+    .pipeline-num { flex-shrink: 0; margin-top: 2px; }
+    .pipeline-body { min-width: 0; flex: 1; width: 0; }
+    .pipeline-action-btn { width: 100%; text-align: center; padding: 10px 12px; font-size: 13px; margin-top: 4px; flex-shrink: 0; box-sizing: border-box; }
+    .pipeline-done-tag { font-size: 10px; margin-top: 2px; }
+    .pipeline-stage > .pipeline-action-btn,
+    .pipeline-stage > .pipeline-done-tag,
+    .pipeline-stage > span { order: 3; flex-basis: 100%; margin-left: 36px; }
     /* Payment toggles: stack vertically */
     .payment-toggles { flex-direction: column; }
     .pay-toggle { width: 100%; box-sizing: border-box; }
@@ -719,11 +730,34 @@
     <!-- DEAL TRACKER -->
     <div class="tab-panel" id="panel-deals">
       <div class="section-header"><div class="section-title">Deal Tracker</div><div class="section-sub">All deals initiated through the platform</div></div>
-      <div class="tab-search-bar">
-        <div class="tab-search-wrap"><span class="search-icon">🔍</span><input class="tab-search-input" id="search-deals" type="text" placeholder="Search by user name, listing or chat ID…" oninput="filterDeals()"></div>
-        <span class="tab-search-count" id="search-deals-count"></span>
+      <!-- Deal sub-tabs -->
+      <div class="deal-subtabs" id="deal-subtabs">
+        <button class="deal-subtab active" data-subtab="needs-action" onclick="switchDealSubtab('needs-action')">
+          🔔 Needs Action <span class="deal-subtab-count" id="deal-subtab-count-needs">0</span>
+        </button>
+        <button class="deal-subtab" data-subtab="all-deals" onclick="switchDealSubtab('all-deals')">
+          📋 All Deals <span class="deal-subtab-count" id="deal-subtab-count-all">0</span>
+        </button>
       </div>
-      <div id="deals-list"></div>
+      <!-- Needs Action panel -->
+      <div id="deal-subpanel-needs-action">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5;">
+          Deals where the next step requires your action — payment amounts to set, payments to confirm, or steps to proceed.
+        </div>
+        <div class="tab-search-bar">
+          <div class="tab-search-wrap"><span class="search-icon">🔍</span><input class="tab-search-input" id="search-deals-needs" type="text" placeholder="Search…" oninput="filterDealsNeeds()"></div>
+          <span class="tab-search-count" id="search-deals-needs-count"></span>
+        </div>
+        <div id="deals-list-needs"></div>
+      </div>
+      <!-- All Deals panel -->
+      <div id="deal-subpanel-all-deals" style="display:none;">
+        <div class="tab-search-bar">
+          <div class="tab-search-wrap"><span class="search-icon">🔍</span><input class="tab-search-input" id="search-deals" type="text" placeholder="Search by user name, listing or chat ID…" oninput="filterDeals()"></div>
+          <span class="tab-search-count" id="search-deals-count"></span>
+        </div>
+        <div id="deals-list"></div>
+      </div>
     </div>
 
     <!-- APPEALS -->
@@ -914,7 +948,7 @@
     <p id="ask-confirm-msg" style="font-size:13px;color:var(--muted);line-height:1.6;"></p>
     <div class="confirm-btns" style="justify-content:flex-end;">
       <button class="confirm-no" onclick="closeAskConfirm()">Cancel</button>
-      <button class="confirm-yes" id="ask-confirm-yes" style="background:rgba(16,185,129,0.2);color:#6ee7b7;border:1px solid rgba(16,185,129,0.4);" onclick="closeAskConfirm();_askConfirmCb&&_askConfirmCb()">Confirm</button>
+      <button class="confirm-yes" id="ask-confirm-yes" style="background:rgba(16,185,129,0.2);color:#6ee7b7;border:1px solid rgba(16,185,129,0.4);" onclick="doAskConfirm()">Confirm</button>
     </div>
   </div>
 </div>
@@ -1278,6 +1312,7 @@
     document.getElementById('chat-count-sub').textContent = `${chats.length} active · ${allChats.length} total`;
     renderFlaggedList(modLog.filter(e => e.status === 'pending'), document.getElementById('flagged-list'), modLog.filter(e => e.status !== 'pending').length);
     renderDealsList(getDeals(), document.getElementById('deals-list'));
+    renderDealNeedsAction(getDeals(), document.getElementById('deals-list-needs'));
     renderAppealsList(appeals, document.getElementById('appeals-list'));
     renderUsersTable(allChats, modLog, getBanned());
     const _acl = document.getElementById('archived-chats-list'); if (_acl) renderArchivedChats(_acl);
@@ -1451,72 +1486,7 @@
       container.innerHTML = `<div class="empty-state" style="text-align:center;padding:40px;"><div class="empty-icon">🎉</div><h3>No active deals</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">All deals are in the Archived tab.</p></div>`;
       return;
     }
-    active.forEach(d => {
-      const stageLabel = d.stage || 'Initiated';
-      const ts = d.initiatedTs ? fmtTs(d.initiatedTs) : '—';
-      const dealId = String(d.chatId).slice(-8).toUpperCase();
-      const acc = document.createElement('div');
-      acc.style.cssText = 'background:var(--card);border:1px solid rgba(16,185,129,0.25);border-radius:12px;margin-bottom:10px;overflow:hidden;';
-      const hdr = document.createElement('div');
-      hdr.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none;';
-      hdr.innerHTML = `
-        <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;white-space:nowrap;">ID: ${dealId}</span>
-        <span style="flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
-        <span class="acc-deal-hdr-listing" style="font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escH(d.listing||'')}">${escH(d.listing||'—')}</span>
-        <span style="font-size:11px;font-weight:700;color:#34d399;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);white-space:nowrap;flex-shrink:0;">● ${escH(stageLabel)}</span>
-        <span class="acc-deal-hdr-ts" style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;">${ts}</span>
-        <span style="color:var(--muted);font-size:16px;transition:transform 0.2s;flex-shrink:0;" class="acc-chev">›</span>`;
-      const bdy = document.createElement('div');
-      bdy.id = safeId(d.chatId);
-      bdy.style.cssText = 'display:none;padding:0 18px 18px;border-top:1px solid rgba(16,185,129,0.15);';
-      // Add close button inside header (right side)
-      const closeBtn = document.createElement('button');
-      closeBtn.innerHTML = '✕';
-      closeBtn.title = 'Close';
-      closeBtn.style.cssText = 'display:none;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 4px;margin-left:4px;line-height:1;flex-shrink:0;';
-      closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        bdy.style.display = 'none';
-        closeBtn.style.display = 'none';
-        const chev = hdr.querySelector('.acc-chev');
-        if (chev) chev.style.transform = '';
-        _openDealIds.delete(d.chatId);
-      });
-      hdr.appendChild(closeBtn);
-
-      // Header click — toggles open/close; clicks inside bdy don't propagate here
-      hdr.addEventListener('click', (e) => {
-        // Only toggle if click is directly on header or its non-button children (not close button)
-        if (e.target === closeBtn) return;
-        const isOpen = bdy.style.display !== 'none';
-        const chev = hdr.querySelector('.acc-chev');
-        if (isOpen) {
-          bdy.style.display = 'none';
-          closeBtn.style.display = 'none';
-          if (chev) chev.style.transform = '';
-          _openDealIds.delete(d.chatId);
-        } else {
-          bdy.style.display = 'block';
-          closeBtn.style.display = 'inline';
-          if (chev) chev.style.transform = 'rotate(90deg)';
-          _openDealIds.add(d.chatId);
-          if (!bdy.innerHTML) renderDealCard(d, bdy, false);
-        }
-      });
-      // No stopPropagation needed — hdr listener is on hdr element, not parent acc
-      // Restore open state — always clear first to prevent duplicate content
-      if (_openDealIds.has(d.chatId)) {
-        bdy.style.display = 'block';
-        closeBtn.style.display = 'inline';
-        const chev = hdr.querySelector('.acc-chev');
-        if (chev) chev.style.transform = 'rotate(90deg)';
-        bdy.innerHTML = '';
-        renderDealCard(d, bdy, false);
-      }
-      acc.appendChild(hdr);
-      acc.appendChild(bdy);
-      container.appendChild(acc);
-    });
+    active.forEach(d => _renderDealAccordion(d, container, 'all'));
   }
 
   function renderDealCard(d, container, isArchived) {
@@ -1673,30 +1643,41 @@
 
   function _removeDealAccordion(chatId) {
     _openDealIds.delete(chatId);
-    // Remove this deal's accordion from the DOM, then do a lightweight stats update
-    const activeBody = document.getElementById(safeId(chatId));
-    if (activeBody) {
-      // Walk up to the <details> element and remove it
-      let el = activeBody;
-      while (el && el.tagName !== 'DETAILS') el = el.parentElement;
-      if (el) el.remove();
-    }
+    // Remove from both lists (all-deals + needs-action) by walking up from body div
+    ['deals-list', 'deals-list-needs'].forEach(listId => {
+      const bodyId = listId === 'deals-list-needs' ? safeId(chatId) + '-n' : safeId(chatId);
+      const bodyEl = document.getElementById(bodyId);
+      if (bodyEl) {
+        let el = bodyEl;
+        while (el && el.parentElement && el.parentElement.id !== listId) el = el.parentElement;
+        if (el && el.parentElement) el.remove();
+      }
+    });
     // Update tab counts and stat cards without full re-render
     const activeDeals = getDeals().filter(d => d.stage !== 'Cancelled' && !d.stage_complete).length;
     const el2 = document.getElementById('stat-deals'); if (el2) el2.textContent = activeDeals;
     const te  = document.getElementById('tab-deals-count'); if (te) te.textContent = activeDeals;
-    // Re-render deals list and archived deals to reflect the change
+    // Re-render both deals lists and archived to reflect the change
     const dealsList = document.getElementById('deals-list');
     if (dealsList) renderDealsList(getDeals(), dealsList);
+    const needsList = document.getElementById('deals-list-needs');
+    if (needsList) renderDealNeedsAction(getDeals(), needsList);
     const archList = document.getElementById('archived-deals-list');
     if (archList) renderArchivedDeals(archList);
   }
 
   function _refreshDealCard(chatId, deal) {
+    // Refresh body in all-deals list
     const bodyEl = document.getElementById(safeId(chatId));
     if (bodyEl && bodyEl.style.display !== 'none') {
       bodyEl.innerHTML = '';
       renderDealCard(deal, bodyEl, false);
+    }
+    // Refresh body in needs-action list
+    const needsEl = document.getElementById(safeId(chatId) + '-n');
+    if (needsEl && needsEl.style.display !== 'none') {
+      needsEl.innerHTML = '';
+      renderDealCard(deal, needsEl, false);
     }
     const activeDeals = getDeals().filter(d => d.stage !== 'Cancelled' && !d.stage_complete).length;
     const el = document.getElementById('stat-deals'); if (el) el.textContent = activeDeals;
@@ -1748,11 +1729,21 @@
     const amtNote = daysA === daysB
       ? `${daysA} day(s) rent each`
       : `${daysA} day(s) rent (${deal.userA}), ${daysB} day(s) rent (${deal.userB})`;
-    askConfirm(`${amtNote}`, () => _doSelectStage(chatId, stageKey, daysA, daysB, amtNote, label), 'Confirm Payment Amounts'); return;
+    askConfirm(`${amtNote}`, () => _doSelectStage(chatId, stageKey, daysA, daysB, amtNote, label), 'Confirm Payment Amounts');
+  }
+
+  function _doSelectStage(chatId, stageKey, daysA, daysB, amtNote, label) {
+    const deals = getDeals();
+    const deal  = deals.find(d => d.chatId === chatId);
+    if (!deal) return;
     deal[`stage_${stageKey}`]    = true;
     deal[`stage_${stageKey}_ts`] = Date.now();
     deal.lastActionTs = Date.now();
+    // Update stage label so accordion header stays accurate
+    const newIdx = (() => { let idx = -1; for (let i = 0; i < PIPELINE.length; i++) { if (deal[`stage_${PIPELINE[i].key}`]) idx = i; } return idx; })();
+    deal.stage = newIdx >= 0 ? PIPELINE[newIdx].label : 'Initiated';
     postDealSystemMsg(chatId, `💳 ${label} confirmed. Amount: ${deal.userA}: ${daysA} day(s) rent · ${deal.userB}: ${daysB} day(s) rent. Please use the Pay Now button in chat to complete payment.`);
+    const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
     saveDeals(deals);
     syncDealToChat(chatId, deal);
     showToast(`✓ ${label} confirmed — both parties notified`, 'success');
@@ -1770,6 +1761,9 @@
   function _doPaymentStage(chatId, stageKey, label) {
     const deals = getDeals(); const deal = deals.find(d => d.chatId === chatId); if (!deal) return;
     deal[`stage_${stageKey}`] = true; deal[`stage_${stageKey}_ts`] = Date.now(); deal.lastActionTs = Date.now();
+    // Update stage label so accordion header stays accurate
+    const newIdx = (() => { let idx = -1; for (let i = 0; i < PIPELINE.length; i++) { if (deal[`stage_${PIPELINE[i].key}`]) idx = i; } return idx; })();
+    deal.stage = newIdx >= 0 ? PIPELINE[newIdx].label : 'Initiated';
     const daysNote = deal[stageKey+'_days'] ? ` Amount: ${deal[stageKey+'_days']} day(s) rent.` : '';
     postDealSystemMsg(chatId, `✅ ${label} confirmed.${daysNote} Moving to next stage.`);
     const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
@@ -1784,6 +1778,9 @@
   function _doActionStage(chatId, stageKey, label) {
     const deals = getDeals(); const deal = deals.find(d => d.chatId === chatId); if (!deal) return;
     deal[`stage_${stageKey}`] = true; deal[`stage_${stageKey}_ts`] = Date.now(); deal.lastActionTs = Date.now();
+    // Update stage label so accordion header stays accurate
+    const newIdx = (() => { let idx = -1; for (let i = 0; i < PIPELINE.length; i++) { if (deal[`stage_${PIPELINE[i].key}`]) idx = i; } return idx; })();
+    deal.stage = newIdx >= 0 ? PIPELINE[newIdx].label : 'Initiated';
     postDealSystemMsg(chatId, `✅ ${label} confirmed by RenterFinder. Moving to next stage.`);
     const di = _deals.findIndex(x => x.chatId === chatId); if (di !== -1) _deals[di] = deal;
     saveDeals(deals); syncDealToChat(chatId, deal);
@@ -1832,47 +1829,60 @@
     askConfirm(`Reverse "${stage.label}"? The deal returns to this step.`, () => _doReverseStep(chatId, deals, deal, stage, lastDoneIdx), 'Reverse Step');
   }
   function _doReverseStep(chatId, deals, deal, stage, lastDoneIdx) {
+    // Always re-fetch deal fresh from _deals to avoid stale-closure bugs
+    deal = _deals.find(d => d.chatId === chatId) || deal;
+
     delete deal[`stage_${stage.key}`];
     delete deal[`stage_${stage.key}_ts`];
+
+    // Clear payment toggles when reversing a payment gate
     if (stage.gateType === 'payment') {
       delete deal[`pay_${stage.key}_A`]; delete deal[`pay_${stage.key}_A_ts`];
       delete deal[`pay_${stage.key}_B`]; delete deal[`pay_${stage.key}_B_ts`];
     }
+    // Clear days selection when reversing a select gate
     if (stage.gateType === 'select') {
       delete deal[`${stage.key}_days`];
       delete deal[`${stage.key}_days_A`];
       delete deal[`${stage.key}_days_B`];
     }
+    // Clear per-party deal_done flags when reversing deal_done stage
     if (stage.key === 'deal_done') {
-      delete deal.deal_done_A; delete deal.deal_done_B;
+      delete deal.deal_done_A; delete deal.deal_done_A_ts;
+      delete deal.deal_done_B; delete deal.deal_done_B_ts;
     }
+    // Only clear meeting data when the meeting step itself is being reversed.
+    // For reversals of deal_done / final_select / final_received / complete,
+    // the meeting already happened — preserve it completely.
     if (stage.key === 'meeting') {
-      delete deal.meeting; delete deal.stage_meeting; delete deal.stage_meeting_ts;
-      deal.meeting_reversed = true;
+      delete deal.meeting;
+      delete deal.stage_meeting;
+      delete deal.stage_meeting_ts;
+      deal.meeting_reversed = true;   // suppress auto-tick when parties re-schedule
       _meetingByChat[chatId] = null;
+      // Write meeting:null to chatMeta so chat.html clears its _meeting state
       RF.updateChatMeta(chatId, { meeting: null }).catch(e => console.warn('[RF] clearMeeting', e));
+    } else {
+      // For any other reversal: ensure meeting_reversed is cleared so the
+      // calendar button stays hidden (meeting was already confirmed and stands)
+      delete deal.meeting_reversed;
     }
-    // If reversing a step AFTER meeting, also un-confirm the meeting so parties can re-schedule
-    const _meetingIdx = PIPELINE.findIndex(p => p.key === 'meeting');
-    if (lastDoneIdx > _meetingIdx && stage.key !== 'meeting') {
-      delete deal.meeting; delete deal.stage_meeting; delete deal.stage_meeting_ts;
-      deal.meeting_reversed = true;
-      _meetingByChat[chatId] = null;
-      RF.updateChatMeta(chatId, { meeting: null }).catch(e => console.warn('[RF] clearMeetingPost', e));
-    }
+
     deal.lastActionTs = Date.now();
-    // Recalculate stage label so accordion header shows correct current step
-    const newLastDoneIdx = (() => { let idx = -1; for (let i = 0; i < PIPELINE.length; i++) { if (deal[`stage_${PIPELINE[i].key}`]) idx = i; } return idx; })();
+    // Recalculate stage label from remaining completed flags
+    const newLastDoneIdx = (() => {
+      let idx = -1;
+      for (let i = 0; i < PIPELINE.length; i++) { if (deal[`stage_${PIPELINE[i].key}`]) idx = i; }
+      return idx;
+    })();
     deal.stage = newLastDoneIdx >= 0 ? PIPELINE[newLastDoneIdx].label : 'Initiated';
+
     postDealSystemMsg(chatId, `↩ "${stage.label}" has been reversed by RenterFinder. Returning to this step.`);
-    // Update in-memory _deals immediately so renderDealCard gets fresh data
     const dealIdx = _deals.findIndex(x => x.chatId === chatId);
     if (dealIdx !== -1) _deals[dealIdx] = deal;
     saveDeals(deals);
-    // Strip undefined/deleted keys before writing to Firestore
     const cleanDeal = JSON.parse(JSON.stringify(deal));
     syncDealToChat(chatId, cleanDeal);
-    // Also explicitly update chatMeta so chat.html onChatMeta fires with clean data
     RF.updateChatMeta(chatId, { deal: cleanDeal }).catch(e => console.warn('[RF] reversal meta', e));
     showToast(`↩ "${stage.label}" reversed`, 'success');
     _refreshDealCard(chatId, deal);
@@ -1961,6 +1971,130 @@
     saveDeals(deals);
     syncDealToChat(chatId, deal);
     showToast('Notes saved ✓', 'success');
+  }
+
+  // ── DEAL SUB-TABS ─────────────────────────────────────────────
+  let _dealSubtab = 'needs-action';
+
+  function switchDealSubtab(tab) {
+    _dealSubtab = tab;
+    document.querySelectorAll('.deal-subtab').forEach(b => b.classList.toggle('active', b.dataset.subtab === tab));
+    document.getElementById('deal-subpanel-needs-action').style.display = tab === 'needs-action' ? '' : 'none';
+    document.getElementById('deal-subpanel-all-deals').style.display    = tab === 'all-deals'    ? '' : 'none';
+  }
+
+  // Returns true if a deal is waiting for mod/admin action right now
+  function _dealNeedsAction(deal) {
+    if (deal.stage === 'Cancelled' || deal.stage_complete || deal.stage === 'Complete') return false;
+    const curIdx  = currentPipelineIdx(deal);
+    const nextIdx = curIdx + 1 < PIPELINE.length ? curIdx + 1 : PIPELINE.length - 1;
+    const next    = PIPELINE[nextIdx];
+    if (!next) return false;
+    // select gates always need admin/mod action
+    if (next.gateType === 'select')   return !deal[`stage_${next.key}`];
+    // payment gates need mod to tick payments and proceed
+    if (next.gateType === 'payment') {
+      if (deal[`stage_${next.key}`]) return false; // already done
+      // payments ticked but not yet proceeded = needs action
+      const payA = deal[`pay_${next.key}_A`];
+      const payB = deal[`pay_${next.key}_B`];
+      const canProceed = next.key === 'final_received' ? (payA || payB) : (payA && payB);
+      return canProceed; // toggles are ticked but proceed not clicked
+    }
+    // terminal gate (complete) needs admin action
+    if (next.gateType === 'terminal') return !deal[`stage_${next.key}`];
+    // meeting + deal_done + both_confirm are user-driven — not mod action needed
+    return false;
+  }
+
+  function renderDealNeedsAction(deals, container) {
+    if (!container) return;
+    const active = deals.filter(d => d.stage !== 'Cancelled' && !d.stage_complete);
+    const needs  = active.filter(d => _dealNeedsAction(d));
+    const clear  = active.filter(d => !_dealNeedsAction(d));
+
+    // Update sub-tab counts
+    const needsEl = document.getElementById('deal-subtab-count-needs');
+    const allEl   = document.getElementById('deal-subtab-count-all');
+    if (needsEl) needsEl.textContent = needs.length;
+    if (allEl)   allEl.textContent   = active.length;
+
+    container.innerHTML = '';
+    if (!needs.length && !clear.length) {
+      container.innerHTML = `<div class="empty-state" style="text-align:center;padding:60px 20px;"><div class="empty-icon">✅</div><h3>No active deals</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">All deals are in the Archived tab.</p></div>`;
+      return;
+    }
+    if (!needs.length) {
+      container.innerHTML = `<div class="empty-state" style="text-align:center;padding:40px 20px;"><div class="empty-icon">✅</div><h3>All clear!</h3><p style="color:var(--muted);font-size:13px;margin-top:6px;">No deals are waiting on your action right now. ${active.length} deal${active.length!==1?'s are':' is'} progressing normally.</p></div>`;
+      return;
+    }
+
+    // Render needs-action deals using the same accordion pattern
+    const sorted = [...needs].sort((a,b)=>(b.lastActionTs||b.initiatedTs||0)-(a.lastActionTs||a.initiatedTs||0));
+    sorted.forEach(d => _renderDealAccordion(d, container, 'needs'));
+  }
+
+  // Shared accordion builder used by both lists
+  function _renderDealAccordion(d, container, listKey) {
+    const stageLabel = d.stage || 'Initiated';
+    const ts = d.initiatedTs ? fmtTs(d.initiatedTs) : '—';
+    const dealId = String(d.chatId).slice(-8).toUpperCase();
+    const acc = document.createElement('div');
+    acc.style.cssText = 'background:var(--card);border:1px solid rgba(16,185,129,0.25);border-radius:12px;margin-bottom:10px;overflow:hidden;';
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none;';
+    hdr.innerHTML = `
+      <span style="font-size:10px;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;padding:2px 7px;flex-shrink:0;white-space:nowrap;">ID: ${dealId}</span>
+      <span style="flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escH(d.userA)} ↔ ${escH(d.userB)}</span>
+      <span class="acc-deal-hdr-listing" style="font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escH(d.listing||'')}">${escH(d.listing||'—')}</span>
+      <span style="font-size:11px;font-weight:700;color:#34d399;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);white-space:nowrap;flex-shrink:0;">● ${escH(stageLabel)}</span>
+      <span class="acc-deal-hdr-ts" style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;">${ts}</span>
+      <span style="color:var(--muted);font-size:16px;transition:transform 0.2s;flex-shrink:0;" class="acc-chev">›</span>`;
+    const bodyId = safeId(d.chatId) + (listKey === 'needs' ? '-n' : '');
+    const bdy = document.createElement('div');
+    bdy.id = bodyId;
+    bdy.style.cssText = 'display:none;padding:0 18px 18px;border-top:1px solid rgba(16,185,129,0.15);';
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '✕'; closeBtn.title = 'Close';
+    closeBtn.style.cssText = 'display:none;background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 4px;margin-left:4px;line-height:1;flex-shrink:0;';
+    closeBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      bdy.style.display = 'none'; closeBtn.style.display = 'none';
+      const chev = hdr.querySelector('.acc-chev'); if (chev) chev.style.transform = '';
+      _openDealIds.delete(d.chatId);
+    });
+    hdr.appendChild(closeBtn);
+    hdr.addEventListener('click', e => {
+      if (e.target === closeBtn) return;
+      const isOpen = bdy.style.display !== 'none';
+      const chev = hdr.querySelector('.acc-chev');
+      if (isOpen) {
+        bdy.style.display = 'none'; closeBtn.style.display = 'none';
+        if (chev) chev.style.transform = ''; _openDealIds.delete(d.chatId);
+      } else {
+        bdy.style.display = 'block'; closeBtn.style.display = 'inline';
+        if (chev) chev.style.transform = 'rotate(90deg)'; _openDealIds.add(d.chatId);
+        if (!bdy.innerHTML) renderDealCard(d, bdy, false);
+      }
+    });
+    if (_openDealIds.has(d.chatId)) {
+      bdy.style.display = 'block'; closeBtn.style.display = 'inline';
+      const chev = hdr.querySelector('.acc-chev'); if (chev) chev.style.transform = 'rotate(90deg)';
+      bdy.innerHTML = ''; renderDealCard(d, bdy, false);
+    }
+    acc.appendChild(hdr); acc.appendChild(bdy); container.appendChild(acc);
+  }
+
+  function filterDealsNeeds() {
+    const q = document.getElementById('search-deals-needs')?.value.trim().toLowerCase().normalize('NFC') || '';
+    const rows = document.querySelectorAll('#deals-list-needs > div');
+    let shown = 0;
+    rows.forEach(row => {
+      const match = !q || row.textContent.toLowerCase().normalize('NFC').includes(q);
+      row.style.display = match ? '' : 'none'; if (match) shown++;
+    });
+    const el = document.getElementById('search-deals-needs-count');
+    if (el) el.textContent = q ? `${shown} result${shown!==1?'s':''}` : '';
   }
 
   function syncDealToChat(chatId, deal) {
@@ -2088,19 +2222,23 @@
   }
 
   function permanentDeleteAllDeals() {
-    askConfirm('Permanently delete ALL archived/cancelled deals?', _doDeleteAllDeals, 'Delete All Archived Deals'); return;
+    askConfirm('Permanently delete ALL archived/cancelled deals? This cannot be undone.', _doDeleteAllDeals, 'Delete All Archived Deals');
+  }
+  function _doDeleteAllDeals() {
     const remaining = getDeals().filter(d => d.stage !== 'Cancelled' && !d.stage_complete && d.stage !== 'Complete');
     const toDelete  = getDeals().filter(d => d.stage === 'Cancelled' || d.stage_complete || d.stage === 'Complete');
-    saveDeals(remaining);
-    toDelete.forEach(d => db.collection('deals').doc(d.chatId).delete().catch(()=>{}));
-    showToast('🗑 All archived deals deleted', '');
+    _deals = remaining;
+    toDelete.forEach(d => RF.deleteDeal(d.chatId).catch(()=>{}));
+    showToast(`🗑 ${toDelete.length} archived deal${toDelete.length!==1?'s':''} deleted`, '');
     loadDashboard();
   }
 
   function permanentDeleteOneDeal(chatId) {
-    askConfirm('Permanently delete this deal?', () => _doDeleteOneDeal(chatId), 'Delete Deal'); return;
-    saveDeals(getDeals().filter(d => d.chatId !== chatId));
-    db.collection('deals').doc(chatId).delete().catch(()=>{});
+    askConfirm('Permanently delete this deal record? This cannot be undone.', () => _doDeleteOneDeal(chatId), 'Delete Deal');
+  }
+  function _doDeleteOneDeal(chatId) {
+    _deals = _deals.filter(d => d.chatId !== chatId);
+    RF.deleteDeal(chatId).catch(e => console.warn('[RF] deleteDeal', e));
     showToast('🗑 Deal deleted', '');
     loadDashboard();
   }
@@ -2613,6 +2751,12 @@
     document.getElementById('ask-confirm-title').textContent = title || 'Confirm';
     document.getElementById('ask-confirm-msg').textContent   = msg;
     box.classList.add('show');
+  }
+  function doAskConfirm() {
+    document.getElementById('ask-confirm-box').classList.remove('show');
+    const cb = _askConfirmCb;
+    _askConfirmCb = null;
+    if (cb) cb();
   }
   function closeAskConfirm() {
     document.getElementById('ask-confirm-box').classList.remove('show');
@@ -3253,18 +3397,19 @@
   }
 
   function permanentDeleteDeal(chatId) {
-    if (!confirm(`Permanently delete this deal record? This cannot be undone.`)) return;
-    _deals = _deals.filter(d => d.chatId !== chatId);
-    RF.deleteDeal(chatId).catch(e => console.warn('[RF] deleteDeal', e));
-    showToast('Deal record permanently deleted', 'error');
-    loadDashboard();
+    askConfirm('Permanently delete this deal record? This cannot be undone.', () => {
+      _deals = _deals.filter(d => d.chatId !== chatId);
+      RF.deleteDeal(chatId).catch(e => console.warn('[RF] deleteDeal', e));
+      showToast('Deal record permanently deleted', 'error');
+      loadDashboard();
+    }, 'Delete Deal');
   }
 
   function switchTab(tab) {
     document.querySelectorAll('.dash-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${tab}`));
     // Clear search on tab switch
-    ['chats','flagged','deals','appeals','users','archived','history','defaulters'].forEach(id => {
+    ['chats','flagged','deals','deals-needs','appeals','users','archived','history','defaulters'].forEach(id => {
       const el = document.getElementById(`search-${id}`);
       const ct = document.getElementById(`search-${id}-count`);
       if (el) el.value = '';
@@ -3376,37 +3521,8 @@ if (_sess) {
     });
   }
 
-  // ── FIRESTORE WRITE-THROUGHS (v38 functions that need to also write to Firestore) ──
-  // We override the existing v38 write functions to also fire Firestore writes.
-  // The v38 localStorage logic runs first, then Firestore is updated asynchronously.
-
-  const _origSyncDealToChat = syncDealToChat;
-  syncDealToChat = function(chatId, deal) {
-    _origSyncDealToChat(chatId, deal);  // v38: writes to rf_deal_${chatId}
-  };
-
-  const _origPostDealSystemMsg = postDealSystemMsg;
-  postDealSystemMsg = function(chatId, text) {
-    _origPostDealSystemMsg(chatId, text);  // v38: writes to rf_chat_${chatId}
-    if (!_isLocal) {
-      const msg = { id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System', text, ts:Date.now(), isSystem:true, chatId };
-    }
-  };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  // Firestore real-time listeners are the authoritative source of truth.
+  // syncDealToChat and postDealSystemMsg write to Firestore directly.
 
 </script>
 </body>

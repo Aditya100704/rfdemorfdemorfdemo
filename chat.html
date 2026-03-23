@@ -1671,11 +1671,13 @@ Message: ${JSON.stringify(text)}`;
     if (!btn || currentIdentity === 'MOD') { if (btn) btn.style.display = 'none'; return; }
     const deal = loadDeal();
     if (!deal || !(deal.confirmedA && deal.confirmedB)) { btn.style.display = 'none'; return; }
-    // Show only after meeting is confirmed AND deal_done step is not yet complete
-    const meetingDone = deal.stage_meeting === true;
+    // Show only after meeting is confirmed, deal_done not yet complete, and
+    // final payment stages haven't started (guards against post-reversal flicker)
+    const meetingDone  = deal.stage_meeting === true;
     const dealDoneDone = deal.stage_deal_done === true;
+    const finalStarted = deal.stage_final_select || deal.stage_final_received || deal.stage_complete;
     const myDone = deal[`deal_done_${currentIdentity}`];
-    if (meetingDone && !dealDoneDone) {
+    if (meetingDone && !dealDoneDone && !finalStarted) {
       btn.style.display = '';
       btn.textContent = myDone ? '⏳ Waiting for other party…' : '✅ Deal Done';
       btn.disabled = !!myDone;
@@ -1695,11 +1697,11 @@ Message: ${JSON.stringify(text)}`;
     if (!deal) return;
     deal[`deal_done_${currentIdentity}`] = true;
     deal[`deal_done_${currentIdentity}_ts`] = Date.now();
+    deal.lastActionTs = Date.now(); // always update so dashboard refreshes immediately
     // If both parties confirmed → auto-tick deal_done stage
     if (deal.deal_done_A && deal.deal_done_B) {
       deal.stage_deal_done    = true;
       deal.stage_deal_done_ts = Date.now();
-      deal.lastActionTs = Date.now();
       const msgs = loadMessages();
       msgs.push({ id: Date.now(), senderIdentity:'SYS', senderId:'system', senderName:'System',
         text: '✅ Both parties have confirmed the deal is done. Moving to closure stage.',
@@ -1712,6 +1714,7 @@ Message: ${JSON.stringify(text)}`;
         ts: Date.now(), isSystem: true });
       saveMessages(msgs);
     }
+    // Write to both deals/{chatId} AND chatMeta so dashboard onDeals fires immediately
     saveDeal(deal);
     RF.updateChatMeta(CHAT_ID, { deal }).catch(e => console.warn('[RF] dealDone', e));
     updateDealDoneBtn(); updatePayBtn(); renderMessages();
@@ -1732,10 +1735,15 @@ Message: ${JSON.stringify(text)}`;
     if (!bothConfirmed || !advanceDone) { btn.classList.remove('show'); return; }
     // Hide once deal_done is confirmed (no more scheduling needed)
     if (deal?.stage_deal_done) { btn.classList.remove('show'); return; }
-    // Hide if meeting is confirmed and NOT reversed (meeting already done)
+    // Hide if final payment stage has started (meeting was completed; no need to reschedule)
+    if (deal?.stage_final_select || deal?.stage_final_received || deal?.stage_complete) { btn.classList.remove('show'); return; }
+    // Hide if meeting is confirmed AND has not been explicitly reversed by a mod
     if (meeting?.status === 'confirmed' && !deal?.meeting_reversed) { btn.classList.remove('show'); return; }
+    // Also hide if stage_meeting flag is set but meeting_reversed isn't
+    // (handles the race where _meeting update arrives before _deal)
+    if (deal?.stage_meeting && !deal?.meeting_reversed) { btn.classList.remove('show'); return; }
 
-    const originalProposer = deal.initiatedBy;   // Party 1 always starts
+    const originalProposer = deal.initiatedBy;
     const isOriginalProposer = currentIdentity === originalProposer;
 
     if (!meeting || meeting.status === undefined) {
@@ -2185,22 +2193,29 @@ Message: ${JSON.stringify(text)}`;
     requestAnimationFrame(() => { msgBox.scrollTop = msgBox.scrollHeight; });
   }
 
-  function submitContactMod() {
+  async function submitContactMod() {
     const subject = document.getElementById('contact-subject').value;
     const message = document.getElementById('contact-message').value.trim();
     if (!subject) { document.getElementById('contact-subject').style.borderColor='#ef4444'; return; }
     if (!message || message.length < 5) { document.getElementById('contact-message').style.borderColor='#ef4444'; return; }
 
-    // Look up which mod is assigned to this chat
+    // Look up which mod is assigned to this chat — prefer Firestore (always current)
     let assignedModId = null, assignedModName = null;
     try {
-      const assignments = JSON.parse(localStorage.getItem('rf_chat_assignments') || '{}');
-      assignedModId = assignments[CHAT_ID] || null;
+      if (!_isLocal) {
+        assignedModId = await RF.getAssignment(CHAT_ID);
+      }
+      // Fallback: localStorage written by mod dashboards (may be stale on fresh devices)
+      if (!assignedModId) {
+        const assignments = JSON.parse(localStorage.getItem('rf_chat_assignments') || '{}');
+        assignedModId = assignments[CHAT_ID] || null;
+      }
       if (assignedModId) {
         const modNum = assignedModId.replace('mod-','');
         assignedModName = `Mod ${modNum}`;
       }
     } catch {}
+
     const contact = {
       id: Date.now(),
       chatId: CHAT_ID,
